@@ -1,146 +1,64 @@
 defmodule ExWasm.OpCodes do
 
+
+
+
+
   def encode_instr(instr) do
       case instr do
         # Control instructions. [Spec reference.](http://webassembly.github.io/spec/core/bikeshed/index.html#control-instructions)
-        :unreachable ->
-          <<0x00>>
-
-        :nop ->
-          <<0x01>>
-
-        {:block, result_type, instrs} ->
-          <<0x02>> <> encode_result_type(result_type) <> map_join(instrs, &encode_instr/1)
-
-        {:loop, result_type, instrs} ->
-          <<0x03>> <> encode_result_type(result_type) <> map_join(instrs, &encode_instr/1)
-
-        {:if, result_type, instrs} ->
-          <<0x04>> <> encode_result_type(result_type) <> map_join(instrs, &encode_instr/1)
-
-        {:if, result_type, consequent, alternate} ->
-          <<0x04>> <>
-            encode_result_type(result_type) <>
-            map_join(consequent, &encode_instr/1) <>
-            <<0x05>> <> map_join(alternate, &encode_instr/1) <> <<0x0B>>
-
-        {:br, label_index} ->
-          <<0x0C>> <> encode_index(label_index)
-
-        {:br_if, label_index} ->
-          <<0x0D>> <> encode_index(label_index)
-
-        {:br_table, label_indices, label_index} ->
-          <<0x0E>> <> map_join(label_indices, &encode_index/1) <> encode_index(label_index)
-
-        :return ->
-          <<0x0F>>
-
-        {:call, func_index} ->
-          <<0x10>> <> encode_index(func_index)
-
-        {:call_indirect, type_index} ->
-          <<0x11>> <> encode_index(type_index)
+        <<0x00>> -> :unreachable
+        <<0x01>> -> :nop
+        <<0x02>> -> :block
+        <<0x03>> -> :loop
+        <<0x04>> -> :if
+        <<0x0C>> -> :br
+        <<0x0D>> -> :br_if
+        <<0x0E>> -> :br_table
+        <<0x0F>> -> :return
+        <<0x10>> -> :call
+        <<0x11>> -> :call_indirect
 
         # Parameteric instructions. [Spec reference.](http://webassembly.github.io/spec/core/bikeshed/index.html#parametric-instructions)
-        :drop ->
-          <<0x1A>>
-
-        :select ->
-          <<0x1B>>
+        <<0x1A>> -> :drop
+        <<0x1B>> -> :select
 
         # Variable instructions. [Spec reference.](http://webassembly.github.io/spec/core/bikeshed/index.html#variable-instructions)
-        {:get_local, local_index} ->
-          <<0x20>> <> encode_index(local_index)
-
-        {:set_local, local_index} ->
-          <<0x21>> <> encode_index(local_index)
-
-        {:tee_local, local_index} ->
-          <<0x22>> <> encode_index(local_index)
-
-        {:get_global, global_index} ->
-          <<0x23>> <> encode_index(global_index)
-
-        {:set_global, global_index} ->
-          <<0x24>> <> encode_index(global_index)
+        # Takes the second byte as the argument
+        <<0x20>> -> :get_local
+        <<0x21>> -> :set_local
+        <<0x22>> -> :tee_local
+        <<0x23>> -> :get_global
+        <<0x24>> -> :set_global
 
         # Memory instructions. [Spec reference.](http://webassembly.github.io/spec/core/bikeshed/index.html#memory-instructions)
-        {:i32_load, align, offset} ->
-          mem_instr(<<0x28>>, align, offset)
-
-        {:i64_load, align, offset} ->
-          mem_instr(<<0x29>>, align, offset)
-
-        {:f32_load, align, offset} ->
-          mem_instr(<<0x2A>>, align, offset)
-
-        {:f64_load, align, offset} ->
-          mem_instr(<<0x2B>>, align, offset)
-
-        {:i32_load8_s, align, offset} ->
-          mem_instr(<<0x2C>>, align, offset)
-
-        {:i32_load8_u, align, offset} ->
-          mem_instr(<<0x2D>>, align, offset)
-
-        {:i32_load16_s, align, offset} ->
-          mem_instr(<<0x2E>>, align, offset)
-
-        {:i32_load16_u, align, offset} ->
-          mem_instr(<<0x2F>>, align, offset)
-
-        {:i64_load8_s, align, offset} ->
-          mem_instr(<<0x30>>, align, offset)
-
-        {:i64_load8_u, align, offset} ->
-          mem_instr(<<0x31>>, align, offset)
-
-        {:i64_load16_s, align, offset} ->
-          mem_instr(<<0x32>>, align, offset)
-
-        {:i64_load16_u, align, offset} ->
-          mem_instr(<<0x33>>, align, offset)
-
-        {:i64_load32_s, align, offset} ->
-          mem_instr(<<0x34>>, align, offset)
-
-        {:i64_load32_u, align, offset} ->
-          mem_instr(<<0x35>>, align, offset)
-
-        {:i32_store, align, offset} ->
-          mem_instr(<<0x36>>, align, offset)
-
-        {:i64_store, align, offset} ->
-          mem_instr(<<0x37>>, align, offset)
-
-        {:f32_store, align, offset} ->
-          mem_instr(<<0x38>>, align, offset)
-
-        {:f64_store, align, offset} ->
-          mem_instr(<<0x39>>, align, offset)
-
-        {:i32_store8, align, offset} ->
-          mem_instr(<<0x3A>>, align, offset)
-
-        {:i32_store16, align, offset} ->
-          mem_instr(<<0x3B>>, align, offset)
-
-        {:i64_store8, align, offset} ->
-          mem_instr(<<0x3C>>, align, offset)
-
-        {:i64_store16, align, offset} ->
-          mem_instr(<<0x3D>>, align, offset)
-
-        {:i64_store32, align, offset} ->
-          mem_instr(<<0x3E>>, align, offset)
-
-        :memory_size ->
-          <<0x3F, 0x00>>
-
-        :memory_grow ->
-          <<0x40, 0x00>>
-
+        #loads & Stores by imemdaite arg
+        <<0x28>> -> :i32_load
+        <<0x29>> -> :i64_load
+        <<0x2A>> -> :f32_load
+        <<0x2B>> -> :f64_load
+        <<0x2C>> -> :i32_load8_s
+        <<0x2D>> -> :i32_load8_u
+        <<0x2E>> -> :i32_load16_s
+        <<0x2F>> -> :i32_load16_u
+        <<0x30>> -> :i64_load8_s
+        <<0x31>> -> :i64_load8_u
+        <<0x32>> -> :i64_load16_s
+        <<0x33>> -> :i64_load16_u
+        <<0x34>> -> :i64_load32_s
+        <<0x35>> -> :i64_load32_u
+        <<0x36>> -> :i32_store
+        <<0x37>> -> :i64_store
+        <<0x38>> -> :f32_store
+        <<0x39>> -> :f64_store
+        <<0x3A>> -> :i32_store8
+        <<0x3B>> -> :i32_store16
+        <<0x3C>> -> :i64_store8
+        <<0x3D>> -> :i64_store16
+        <<0x3E>> -> :i64_store32
+        <<0x3F, 0x00>> -> :memory_size
+        <<0x40, 0x00>> -> :memory_grow
+        
         # Numberic instructions. [Spec reference.](http://webassembly.github.io/spec/core/bikeshed/index.html#numeric-instructions)
         {:i32_const, integer} ->
           <<0x41>> <> encode_integer({:i32, integer})
@@ -481,47 +399,36 @@ defmodule ExWasm.OpCodes do
         :i64_trunc_u_f64 ->
           <<0xB1>>
 
-        :f32_convert_s_i32 ->
-          <<0xB2>>
+         ->
+          <<0xB2>> -> :f32_convert_s_i32
+          <<0xB3>> -> :f32_convert_u_i32
+          <<0xB4>> -> :f32_convert_s_i64
+          <<0xB5>> -> :f32_convert_u_i64
+          <<0xB6>> -> :f32_demote_f64
+          <<0xB7>> -> :f64_convert_s_i32
+          <<0xB8>> -> :f64_convert_u_i32
 
-        :f32_convert_u_i32 ->
-          <<0xB3>>
-
-        :f32_convert_s_i64 ->
-          <<0xB4>>
-
-        :f32_convert_u_i64 ->
-          <<0xB5>>
-
-        :f32_demote_f64 ->
-          <<0xB6>>
-
-        :f64_convert_s_i32 ->
-          <<0xB7>>
-
-        :f64_convert_u_i32 ->
-          <<0xB8>>
 
         :f64_convert_s_i64 ->
-          <<0xB9>>
+          <<0xB9>> ->
 
         :f64_convert_u_i64 ->
-          <<0xBA>>
+          <<0xBA>> ->
 
         :f64_promote_f32 ->
-          <<0xBB>>
+          <<0xBB>> ->
 
         :i32_reinterpret_f32 ->
-          <<0xBC>>
+          <<0xBC>> ->
 
         :i64_reinterpret_f64 ->
-          <<0xBD>>
+          <<0xBD>> ->
 
         :f32_reinterpret_i32 ->
-          <<0xBE>>
+          <<0xBE>> ->
 
         :f64_reinterpret_i64 ->
-          <<0xBF>>
+          <<0xBF>> ->
 end
 
 end
