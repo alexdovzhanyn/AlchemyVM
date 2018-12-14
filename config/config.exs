@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure your application as:
 #
-#     config :ex_wasm, key: :value
+#     config :wasp_vm, key: :value
 #
 # and access this configuration in your application as:
 #
-#     Application.get_env(:ex_wasm, :key)
+#     Application.get_env(:wasp_vm, :key)
 #
 # You can also configure a 3rd-party app:
 #

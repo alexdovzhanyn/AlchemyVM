@@ -1,4 +1,4 @@
-defmodule ExWasm.OpCodes do
+defmodule WaspVM.OpCodes do
 
 
 

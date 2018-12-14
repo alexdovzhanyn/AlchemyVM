@@ -1,7 +1,7 @@
 defmodule StackTest do
   use ExUnit.Case
 
-  alias ExWasm.Stack
+  alias WaspVM.Stack
 
 
   test "Creates Stack" do

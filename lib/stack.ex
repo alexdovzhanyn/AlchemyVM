@@ -1,17 +1,17 @@
-defmodule ExWasm.Stack do
+defmodule WaspVM.Stack do
 
 defstruct elements: []
 
-def new, do: %ExWasm.Stack{}
+def new, do: %WaspVM.Stack{}
 
 def push(stack, element) do
- %ExWasm.Stack{stack | elements: [element | stack.elements]}
+ %WaspVM.Stack{stack | elements: [element | stack.elements]}
  end
 
-def pop(%ExWasm.Stack{elements: []}), do: raise("Stack is empty!")
- def pop(%ExWasm.Stack{elements: [top | rest]}) do
- {top, %ExWasm.Stack{elements: rest}}
+def pop(%WaspVM.Stack{elements: []}), do: raise("Stack is empty!")
+ def pop(%WaspVM.Stack{elements: [top | rest]}) do
+ {top, %WaspVM.Stack{elements: rest}}
  end
 
-def depth(%ExWasm.Stack{elements: elements}), do: length(elements)
+def depth(%WaspVM.Stack{elements: elements}), do: length(elements)
  end

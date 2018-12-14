@@ -1,4 +1,4 @@
-defmodule ExWasm do
+defmodule WaspVM do
   import Binary
 
   def bin_open(file_path) do
