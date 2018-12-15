@@ -2,6 +2,7 @@ defmodule WaspVM.Decoder do
   alias WaspVM.LEB128
   alias WaspVM.Module
   alias WaspVM.Decoder.TypeSectionParser
+  alias WaspVM.Decoder.MemorySectionParser
   require IEx
 
   def decode_file(file_path) do
@@ -52,5 +53,7 @@ defmodule WaspVM.Decoder do
   end
 
   defp parse_section(module, 1), do: TypeSectionParser.parse(module)
+  defp parse_section(module, 5), do: MemorySectionParser.parse(module)
+  defp parse_section(module, _), do: module
 
 end

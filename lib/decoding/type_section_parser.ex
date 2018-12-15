@@ -8,8 +8,8 @@ defmodule WaspVM.Decoder.TypeSectionParser do
       |> Map.get(1)
       |> LEB128.decode()
 
-    if count > 0 do
-      entries =
+    entries =
+      if count > 0 do
         entries
         |> String.split(OpCodes.type_to_opcode(:func))
         |> Enum.filter(& &1 != "")
@@ -19,11 +19,11 @@ defmodule WaspVM.Decoder.TypeSectionParser do
 
           {types, return_types}
         end)
+      else
+        []
+      end
 
-      Map.put(module, :types, entries)
-    else
-      []
-    end
+    Map.put(module, :types, entries)
   end
 
   defp parse_type_entry(entry) do
