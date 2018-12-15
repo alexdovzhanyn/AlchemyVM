@@ -4,7 +4,8 @@ defmodule WaspVM.Module do
             magic: nil,
             version: nil,
             types: nil,
-            memory: nil
+            memory: nil,
+            exports: nil
 
   def add_section(module, sec_code, section) do
     sections = Map.put(module.sections, sec_code, section)

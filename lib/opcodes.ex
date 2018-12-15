@@ -219,4 +219,13 @@ defmodule WaspVM.OpCodes do
     end
   end
 
+  def external_kind(kind) do
+    case kind do
+      0 -> :func
+      1 -> :table
+      2 -> :mem
+      3 -> :global
+    end
+  end
+
 end
