@@ -9,8 +9,7 @@ defmodule WaspVM.Decoder.ExportSectionParser do
       |> Map.get(7)
       |> LEB128.decode()
 
-    entries =
-      if count > 0, do: parse_entries(entries), else: []
+    entries = if count > 0, do: parse_entries(entries), else: []
 
     Map.put(module, :exports, entries)
   end
