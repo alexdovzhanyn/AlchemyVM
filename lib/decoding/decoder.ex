@@ -1,7 +1,7 @@
 defmodule WaspVM.Decoder do
   alias WaspVM.LEB128
   alias WaspVM.Module
-  alias WaspVM.OpCodes
+  alias WaspVM.Decoder.TypeSectionParser
   require IEx
 
   def decode_file(file_path) do
@@ -44,34 +44,13 @@ defmodule WaspVM.Decoder do
   end
 
   defp decode_section(sec_code, bin) when sec_code > 0 do
-    <<section_size::bytes-size(4), rest::binary>> = bin
-
-    {size, remaining} = LEB128.decode(section_size)
-
-    rest = remaining <> rest
+    {size, rest} = LEB128.decode(bin)
 
     <<section::bytes-size(size), rest::binary>> = rest
 
     {section, rest}
   end
 
-  defp parse_section(module, 1) do
-    <<count::bytes-size(4), entries::binary>> = Map.get(module.sections, 1)
-
-    {count, remaining} = LEB128.decode(count)
-
-    entries = remaining <> entries
-
-    if count > 0 do
-      entries =
-        entries
-        |> String.split(OpCodes.type_to_opcode(:func))
-        |> Enum.filter(& &1 != "")
-
-      IEx.pry
-    else
-      []
-    end
-  end
+  defp parse_section(module, 1), do: TypeSectionParser.parse(module)
 
 end
