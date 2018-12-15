@@ -2,6 +2,7 @@ defmodule WaspVM.Decoder do
   alias WaspVM.LEB128
   alias WaspVM.Module
   alias WaspVM.Decoder.TypeSectionParser
+  alias WaspVM.Decoder.FunctionSectionParser
   alias WaspVM.Decoder.MemorySectionParser
   alias WaspVM.Decoder.ExportSectionParser
   require IEx
@@ -54,8 +55,9 @@ defmodule WaspVM.Decoder do
   end
 
   defp parse_section(module, 1), do: TypeSectionParser.parse(module)
+  defp parse_section(module, 3), do: FunctionSectionParser.parse(module)
   defp parse_section(module, 5), do: MemorySectionParser.parse(module)
-  defp parse_section(module, 7), do: ExportSectionParser.parse(module)
+  defp parse_section(module, 7), do: ExportSectionParser.parse(module) |> IO.inspect
   defp parse_section(module, _), do: module
 
 end
