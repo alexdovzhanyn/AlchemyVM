@@ -7,5 +7,6 @@ defmodule WaspVM.Dissasembler do
 
   @spec instruction(Binary, Integer, List, Map) :: Tuple
   defp instruction(bin, addr, stack, dissasembled), do: {:ok, ""}
+  defp instruction(bin, addr, [], dissasembled), do: {:ok, {dissasembled, addr}, bin}
 
 end
