@@ -3,7 +3,7 @@ defmodule WaspVMTest do
   doctest WaspVM
 
   test "Opens File File" do
-    WaspVM.Decoder.decode_file("./alex.wasm") |> IO.inspect
+    WaspVM.Decoder.decode_file("./addTwo_main.wasm") |> IO.inspect
 
   end
 
