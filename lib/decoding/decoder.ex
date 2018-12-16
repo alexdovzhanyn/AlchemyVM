@@ -10,6 +10,7 @@ defmodule WaspVM.Decoder do
   alias WaspVM.Decoder.ImportSectionParser
   alias WaspVM.Decoder.StartSectionParser
   alias WaspVM.Decoder.ElementSectionParser
+  alias WaspVM.Decoder.CodeSectionParser
   require IEx
 
   def decode_file(file_path) do
@@ -68,6 +69,7 @@ defmodule WaspVM.Decoder do
   defp parse_section(module, 7), do: ExportSectionParser.parse(module)
   defp parse_section(module, 8), do: StartSectionParser.parse(module)
   defp parse_section(module, 9), do: ElementSectionParser.parse(module)
+  defp parse_section(module, 10), do: CodeSectionParser.parse(module)
   defp parse_section(module, _), do: module
 
 end

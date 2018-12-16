@@ -11,7 +11,7 @@ defmodule WaspVM.Decoder.ExportSectionParser do
 
     entries = if count > 0, do: parse_entries(entries), else: []
 
-    Map.put(module, :exports, entries)
+    Map.put(module, :exports, Enum.reverse(entries))
   end
 
   defp parse_entries(entries), do: parse_entries([], entries)

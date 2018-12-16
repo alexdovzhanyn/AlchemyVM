@@ -17,6 +17,7 @@ defmodule WaspVM.OpCodes do
       <<0x0F>> -> :return
       <<0x10>> -> :call
       <<0x11>> -> :call_indirect
+      <<0x0B>> -> :end
 
       # Parameteric instructions. [Spec reference.](http://webassembly.github.io/spec/core/bikeshed/index.html#parametric-instructions)
       <<0x1A>> -> :drop
