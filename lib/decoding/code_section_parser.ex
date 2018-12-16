@@ -683,10 +683,11 @@ defmodule WaspVM.Decoder.CodeSectionParser do
    end
 
    defp parse_instruction(:br_table, bytecode) do
-     #NR
-     {local_index, rest} = LEB128.decode(bytecode)
+     #NEEDS VERIFICATION
+     {label_indices, rest} = LEB128.decode(bytecode)
+     {label_index, rest} = LEB128.decode(bytecode)
 
-     {{:br_table, local_index}, rest}
+     {{:br_table, label_indices, label_index}, rest}
    end
 
    #Structured Instruction
@@ -698,11 +699,18 @@ defmodule WaspVM.Decoder.CodeSectionParser do
    end
 
    defp parse_instruction(:loop, bytecode) do
-     {:loop, bytecode}
+     #NEEDS VERIFICATION
+     {result_type, rest} = LEB128.decode(bytecode)
+     {instructions, rest} = LEB128.decode(rest)
+     {{:loop, result_type, instructions}, rest}
    end
 
    defp parse_instruction(:if, bytecode) do
-     {:if, bytecode}
+     #NEEDS VERIFICATION
+     {result_type, rest} = LEB128.decode(bytecode)
+     {consequence, rest} = LEB128.decode(rest)
+     {alternate, rest} = LEB128.decode(rest)
+     {{:if, result_type, consequence, alternate}, rest}
    end
 
    defp parse_instruction(:unreachable, bytecode) do
