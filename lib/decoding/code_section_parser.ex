@@ -10,7 +10,8 @@ defmodule WaspVM.Decoder.CodeSectionParser do
       |> LEB128.decode()
 
     bodies = if count > 0, do: parse_bodies(bodies), else: []
-
+    
+    module = Map.put(module, :code, List.first(bodies).bytecode)
     Map.put(module, :functions, Enum.reverse(bodies))
   end
 
@@ -30,8 +31,6 @@ defmodule WaspVM.Decoder.CodeSectionParser do
       else
         {[], body}
       end
-
-    IO.inspect(body)
 
     parsed_bytecode =
       body
