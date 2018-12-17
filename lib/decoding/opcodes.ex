@@ -1,4 +1,5 @@
 defmodule WaspVM.OpCodes do
+  require IEx
 
   @doc """
     Returns an atom representing a given language opcode
@@ -190,6 +191,9 @@ defmodule WaspVM.OpCodes do
       <<0xBD>> -> :i64_reinterpret_f64
       <<0xBE>> -> :f32_reinterpret_i32
       <<0xBF>> -> :f64_reinterpret_i64
+      any ->
+        IEx.pry
+
     end
   end
 
