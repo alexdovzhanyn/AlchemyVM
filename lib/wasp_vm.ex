@@ -18,6 +18,14 @@ defmodule WaspVM do
     |> do_load
   end
 
+  def execute(file, args) do
+    module = load_file(file)
+    IO.inspect(module, lable: "MODULE")
+    IO.inspect(args, label: "Arguments")
+    WaspVM.Executor.execute(module, args)
+    
+  end
+
   defp do_load(module) do
     %WaspVM{
       module: module,
