@@ -6,6 +6,10 @@ defmodule WaspVM do
   @enforce_keys [:module, :stack, :memory]
   defstruct [:module, :stack, :memory]
 
+  def start() do
+    WaspVM.VMManager.start()
+  end
+
   def load_file(filename) do
     filename
     |> Decoder.decode_file()
@@ -22,8 +26,8 @@ defmodule WaspVM do
     module = load_file(file)
     IO.inspect(module, lable: "MODULE")
     IO.inspect(args, label: "Arguments")
+    module = Map.put(module, :locals, args)
     WaspVM.Executor.execute(module, args)
-    
   end
 
   defp do_load(module) do

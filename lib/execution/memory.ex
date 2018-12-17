@@ -32,7 +32,7 @@ defmodule WaspVM.Memory do
 
     pages = List.replace_at(memory.pages, page, mem)
 
-    Map.put(memory, :pages, pages)
+    Map.put(memory, :pages, pages) |> IO.inspect
   end
 
 end
