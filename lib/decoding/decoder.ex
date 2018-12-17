@@ -16,7 +16,7 @@ defmodule WaspVM.Decoder do
   def decode_file(file_path) do
     {:ok, bin} = File.read(file_path)
 
-    decode(bin)
+    decode(bin) |> IO.inspect
   end
 
   def decode(bin) when is_binary(bin), do: do_decode(%Module{}, bin)

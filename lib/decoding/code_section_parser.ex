@@ -131,17 +131,17 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   defp parse_instruction(:i32_le_u, bytecode), do: {:i32_le_u, bytecode}
   defp parse_instruction(:i32_ge_s, bytecode), do: {:i32_ge_s, bytecode}
   defp parse_instruction(:i32_ge_u, bytecode), do: {:i32_ge_u, bytecode}
-  defp parse_instruction(:i32_clz, bytecode), do: {:i32_clz, bytecode}
-  defp parse_instruction(:i32_ctz, bytecode), do: {:i32_ctz, bytecode}
-  defp parse_instruction(:i32_popcnt, bytecode), do: {:i32_popcnt, bytecode}
-  defp parse_instruction(:i32_add, bytecode), do: {:i32_add, bytecode}
-  defp parse_instruction(:i32_sub, bytecode), do: {:i32_sub, bytecode}
-  defp parse_instruction(:i32_mul, bytecode), do: {:i32_mul, bytecode}
-  defp parse_instruction(:i32_div_s, bytecode), do: {:i32_div_, bytecode}
-  defp parse_instruction(:i32_div_u, bytecode), do: {:i32_div_, bytecode}
-  defp parse_instruction(:i32_rem_s, bytecode), do: {:i32_rem_, bytecode}
-  defp parse_instruction(:i32_rem_u, bytecode), do: {:i32_rem_, bytecode}
-  defp parse_instruction(:i32_or, bytecode), do: {:i32_or, bytecode}
+  defp parse_instruction(:i32_clz, bytecode), do: {:i32_clz, bytecode} #NEED CLARIFICATION ON L/T Zeros
+  defp parse_instruction(:i32_ctz, bytecode), do: {:i32_ctz, bytecode} #NEED CLARIFICATION ON L/T Zeros
+  defp parse_instruction(:i32_popcnt, bytecode), do: {:i32_popcnt, bytecode} #Done
+  defp parse_instruction(:i32_add, bytecode), do: {:i32_add, bytecode} #Done
+  defp parse_instruction(:i32_sub, bytecode), do: {:i32_sub, bytecode} #Done
+  defp parse_instruction(:i32_mul, bytecode), do: {:i32_mul, bytecode} #Done
+  defp parse_instruction(:i32_div_s, bytecode), do: {:i32_div_, bytecode} #Done
+  defp parse_instruction(:i32_div_u, bytecode), do: {:i32_div_, bytecode} #Done
+  defp parse_instruction(:i32_rem_s, bytecode), do: {:i32_rem_, bytecode} #Done
+  defp parse_instruction(:i32_rem_u, bytecode), do: {:i32_rem_, bytecode} #Done
+  defp parse_instruction(:i32_or, bytecode), do: {:i32_or, bytecode} #Done
   defp parse_instruction(:i32_xor, bytecode), do: {:i32_xor, bytecode}
   defp parse_instruction(:i32_shl, bytecode), do: {:i32_shl, bytecode}
   defp parse_instruction(:i32_shr_s, bytecode), do: {:i32_shr_, bytecode}
