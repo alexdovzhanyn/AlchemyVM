@@ -10,7 +10,7 @@ defmodule WaspVM.Decoder.CodeSectionParser do
       |> LEB128.decode()
 
     bodies = if count > 0, do: parse_bodies(bodies), else: []
-    
+
     module = Map.put(module, :code, List.first(bodies).bytecode)
     Map.put(module, :functions, Enum.reverse(bodies))
   end
@@ -37,7 +37,7 @@ defmodule WaspVM.Decoder.CodeSectionParser do
       |> parse_bytecode()
       |> Enum.reverse()
 
-    body = %{locals: locals, body: parsed_bytecode, bytecode: body}
+    body = %{locals: locals, body: parsed_bytecode}
 
     parse_bodies([body | parsed], bodies)
   end
@@ -61,697 +61,238 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   defp parse_bytecode(instructions, bytecode) do
     <<opcode::bytes-size(1), bytecode::binary>> = bytecode
 
-    opcode = OpCodes.encode_instr(opcode)
-
-    {instruction, bytecode} = parse_instruction(opcode, bytecode)
+    {instruction, bytecode} =
+      opcode
+      |> OpCodes.encode_instr()
+      |> parse_instruction(bytecode)
 
     parse_bytecode([instruction | instructions], bytecode)
   end
 
-
-
-  defp parse_instruction(:i32_store, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i32_store, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i32_load, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i32_load, alignment, offset}, rest}
-
-  end
-
-  defp parse_instruction(:i32_add, bytecode) do
-    {:i32_add, bytecode}
-  end
-
-
-  defp parse_instruction(:i64_load, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i64_load, alignment, offset}, rest}
-  end
-
-
-  defp parse_instruction(:f32_load, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:f32_load, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:f64_load, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:f32_load, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i32_load8_s, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i32_load8_s, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i32_load8_u, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i32_load8_u, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i32_load16_u, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i32_load16_u, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i64_load8_s, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i64_load8_s, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i64_load8_u, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i64_load8_u, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i64_load16_s, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i64_load16_s, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i64_load16_u, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i64_load16_u, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i64_load32_s, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i64_load32_s, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i64_load32_u, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i64_load32_u, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i64_store, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i64_store, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:f32_store, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:f32_store, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:f64_store, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:f64_store, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i32_store8, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i32_store8, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i32_store16, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i32_store16, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i64_store8, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i64_store8, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i64_store16, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i64_store16, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:i64_store32, bytecode) do
-    {alignment, rest} = LEB128.decode(bytecode)
-    {offset, rest} = LEB128.decode(rest)
-
-    {{:i64_store32, alignment, offset}, rest}
-  end
-
-  defp parse_instruction(:memory_size, bytecode) do
-    {:memory_size, bytecode}
-  end
-
-  defp parse_instruction(:memory_grow, bytecode) do
-    {:memory_grow, bytecode}
-  end
-
-  defp parse_instruction(:i32_const, bytecode) do
-    {int_value, rest} = LEB128.decode(bytecode)
-
-    {{:i32_const, int_value}, rest}
-  end
-
-  defp parse_instruction(:i64_const, bytecode) do
-    {int_value, rest} = LEB128.decode(bytecode)
-
-    {{:i64_const, int_value}, rest}
-  end
-
-  defp parse_instruction(:f32_const, bytecode) do
-    {float_value, rest} = LEB128.decode(bytecode)
-
-    {{:f32_const, float_value}, rest}
-  end
-
-  defp parse_instruction(:f64_const, bytecode) do
-    {float_value, rest} = LEB128.decode(bytecode)
-
-    {{:f64_const, float_value}, rest}
-  end
-
-  defp parse_instruction(:i32_eqz, bytecode) do
-    {:i32_eqz, bytecode}
-  end
-
-  defp parse_instruction(:i32_eq, bytecode) do
-    {:i32_eq, bytecode}
-  end
-
-  defp parse_instruction(:i32_ne, bytecode) do
-    {:i32_ne, bytecode}
-  end
-  defp parse_instruction(:i32_lt_s, bytecode) do
-    {:i32_lt_s, bytecode}
-  end
-  defp parse_instruction(:i32_lt_u, bytecode) do
-    {:i32_lt_u, bytecode}
-  end
-  defp parse_instruction(:i32_gt_s, bytecode) do
-    {:i32_gt_s, bytecode}
-  end
-  defp parse_instruction(:i32_gt_u, bytecode) do
-    {:i32_gt_u, bytecode}
-  end
-  defp parse_instruction(:i32_le_s, bytecode) do
-    {:i32_le_s, bytecode}
-  end
-  defp parse_instruction(:i32_le_u, bytecode) do
-    {:i32_le_u, bytecode}
-  end
-
-  defp parse_instruction(:i32_ge_s, bytecode) do
-    {:i32_ge_s, bytecode}
-  end
-  defp parse_instruction(:i32_ge_u, bytecode) do
-    {:i32_ge_u, bytecode}
-  end
-  defp parse_instruction(:i32_clz, bytecode) do
-    {:i32_clz, bytecode}
-  end
-  defp parse_instruction(:i32_ctz, bytecode) do
-    {:i32_ctz, bytecode}
-  end
-  defp parse_instruction(:i32_popcnt, bytecode) do
-    {:i32_popcnt, bytecode}
-  end
-  defp parse_instruction(:i32_add, bytecode) do
-    {:i32_add, bytecode}
-  end
-  defp parse_instruction(:i32_sub, bytecode) do
-    {:i32_sub, bytecode}
-  end
-  defp parse_instruction(:i32_mul, bytecode) do
-    {:i32_mul, bytecode}
-  end
-
-  defp parse_instruction(:i32_div_s, bytecode) do
-    {:i32_div_, bytecode}
-  end
-  defp parse_instruction(:i32_div_u, bytecode) do
-    {:i32_div_, bytecode}
-  end
-  defp parse_instruction(:i32_rem_s, bytecode) do
-    {:i32_rem_, bytecode}
-  end
-  defp parse_instruction(:i32_rem_u, bytecode) do
-    {:i32_rem_, bytecode}
-  end
-  defp parse_instruction(:i32_add, bytecode) do
-    {:i32_add, bytecode}
-  end
-  defp parse_instruction(:i32_or, bytecode) do
-    {:i32_or, bytecode}
-  end
-  defp parse_instruction(:i32_xor, bytecode) do
-    {:i32_xor, bytecode}
-  end
-  defp parse_instruction(:i32_shl, bytecode) do
-    {:i32_shl, bytecode}
-  end
-  defp parse_instruction(:i32_shr_s, bytecode) do
-    {:i32_shr_, bytecode}
-  end
-  defp parse_instruction(:i32_shr_u, bytecode) do
-    {:i32_shr_, bytecode}
-  end
-  defp parse_instruction(:i32_rotl, bytecode) do
-    {:i32_rotl, bytecode}
-  end
-  defp parse_instruction(:i32_rotr, bytecode) do
-    {:i32_rotr, bytecode}
-  end
-  defp parse_instruction(:i64_eqz, bytecode) do
-    {:i64_eqz, bytecode}
-  end
-  defp parse_instruction(:i64_eq, bytecode) do
-    {:i64_eq, bytecode}
-  end
-  defp parse_instruction(:i64_ne, bytecode) do
-    {:i64_ne, bytecode}
-  end
-  defp parse_instruction(:i64_lt_s, bytecode) do
-    {:i64_lt_s, bytecode}
-  end
-  defp parse_instruction(:i64_lt_u, bytecode) do
-    {:i64_lt_u, bytecode}
-  end
-  defp parse_instruction(:i64_gt_s, bytecode) do
-    {:i64_gt_s, bytecode}
-  end
-  defp parse_instruction(:i64_gt_u, bytecode) do
-    {:i64_gt_u, bytecode}
+  # Needs Revisitng
+  defp parse_instruction(:call, bytecode) do
+    {function_index, rest} = LEB128.decode(bytecode)
+
+    {{:call, function_index}, rest}
+  end
+
+  defp parse_instruction(:call_indirect, bytecode) do
+    {type_index, rest} = LEB128.decode(bytecode)
+
+    {{:call, type_index}, rest}
+  end
+
+  defp parse_instruction(:br_table, bytecode) do
+    #NEEDS VERIFICATION
+    {label_indices, rest} = LEB128.decode(bytecode)
+    {label_index, rest} = LEB128.decode(rest)
+
+    {{:br_table, label_indices, label_index}, rest}
+  end
+
+  #Structured Instruction
+  defp parse_instruction(:block, bytecode) do
+    #NEEDS VERIFICATION
+    {result_type, rest} = LEB128.decode(bytecode)
+
+    if result_type == 0x40 do
+      {{:block, result_type}, rest}
+    else
+      {instructions, rest} = LEB128.decode(rest)
+      {{:block, result_type, instructions}, rest}
+    end
+  end
+
+  defp parse_instruction(:loop, bytecode) do
+    #NEEDS VERIFICATION
+    {result_type, rest} = LEB128.decode(bytecode)
+    {instructions, rest} = LEB128.decode(rest)
+    {{:loop, result_type, instructions}, rest}
+  end
+
+  defp parse_instruction(:if, bytecode) do
+    #NEEDS VERIFICATION
+    {result_type, rest} = LEB128.decode(bytecode)
+    {consequence, rest} = LEB128.decode(rest)
+    {alternate, rest} = LEB128.decode(rest)
+    {{:if, result_type, consequence, alternate}, rest}
+  end
+
+  defp parse_instruction(:get_local, bytecode), do: get_single_value(:get_local, bytecode)
+  defp parse_instruction(:set_local, bytecode), do: get_single_value(:set_local, bytecode)
+  defp parse_instruction(:tee_local, bytecode), do: get_single_value(:tee_local, bytecode)
+  defp parse_instruction(:set_global, bytecode), do: get_single_value(:set_global, bytecode)
+  defp parse_instruction(:get_global, bytecode), do: get_single_value(:get_global, bytecode)
+  defp parse_instruction(:i32_const, bytecode), do: get_single_value(:i32_const, bytecode)
+  defp parse_instruction(:i64_const, bytecode), do: get_single_value(:i64_const, bytecode)
+  defp parse_instruction(:f32_const, bytecode), do: get_single_value(:f32_const, bytecode)
+  defp parse_instruction(:f64_const, bytecode), do: get_single_value(:f64_const, bytecode)
+  defp parse_instruction(:br, bytecode), do: get_single_value(:br, bytecode)
+  defp parse_instruction(:br_if, bytecode), do: get_single_value(:br_if, bytecode)
+  defp parse_instruction(:i32_store, bytecode), do: get_two_values(:i32_store, bytecode)
+  defp parse_instruction(:i32_load, bytecode), do: get_two_values(:i32_load, bytecode)
+  defp parse_instruction(:i64_load, bytecode), do: get_two_values(:i64_load, bytecode)
+  defp parse_instruction(:f32_load, bytecode), do: get_two_values(:f32_load, bytecode)
+  defp parse_instruction(:f64_load, bytecode), do: get_two_values(:f64_load, bytecode)
+  defp parse_instruction(:i32_load8_s, bytecode), do: get_two_values(:i32_load8_s, bytecode)
+  defp parse_instruction(:i32_load8_u, bytecode), do: get_two_values(:i32_load8_u, bytecode)
+  defp parse_instruction(:i32_load16_u, bytecode), do: get_two_values(:i32_load16_u, bytecode)
+  defp parse_instruction(:i64_load8_s, bytecode), do: get_two_values(:i64_load8_s, bytecode)
+  defp parse_instruction(:i64_load8_u, bytecode), do: get_two_values(:i64_load8_u, bytecode)
+  defp parse_instruction(:i64_load16_s, bytecode), do: get_two_values(:i64_load16_s, bytecode)
+  defp parse_instruction(:i64_load16_u, bytecode), do: get_two_values(:i64_load16_u, bytecode)
+  defp parse_instruction(:i64_load32_s, bytecode), do: get_two_values(:i64_load32_s, bytecode)
+  defp parse_instruction(:i64_load32_u, bytecode), do: get_two_values(:i64_load32_u, bytecode)
+  defp parse_instruction(:i64_store, bytecode), do: get_two_values(:i64_store, bytecode)
+  defp parse_instruction(:f32_store, bytecode), do: get_two_values(:f32_store, bytecode)
+  defp parse_instruction(:f64_store, bytecode), do: get_two_values(:f64_store, bytecode)
+  defp parse_instruction(:i32_store8, bytecode), do: get_two_values(:i32_store8, bytecode)
+  defp parse_instruction(:i32_store16, bytecode), do: get_two_values(:i32_store16, bytecode)
+  defp parse_instruction(:i64_store8, bytecode), do: get_two_values(:i64_store8, bytecode)
+  defp parse_instruction(:i64_store16, bytecode), do: get_two_values(:i64_store16, bytecode)
+  defp parse_instruction(:i64_store32, bytecode), do: get_two_values(:i64_store32, bytecode)
+  defp parse_instruction(:i32_eqz, bytecode), do: {:i32_eqz, bytecode}
+  defp parse_instruction(:i32_eq, bytecode), do: {:i32_eq, bytecode}
+  defp parse_instruction(:i32_ne, bytecode), do: {:i32_ne, bytecode}
+  defp parse_instruction(:i32_lt_s, bytecode), do: {:i32_lt_s, bytecode}
+  defp parse_instruction(:i32_lt_u, bytecode), do: {:i32_lt_u, bytecode}
+  defp parse_instruction(:i32_gt_s, bytecode), do: {:i32_gt_s, bytecode}
+  defp parse_instruction(:i32_gt_u, bytecode), do: {:i32_gt_u, bytecode}
+  defp parse_instruction(:i32_le_s, bytecode), do: {:i32_le_s, bytecode}
+  defp parse_instruction(:i32_le_u, bytecode), do: {:i32_le_u, bytecode}
+  defp parse_instruction(:i32_ge_s, bytecode), do: {:i32_ge_s, bytecode}
+  defp parse_instruction(:i32_ge_u, bytecode), do: {:i32_ge_u, bytecode}
+  defp parse_instruction(:i32_clz, bytecode), do: {:i32_clz, bytecode}
+  defp parse_instruction(:i32_ctz, bytecode), do: {:i32_ctz, bytecode}
+  defp parse_instruction(:i32_popcnt, bytecode), do: {:i32_popcnt, bytecode}
+  defp parse_instruction(:i32_add, bytecode), do: {:i32_add, bytecode}
+  defp parse_instruction(:i32_sub, bytecode), do: {:i32_sub, bytecode}
+  defp parse_instruction(:i32_mul, bytecode), do: {:i32_mul, bytecode}
+  defp parse_instruction(:i32_div_s, bytecode), do: {:i32_div_, bytecode}
+  defp parse_instruction(:i32_div_u, bytecode), do: {:i32_div_, bytecode}
+  defp parse_instruction(:i32_rem_s, bytecode), do: {:i32_rem_, bytecode}
+  defp parse_instruction(:i32_rem_u, bytecode), do: {:i32_rem_, bytecode}
+  defp parse_instruction(:i32_or, bytecode), do: {:i32_or, bytecode}
+  defp parse_instruction(:i32_xor, bytecode), do: {:i32_xor, bytecode}
+  defp parse_instruction(:i32_shl, bytecode), do: {:i32_shl, bytecode}
+  defp parse_instruction(:i32_shr_s, bytecode), do: {:i32_shr_, bytecode}
+  defp parse_instruction(:i32_shr_u, bytecode), do: {:i32_shr_, bytecode}
+  defp parse_instruction(:i32_rotl, bytecode), do: {:i32_rotl, bytecode}
+  defp parse_instruction(:i32_rotr, bytecode), do: {:i32_rotr, bytecode}
+  defp parse_instruction(:i64_eqz, bytecode), do: {:i64_eqz, bytecode}
+  defp parse_instruction(:i64_eq, bytecode), do: {:i64_eq, bytecode}
+  defp parse_instruction(:i64_ne, bytecode), do: {:i64_ne, bytecode}
+  defp parse_instruction(:i64_lt_s, bytecode), do: {:i64_lt_s, bytecode}
+  defp parse_instruction(:i64_lt_u, bytecode), do: {:i64_lt_u, bytecode}
+  defp parse_instruction(:i64_gt_s, bytecode), do: {:i64_gt_s, bytecode}
+  defp parse_instruction(:i64_gt_u, bytecode), do: {:i64_gt_u, bytecode}
+  defp parse_instruction(:i64_le_s, bytecode), do: {:i64_le_s, bytecode}
+  defp parse_instruction(:i64_le_u, bytecode), do: {:i64_le_u, bytecode}
+  defp parse_instruction(:i64_ge_s, bytecode), do: {:i64_ge_s, bytecode}
+  defp parse_instruction(:i64_ge_u, bytecode), do: {:i64_ge_u, bytecode}
+  defp parse_instruction(:i64_clz, bytecode), do: {:i64_clz, bytecode}
+  defp parse_instruction(:i64_ctz, bytecode), do: {:i64_ctz, bytecode}
+  defp parse_instruction(:i64_popcnt, bytecode), do: {:i64_popcnt, bytecode}
+  defp parse_instruction(:i64_add, bytecode), do: {:i64_add, bytecode}
+  defp parse_instruction(:i64_sub, bytecode), do: {:i64_sub, bytecode}
+  defp parse_instruction(:i64_mul, bytecode), do: {:i64_mul, bytecode}
+  defp parse_instruction(:i64_div_s, bytecode), do: {:i64_div_s, bytecode}
+  defp parse_instruction(:i64_div_u, bytecode), do: {:i64_div_u, bytecode}
+  defp parse_instruction(:i64_rem_s, bytecode), do: {:i64_rem_s, bytecode}
+  defp parse_instruction(:i64_rem_u, bytecode), do: {:i64_rem_u, bytecode}
+  defp parse_instruction(:i64_or, bytecode), do: {:i64_or, bytecode}
+  defp parse_instruction(:i64_xor, bytecode), do: {:i64_xor, bytecode}
+  defp parse_instruction(:i64_shl, bytecode), do: {:i64_shl, bytecode}
+  defp parse_instruction(:i64_shr_s, bytecode), do: {:i64_shr_s, bytecode}
+  defp parse_instruction(:i64_shr_u, bytecode), do: {:i64_shr_u, bytecode}
+  defp parse_instruction(:i64_rotl, bytecode), do: {:i64_rotl, bytecode}
+  defp parse_instruction(:i64_rotr, bytecode), do: {:i64_rotr, bytecode}
+  defp parse_instruction(:f32_eq, bytecode), do: {:f32_eq, bytecode}
+  defp parse_instruction(:f32_ne, bytecode), do: {:f32_ne, bytecode}
+  defp parse_instruction(:f32_lt, bytecode), do: {:f32_lt, bytecode}
+  defp parse_instruction(:f32_gt, bytecode), do: {:f32_gt, bytecode}
+  defp parse_instruction(:f32_le, bytecode), do: {:f32_le, bytecode}
+  defp parse_instruction(:f32_ge, bytecode), do: {:f32_ge, bytecode}
+  defp parse_instruction(:f32_abs, bytecode), do: {:f32_abs, bytecode}
+  defp parse_instruction(:f32_neg, bytecode), do: {:f32_neg, bytecode}
+  defp parse_instruction(:f32_ceil, bytecode), do: {:f32_ceil, bytecode}
+  defp parse_instruction(:f32_floor, bytecode), do: {:f32_floor, bytecode}
+  defp parse_instruction(:f32_trunc, bytecode), do: {:f32_trunc, bytecode}
+  defp parse_instruction(:f32_nearest, bytecode), do: {:f32_nearest, bytecode}
+  defp parse_instruction(:f32_sqrt, bytecode), do: {:f32_sqrt, bytecode}
+  defp parse_instruction(:f32_add, bytecode), do: {:f32_add, bytecode}
+  defp parse_instruction(:f32_sub, bytecode), do: {:f32_sub, bytecode}
+  defp parse_instruction(:f32_mul, bytecode), do: {:f32_mul, bytecode}
+  defp parse_instruction(:f32_div, bytecode), do: {:f32_div, bytecode}
+  defp parse_instruction(:f32_min, bytecode), do: {:f32_min, bytecode}
+  defp parse_instruction(:f32_max, bytecode), do: {:f32_max, bytecode}
+  defp parse_instruction(:f32_copysign, bytecode), do: {:f32_copysign, bytecode}
+  defp parse_instruction(:f64_eq, bytecode), do: {:f64_eq, bytecode}
+  defp parse_instruction(:f64_ne, bytecode), do: {:f64_ne, bytecode}
+  defp parse_instruction(:f64_lt, bytecode), do: {:f64_lt, bytecode}
+  defp parse_instruction(:f64_gt, bytecode), do: {:f64_gt, bytecode}
+  defp parse_instruction(:f64_le, bytecode), do: {:f64_le, bytecode}
+  defp parse_instruction(:f64_ge, bytecode), do: {:f64_ge, bytecode}
+  defp parse_instruction(:f64_abs, bytecode), do: {:f64_abs, bytecode}
+  defp parse_instruction(:f64_neg, bytecode), do: {:f64_neg, bytecode}
+  defp parse_instruction(:f64_ceil, bytecode), do: {:f64_ceil, bytecode}
+  defp parse_instruction(:f64_floor, bytecode), do: {:f64_floor, bytecode}
+  defp parse_instruction(:f64_trunc, bytecode), do: {:f64_trunc, bytecode}
+  defp parse_instruction(:f64_nearest, bytecode), do: {:f64_nearest, bytecode}
+  defp parse_instruction(:f64_sqrt, bytecode), do: {:f64_sqrt, bytecode}
+  defp parse_instruction(:f64_add, bytecode), do: {:f64_add, bytecode}
+  defp parse_instruction(:f64_sub, bytecode), do: {:f64_sub, bytecode}
+  defp parse_instruction(:f64_mul, bytecode), do: {:f64_mul, bytecode}
+  defp parse_instruction(:f64_div, bytecode), do: {:f64_div, bytecode}
+  defp parse_instruction(:f64_min, bytecode), do: {:f64_min, bytecode}
+  defp parse_instruction(:f64_max, bytecode), do: {:f64_max, bytecode}
+  defp parse_instruction(:f64_copysign, bytecode), do: {:f64_copysign, bytecode}
+  defp parse_instruction(:i32_wrap_i64, bytecode), do: {:i32_wrap_i64, bytecode}
+  defp parse_instruction(:i32_trunc_s_f32, bytecode), do: {:i32_trunc_s_f32, bytecode}
+  defp parse_instruction(:i32_trunc_u_f32, bytecode), do: {:i32_trunc_u_f32, bytecode}
+  defp parse_instruction(:i32_trunc_s_f64, bytecode), do: {:i32_trunc_s_f64, bytecode}
+  defp parse_instruction(:i32_trunc_u_f64, bytecode), do: {:i32_trunc_u_f64, bytecode}
+  defp parse_instruction(:i64_extend_s_i32, bytecode), do: {:i64_extend_s_i32, bytecode}
+  defp parse_instruction(:i64_extend_u_i32, bytecode), do: {:i64_extend_u_i32, bytecode}
+  defp parse_instruction(:i64_trunc_s_f32, bytecode), do: {:i64_trunc_s_f32, bytecode}
+  defp parse_instruction(:i64_trunc_u_f32, bytecode), do: {:i64_trunc_u_f32, bytecode}
+  defp parse_instruction(:i64_trunc_s_f64, bytecode), do: {:i64_trunc_s_f64, bytecode}
+  defp parse_instruction(:i64_trunc_u_f64, bytecode), do: {:i64_trunc_u_f64, bytecode}
+  defp parse_instruction(:f32_convert_s_i32, bytecode), do: {:f32_convert_s_i32, bytecode}
+  defp parse_instruction(:f32_convert_u_i32, bytecode), do: {:f32_convert_u_i32, bytecode}
+  defp parse_instruction(:f32_convert_s_i64, bytecode), do: {:f32_convert_s_i64, bytecode}
+  defp parse_instruction(:f32_convert_u_i64, bytecode), do: {:f32_convert_u_i64, bytecode}
+  defp parse_instruction(:f32_demote_f64, bytecode), do: {:f32_demote_f64, bytecode}
+  defp parse_instruction(:f64_convert_s_i32, bytecode), do: {:f64_convert_s_i32, bytecode}
+  defp parse_instruction(:f64_convert_u_i32, bytecode), do: {:f64_convert_u_i32, bytecode}
+  defp parse_instruction(:f64_convert_s_i64, bytecode), do: {:f64_convert_s_i64, bytecode}
+  defp parse_instruction(:f64_convert_u_i64, bytecode), do: {:f64_convert_u_i64, bytecode}
+  defp parse_instruction(:f64_promote_f32, bytecode), do: {:f64_promote_f32, bytecode}
+  defp parse_instruction(:i32_reinterpret_f32, bytecode), do: {:i32_reinterpret_f32, bytecode}
+  defp parse_instruction(:i64_reinterpret_f64, bytecode), do: {:i64_reinterpret_f64, bytecode}
+  defp parse_instruction(:f32_reinterpret_i32, bytecode), do: {:f32_reinterpret_i32, bytecode}
+  defp parse_instruction(:f64_reinterpret_i64, bytecode), do: {:f64_reinterpret_i64, bytecode}
+  defp parse_instruction(:drop, bytecode), do: {:drop, bytecode}
+  defp parse_instruction(:select, bytecode), do: {:select, bytecode}
+  defp parse_instruction(:unreachable, bytecode), do: {:unreachable, bytecode}
+  defp parse_instruction(:end, bytecode), do: {:end, bytecode}
+  defp parse_instruction(:return, bytecode), do: {:return, bytecode}
+  defp parse_instruction(:memory_size, bytecode), do: {:memory_size, bytecode}
+  defp parse_instruction(:memory_grow, bytecode), do: {:memory_grow, bytecode}
+  defp parse_instruction(:nop, bytecode), do: {:nop, bytecode}
+  defp parse_instruction(no_match, _bytecode), do: raise "Couldn't parse instruction for #{no_match}"
+
+  defp get_single_value(opcode, bytecode) do
+    {val, rest} = LEB128.decode(bytecode)
+
+    {{opcode, val}, rest}
+  end
+
+  defp get_two_values(opcode, bytecode) do
+    {val1, rest} = LEB128.decode(bytecode)
+    {val2, rest} = LEB128.decode(rest)
+
+    {{opcode, val1, val2}, rest}
   end
-  defp parse_instruction(:i64_le_s, bytecode) do
-    {:i64_le_s, bytecode}
-  end
-  defp parse_instruction(:i64_le_u, bytecode) do
-    {:i64_le_u, bytecode}
-  end
-  defp parse_instruction(:i64_ge_s, bytecode) do
-    {:i64_ge_s, bytecode}
-  end
-  defp parse_instruction(:i64_ge_u, bytecode) do
-    {:i64_ge_u, bytecode}
-  end
-  defp parse_instruction(:i64_clz, bytecode) do
-    {:i64_clz, bytecode}
-  end
-  defp parse_instruction(:i64_ctz, bytecode) do
-    {:i64_ctz, bytecode}
-  end
-
-  defp parse_instruction(:i64_popcnt, bytecode) do
-    {:i64_popcnt, bytecode}
-  end
-  defp parse_instruction(:i64_add, bytecode) do
-    {:i64_add, bytecode}
-  end
-  defp parse_instruction(:i64_sub, bytecode) do
-    {:i64_sub, bytecode}
-  end
-  defp parse_instruction(:i64_mul, bytecode) do
-    {:i64_mul, bytecode}
-  end
-  defp parse_instruction(:i64_div_s, bytecode) do
-    {:i64_div_s, bytecode}
-  end
-  defp parse_instruction(:i64_div_u, bytecode) do
-    {:i64_div_u, bytecode}
-  end
-  defp parse_instruction(:i64_rem_s, bytecode) do
-    {:i64_rem_s, bytecode}
-  end
-  defp parse_instruction(:i64_rem_u, bytecode) do
-    {:i64_rem_u, bytecode}
-  end
-  defp parse_instruction(:i64_add, bytecode) do
-    {:i64_add, bytecode}
-  end
-  defp parse_instruction(:i64_or, bytecode) do
-    {:i64_or, bytecode}
-  end
-  defp parse_instruction(:i64_xor, bytecode) do
-    {:i64_xor, bytecode}
-  end
-  defp parse_instruction(:i64_shl, bytecode) do
-    {:i64_shl, bytecode}
-  end
-  defp parse_instruction(:i64_shr_s, bytecode) do
-    {:i64_shr_s, bytecode}
-  end
-  defp parse_instruction(:i64_shr_u, bytecode) do
-    {:i64_shr_u, bytecode}
-  end
-  defp parse_instruction(:i64_rotl, bytecode) do
-    {:i64_rotl, bytecode}
-  end
-  defp parse_instruction(:i64_rotr, bytecode) do
-    {:i64_rotr, bytecode}
-  end
-  defp parse_instruction(:f32_eq, bytecode) do
-    {:f32_eq, bytecode}
-  end
-  defp parse_instruction(:f32_ne, bytecode) do
-    {:f32_ne, bytecode}
-  end
-  defp parse_instruction(:f32_lt, bytecode) do
-    {:f32_lt, bytecode}
-  end
-  defp parse_instruction(:f32_gt, bytecode) do
-    {:f32_gt, bytecode}
-  end
-  defp parse_instruction(:f32_le, bytecode) do
-    {:f32_le, bytecode}
-  end
-  defp parse_instruction(:f32_ge, bytecode) do
-    {:f32_ge, bytecode}
-  end
-  defp parse_instruction(:f32_abs, bytecode) do
-    {:f32_abs, bytecode}
-  end
-  defp parse_instruction(:f32_neg, bytecode) do
-    {:f32_neg, bytecode}
-  end
-  defp parse_instruction(:f32_ceil, bytecode) do
-    {:f32_ceil, bytecode}
-  end
-  defp parse_instruction(:f32_floor, bytecode) do
-    {:f32_floor, bytecode}
-  end
-  defp parse_instruction(:f32_trunc, bytecode) do
-    {:f32_trunc, bytecode}
-  end
-  defp parse_instruction(:f32_nearest, bytecode) do
-    {:f32_nearest, bytecode}
-  end
-  defp parse_instruction(:f32_sqrt, bytecode) do
-    {:f32_sqrt, bytecode}
-  end
-  defp parse_instruction(:f32_add, bytecode) do
-    {:f32_add, bytecode}
-  end
-  defp parse_instruction(:f32_sub, bytecode) do
-    {:f32_sub, bytecode}
-  end
-  defp parse_instruction(:f32_mul, bytecode) do
-    {:f32_mul, bytecode}
-  end
-  defp parse_instruction(:f32_div, bytecode) do
-    {:f32_div, bytecode}
-  end
-  defp parse_instruction(:f32_min, bytecode) do
-    {:f32_min, bytecode}
-  end
-  defp parse_instruction(:f32_max, bytecode) do
-    {:f32_max, bytecode}
-  end
-  defp parse_instruction(:f32_copysign, bytecode) do
-    {:f32_copysign, bytecode}
-  end
-  defp parse_instruction(:f64_eq, bytecode) do
-    {:f64_eq, bytecode}
-  end
-  defp parse_instruction(:f64_ne, bytecode) do
-    {:f64_ne, bytecode}
-  end
-  defp parse_instruction(:f64_lt, bytecode) do
-    {:f64_lt, bytecode}
-  end
-  defp parse_instruction(:f64_gt, bytecode) do
-    {:f64_gt, bytecode}
-  end
-  defp parse_instruction(:f64_le, bytecode) do
-    {:f64_le, bytecode}
-  end
-  defp parse_instruction(:f64_ge, bytecode) do
-    {:f64_ge, bytecode}
-  end
-  defp parse_instruction(:f64_abs, bytecode) do
-    {:f64_abs, bytecode}
-  end
-  defp parse_instruction(:f64_neg, bytecode) do
-    {:f64_neg, bytecode}
-  end
-  defp parse_instruction(:f64_ceil, bytecode) do
-    {:f64_ceil, bytecode}
-  end
-  defp parse_instruction(:f64_floor, bytecode) do
-    {:f64_floor, bytecode}
-  end
-  defp parse_instruction(:f64_trunc, bytecode) do
-    {:f64_trunc, bytecode}
-  end
-  defp parse_instruction(:f64_nearest, bytecode) do
-    {:f64_nearest, bytecode}
-  end
-  defp parse_instruction(:f64_sqrt, bytecode) do
-    {:f64_sqrt, bytecode}
-  end
-  defp parse_instruction(:f64_add, bytecode) do
-    {:f64_add, bytecode}
-  end
-  defp parse_instruction(:f64_sub, bytecode) do
-    {:f64_sub, bytecode}
-  end
-  defp parse_instruction(:f64_mul, bytecode) do
-    {:f64_mul, bytecode}
-  end
-  defp parse_instruction(:f64_div, bytecode) do
-    {:f64_div, bytecode}
-  end
-  defp parse_instruction(:f64_min, bytecode) do
-    {:f64_min, bytecode}
-  end
-  defp parse_instruction(:f64_max, bytecode) do
-    {:f64_max, bytecode}
-  end
-  defp parse_instruction(:f64_copysign, bytecode) do
-    {:f64_copysign, bytecode}
-  end
-  defp parse_instruction(:i32_wrap_i64, bytecode) do
-    {:i32_wrap_i64, bytecode}
-  end
-  defp parse_instruction(:i32_trunc_s_f32, bytecode) do
-    {:i32_trunc_s_f32, bytecode}
-  end
-  defp parse_instruction(:i32_trunc_u_f32, bytecode) do
-    {:i32_trunc_u_f32, bytecode}
-  end
-  defp parse_instruction(:i32_trunc_s_f64, bytecode) do
-    {:i32_trunc_s_f64, bytecode}
-  end
-  defp parse_instruction(:i32_trunc_u_f64, bytecode) do
-    {:i32_trunc_u_f64, bytecode}
-  end
-  defp parse_instruction(:i64_extend_s_i32, bytecode) do
-    {:i64_extend_s_i32, bytecode}
-  end
-  defp parse_instruction(:i64_extend_u_i32, bytecode) do
-    {:i64_extend_u_i32, bytecode}
-  end
-  defp parse_instruction(:i64_trunc_s_f32, bytecode) do
-    {:i64_trunc_s_f32, bytecode}
-  end
-  defp parse_instruction(:i64_trunc_u_f32, bytecode) do
-    {:i64_trunc_u_f32, bytecode}
-  end
-  defp parse_instruction(:i64_trunc_s_f64, bytecode) do
-    {:i64_trunc_s_f64, bytecode}
-  end
-  defp parse_instruction(:i64_trunc_u_f64, bytecode) do
-    {:i64_trunc_u_f64, bytecode}
-  end
-  defp parse_instruction(:f32_convert_s_i32, bytecode) do
-    {:f32_convert_s_i32, bytecode}
-  end
-  defp parse_instruction(:f32_convert_u_i32, bytecode) do
-    {:f32_convert_u_i32, bytecode}
-  end
-  defp parse_instruction(:f32_convert_s_i64, bytecode) do
-    {:f32_convert_s_i64, bytecode}
-  end
-  defp parse_instruction(:f32_convert_u_i64, bytecode) do
-    {:f32_convert_u_i64, bytecode}
-  end
-  defp parse_instruction(:f32_demote_f64, bytecode) do
-    {:f32_demote_f64, bytecode}
-  end
-  defp parse_instruction(:f64_convert_s_i32, bytecode) do
-    {:f64_convert_s_i32, bytecode}
-  end
-  defp parse_instruction(:f64_convert_u_i32, bytecode) do
-    {:f64_convert_u_i32, bytecode}
-  end
-  defp parse_instruction(:f64_convert_s_i64, bytecode) do
-    {:f64_convert_s_i64, bytecode}
-  end
-  defp parse_instruction(:f64_convert_u_i64, bytecode) do
-    {:f64_convert_u_i64, bytecode}
-  end
-  defp parse_instruction(:f64_promote_f32, bytecode) do
-    {:f64_promote_f32, bytecode}
-  end
-  defp parse_instruction(:i32_reinterpret_f32, bytecode) do
-    {:i32_reinterpret_f32, bytecode}
-  end
-  defp parse_instruction(:i64_reinterpret_f64, bytecode) do
-    {:i64_reinterpret_f64, bytecode}
-  end
-  defp parse_instruction(:f32_reinterpret_i32, bytecode) do
-    {:f32_reinterpret_i32, bytecode}
-  end
-  defp parse_instruction(:f64_reinterpret_i64, bytecode) do
-    {:f64_reinterpret_i64, bytecode}
-  end
-
-## Parametric Intructions
-  defp parse_instruction(:drop, bytecode) do
-    {:drop, bytecode}
-  end
-
-  defp parse_instruction(:select, bytecode) do
-    {:select, bytecode}
-  end
-
-### Control Instructions
-   defp parse_instruction(:return, bytecode) do
-     {:return, bytecode}
-   end
-
-   defp parse_instruction(:br, bytecode) do
-     {label_index, rest} = LEB128.decode(bytecode)
-
-     {{:br, label_index}, rest}
-   end
-
-   defp parse_instruction(:br_if, bytecode) do
-     {label_index, rest} = LEB128.decode(bytecode)
-
-     {{:br_if, label_index}, rest}
-   end
-
-   defp parse_instruction(:nop, bytecode) do
-     {:nop, bytecode}
-   end
-
-   #Needs Revisitng
-   defp parse_instruction(:call, bytecode) do
-     {function_index, rest} = LEB128.decode(bytecode)
-
-     {{:call, function_index}, rest}
-   end
-
-   defp parse_instruction(:call_indirect, bytecode) do
-     {type_index, rest} = LEB128.decode(bytecode)
-
-     {{:call, type_index}, rest}
-   end
-
-   defp parse_instruction(:br_table, bytecode) do
-     #NEEDS VERIFICATION
-     {label_indices, rest} = LEB128.decode(bytecode)
-     {label_index, rest} = LEB128.decode(bytecode)
-
-     {{:br_table, label_indices, label_index}, rest}
-   end
-
-   #Structured Instruction
-   defp parse_instruction(:block, bytecode) do
-     #NEEDS VERIFICATION
-     {result_type, rest} = LEB128.decode(bytecode)
-     {instructions, rest} = LEB128.decode(rest)
-     {{:block, result_type, instructions}, rest}
-   end
-
-   defp parse_instruction(:loop, bytecode) do
-     #NEEDS VERIFICATION
-     {result_type, rest} = LEB128.decode(bytecode)
-     {instructions, rest} = LEB128.decode(rest)
-     {{:loop, result_type, instructions}, rest}
-   end
-
-   defp parse_instruction(:if, bytecode) do
-     #NEEDS VERIFICATION
-     {result_type, rest} = LEB128.decode(bytecode)
-     {consequence, rest} = LEB128.decode(rest)
-     {alternate, rest} = LEB128.decode(rest)
-     {{:if, result_type, consequence, alternate}, rest}
-   end
-
-   defp parse_instruction(:unreachable, bytecode) do
-     {:unreachable, bytecode}
-   end
-
-
-  defp parse_instruction(:end, bytecode) do
-    {:end, bytecode}
-  end
-
-  defp parse_instruction(:get_local, bytecode) do
-    {local_index, rest} = LEB128.decode(bytecode)
-
-    {{:get_local, local_index}, rest}
-
-  end
-
-  defp parse_instruction(:set_local, bytecode) do
-    {local_index, rest} = LEB128.decode(bytecode)
-
-    {{:set_local, local_index}, rest}
-  end
-
-  defp parse_instruction(:tee_local, bytecode) do
-    {local_index, rest} = LEB128.decode(bytecode)
-
-    {{:tee_local, local_index}, rest}
-  end
-
-  defp parse_instruction(:set_global, bytecode) do
-    {global_index, rest} = LEB128.decode(bytecode)
-
-    {{:set_global, global_index}, rest}
-  end
-
-  defp parse_instruction(:get_global, bytecode) do
-    {global_index, rest} = LEB128.decode(bytecode)
-
-    {{:get_global, global_index}, rest}
-  end
-
-
 
 end
