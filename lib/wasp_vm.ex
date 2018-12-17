@@ -11,8 +11,8 @@ defmodule WaspVM do
     module = load_file(filename)
     WaspVM.VirtualMachine.start_vm(module)
     WaspVM.VirtualMachine.run_vm(args)
-    WaspVM.Executor.execute(args)
-    WaspVM.VirtualMachine.fetch |> IO.inspect
+    WaspVM.Executor.execute(args) |> IO.inspect
+
   end
 
   def load_file(filename) do
@@ -25,14 +25,6 @@ defmodule WaspVM do
     binary
     |> Decoder.decode()
     |> do_load
-  end
-
-  def execute(file, args) do
-    module = load_file(file)
-    IO.inspect(module, lable: "MODULE")
-    IO.inspect(args, label: "Arguments")
-    module = Map.put(module, :locals, args)
-    WaspVM.Executor.execute(module, args)
   end
 
   defp do_load(module) do

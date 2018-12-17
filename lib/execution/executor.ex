@@ -8,33 +8,34 @@ def execute(args) do
   result =
       function_bodies
       |> Enum.flat_map(fn inst ->
-        Enum.reduce(inst, [], fn inst, acc -> [instruction(inst) | acc ] end)
+        Enum.reduce(inst, [], fn inst, stack ->
+          stack = instruction(stack, inst)
+      end)
       end)
 end
 
-def instruction({opcode, bytecode}), do: exec_inst(opcode, bytecode)
-def instruction(opcode), do: exec_inst(opcode)
+def instruction(stack, opcode) when is_atom(opcode), do: exec_inst(stack, opcode)
+def instruction(stack, {opcode, bytecode}), do: exec_inst(stack, opcode, bytecode)
 
-defp exec_inst(:i32_add) do
-  total = WaspVM.VirtualMachine.get_used()
-  #immediate = WaspVM.Memory.get_at(module.memory, 1, 1)
-  #args + immediate
+
+defp exec_inst(stack, :i32_add) do
+  value = Enum.sum(Enum.take(stack, 2))
+  stack = Enum.drop(stack, 2)
+  [value | stack]
 end
 
-defp exec_inst(:end) do
-:end
+defp exec_inst(stack, :end) do
+  stack
 end
 
-defp exec_inst(:get_local, bytecode) do
+defp exec_inst(stack, :get_local, bytecode) do
   locals = WaspVM.VirtualMachine.fetch_locals
-
-  fetched_local = Enum.fetch!(locals, bytecode)
-
-  WaspVM.VirtualMachine.update_memory(%{index: 0, value: <<2>>})
+  local = Enum.fetch!(locals, bytecode)
+  [local | stack]
 end
 
-defp exec_inst(:i32_const, bytecode) do
-WaspVM.VirtualMachine.update_memory(%{index: 1, value: <<2>>})
+defp exec_inst(stack, :i32_const, bytecode) do
+ [bytecode | stack]
 end
 
 end

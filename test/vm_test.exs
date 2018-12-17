@@ -3,7 +3,7 @@ defmodule WaspVM.VMTest do
   doctest WaspVM
 
   test "Can exeucte basic vm" do
-    WaspVM.start("./addTwo_main.wasm", [2])
+    WaspVM.start("./addTwo_main.wasm", [2]) == [4]
   end
 
 end
