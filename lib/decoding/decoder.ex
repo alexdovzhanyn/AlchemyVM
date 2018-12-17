@@ -16,10 +16,24 @@ defmodule WaspVM.Decoder do
   def decode_file(file_path) do
     {:ok, bin} = File.read(file_path)
 
-    decode(bin) |> IO.inspect
+    decode(bin)
   end
 
-  def decode(bin) when is_binary(bin), do: do_decode(%Module{}, bin)
+  def decode(bin) when is_binary(bin) do
+    decoded = do_decode(%Module{}, bin)
+
+    # Add imported functions to the function section.
+    # Temporarily just stubbing at this point, will need to check if import
+    # is valid and add bytecode in the future
+    funcs =
+      decoded.imports
+      |> Enum.filter(& &1.type == :typeidx)
+      |> Enum.reduce(decoded.functions, fn func, functions ->
+        List.insert_at(functions, func.index, func)
+      end)
+
+    Map.put(decoded, :functions, funcs)
+  end
 
   @doc false
   def decode(bin) do
