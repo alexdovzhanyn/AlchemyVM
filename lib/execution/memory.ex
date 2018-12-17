@@ -32,6 +32,11 @@ defmodule WaspVM.Memory do
     for i <- address..(address + (bytes - 1)), into: <<>>, do: elem(mem, i)
   end
 
+  def get_end(memory, page \\ 0) do
+    mem = Enum.at(memory.pages, page)
+    # Need to implement
+  end
+
   @doc """
     Writes bytes to memory at a given address
   """
@@ -48,7 +53,7 @@ defmodule WaspVM.Memory do
 
     pages = List.replace_at(memory.pages, page, mem)
 
-    Map.put(memory, :pages, pages) |> IO.inspect
+    Map.put(memory, :pages, pages)
   end
 
 end

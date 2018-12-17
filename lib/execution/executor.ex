@@ -1,41 +1,40 @@
 defmodule WaspVM.Executor do
+  require Logger
 
-
-def execute(module, args) do
-  functions = module.module.functions
-  function_bodies = functions |> Enum.map(fn function -> function.body end)
+def execute(args) do
+  Logger.info("Starting Execution of VM")
+  vm = WaspVM.VirtualMachine.fetch()
+  function_bodies = vm.module.functions |> Enum.map(fn function -> function.body end)
   result =
-    function_bodies
-    |> Enum.flat_map(fn inst ->
-      Enum.reduce(inst, module, fn inst, acc -> instruction(module, inst) end)
-    end)
+      function_bodies
+      |> Enum.flat_map(fn inst ->
+        Enum.reduce(inst, [], fn inst, acc -> [instruction(inst) | acc ] end)
+      end)
 end
 
-def instruction(module, {opcode, bytecode}), do: exec_inst(module, opcode, bytecode)
-def instruction(module, opcode), do: exec_inst(module, opcode)
+def instruction({opcode, bytecode}), do: exec_inst(opcode, bytecode)
+def instruction(opcode), do: exec_inst(opcode)
 
-defp exec_inst(module, :i32_add) do
-  #args = WaspVM.Memory.get_at(module.memory, 0, 1)
+defp exec_inst(:i32_add) do
+  total = WaspVM.VirtualMachine.get_used()
   #immediate = WaspVM.Memory.get_at(module.memory, 1, 1)
   #args + immediate
 end
 
-defp exec_inst(module, :end) do
+defp exec_inst(:end) do
 :end
 end
 
-defp exec_inst(module, :get_local, bytecode) do
-# byte code is local index of immediate variable i.e arg 0,1
-# push bytecode to stack
-  memory = WaspVM.Memory.put_at(module.memory, 0, <<2>>)
-  Map.put(module, :memory, memory)
+defp exec_inst(:get_local, bytecode) do
+  locals = WaspVM.VirtualMachine.fetch_locals
+
+  fetched_local = Enum.fetch!(locals, bytecode)
+
+  WaspVM.VirtualMachine.update_memory(%{index: 0, value: <<2>>})
 end
 
-defp exec_inst(module, :i32_const, bytecode) do
-  IO.inspect(module.memory, label: "MEMORY", limit: :infinity)
-#byte code is immediate constant
-#bytecode is constant from function body
-  #WaspVM.Memory.put_at(module.memory, 0, bytecode)
+defp exec_inst(:i32_const, bytecode) do
+WaspVM.VirtualMachine.update_memory(%{index: 1, value: <<2>>})
 end
 
 end

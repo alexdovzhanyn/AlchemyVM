@@ -12,12 +12,12 @@ defmodule WaspVM.VMManager do
 
     module_name = String.replace(filename, [".","/", "wasm"], "")
 
-    Supervisor.start_link(__MODULE__, module_name, name: __MODULE__)
+    Supervisor.start_link(__MODULE__, {filename, module_name}, name: __MODULE__)
   end
 
-  def init(args) do
+  def init({filename, name}) do
     children = [
-      {WaspVM.VirtualMachine, args}
+      {WaspVM.VirtualMachine, [name: name, filename: filename]}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
