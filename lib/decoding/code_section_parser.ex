@@ -11,7 +11,6 @@ defmodule WaspVM.Decoder.CodeSectionParser do
 
     bodies = if count > 0, do: parse_bodies(bodies), else: []
 
-    module = Map.put(module, :code, List.first(bodies).bytecode)
     Map.put(module, :functions, Enum.reverse(bodies))
   end
 
