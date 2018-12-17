@@ -68,13 +68,7 @@ defmodule WaspVM.Decoder.CodeSectionParser do
     parse_bytecode([instruction | instructions], bytecode)
   end
 
-  # Needs Revisitng
-  defp parse_instruction(:call, bytecode) do
-    {function_index, rest} = LEB128.decode(bytecode)
-
-    {{:call, function_index}, rest}
-  end
-
+  # Needs revisiting
   defp parse_instruction(:call_indirect, bytecode) do
     {type_index, rest} = LEB128.decode(bytecode)
 
@@ -82,41 +76,17 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   end
 
   defp parse_instruction(:br_table, bytecode) do
-    #NEEDS VERIFICATION
-    {label_indices, rest} = LEB128.decode(bytecode)
-    {label_index, rest} = LEB128.decode(rest)
+    {target_count, rest} = LEB128.decode(bytecode)
+    {target_table, rest} = get_entries(rest, target_count)
+    {default_target, rest} = LEB128.decode(rest)
 
-    {{:br_table, label_indices, label_index}, rest}
+    {{:br_table, target_table, default_target}, rest}
   end
 
-  #Structured Instruction
-  defp parse_instruction(:block, bytecode) do
-    #NEEDS VERIFICATION
-    {result_type, rest} = LEB128.decode(bytecode)
-
-    if result_type == 0x40 do
-      {{:block, result_type}, rest}
-    else
-      {instructions, rest} = LEB128.decode(rest)
-      {{:block, result_type, instructions}, rest}
-    end
-  end
-
-  defp parse_instruction(:loop, bytecode) do
-    #NEEDS VERIFICATION
-    {result_type, rest} = LEB128.decode(bytecode)
-    {instructions, rest} = LEB128.decode(rest)
-    {{:loop, result_type, instructions}, rest}
-  end
-
-  defp parse_instruction(:if, bytecode) do
-    #NEEDS VERIFICATION
-    {result_type, rest} = LEB128.decode(bytecode)
-    {consequence, rest} = LEB128.decode(rest)
-    {alternate, rest} = LEB128.decode(rest)
-    {{:if, result_type, consequence, alternate}, rest}
-  end
-
+  defp parse_instruction(:if, bytecode), do: parse_block_type_instruction(:if, bytecode)
+  defp parse_instruction(:block, bytecode), do: parse_block_type_instruction(:block, bytecode)
+  defp parse_instruction(:loop, bytecode), do: parse_block_type_instruction(:loop, bytecode)
+  defp parse_instruction(:call, bytecode), do: get_single_value(:call, bytecode)
   defp parse_instruction(:get_local, bytecode), do: get_single_value(:get_local, bytecode)
   defp parse_instruction(:set_local, bytecode), do: get_single_value(:set_local, bytecode)
   defp parse_instruction(:tee_local, bytecode), do: get_single_value(:tee_local, bytecode)
@@ -281,6 +251,20 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   defp parse_instruction(:nop, bytecode), do: {:nop, bytecode}
   defp parse_instruction(no_match, _bytecode), do: raise "Couldn't parse instruction for #{no_match}"
 
+  defp parse_block_type_instruction(opcode, bytecode) do
+    {result_type, rest} = LEB128.decode(bytecode)
+
+    if result_type == 0x40 do
+      {{opcode, :no_res}, rest}
+    else
+      {opcode, rest} = LEB128.decode(rest)
+
+      value_type = OpCodes.opcode_to_type(opcode)
+
+      {{opcode, value_type}, rest}
+    end
+  end
+
   defp get_single_value(opcode, bytecode) do
     {val, rest} = LEB128.decode(bytecode)
 
@@ -292,6 +276,14 @@ defmodule WaspVM.Decoder.CodeSectionParser do
     {val2, rest} = LEB128.decode(rest)
 
     {{opcode, val1, val2}, rest}
+  end
+
+  defp get_entries(bin, count), do: get_entries([], bin, count)
+  defp get_entries(entries, bin, 0), do: {entries, bin}
+  defp get_entries(entries, bin, count) do
+    {entry, bin} = LEB128.decode(bin)
+
+    get_entries([entry | entries], bin, count - 1)
   end
 
 end
