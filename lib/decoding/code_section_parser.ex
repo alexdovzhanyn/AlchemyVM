@@ -84,8 +84,6 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   end
 
 #################### NOT COMPLETED ###############################
-  # i32_and
-  # i64_and
   defp parse_instruction(:if, bytecode), do: parse_block_type_instruction(:if, bytecode)
   defp parse_instruction(:block, bytecode), do: parse_block_type_instruction(:block, bytecode)
   defp parse_instruction(:loop, bytecode), do: parse_block_type_instruction(:loop, bytecode)
@@ -160,7 +158,7 @@ defmodule WaspVM.Decoder.CodeSectionParser do
 
   #################### COMPLETED WITH NOTES ###############################
   defp parse_instruction(:i32_shl, bytecode), do: {:i32_shl, bytecode} # Done
-  defp parse_instruction(:i32_shr_u, bytecode), do: {:i32_shr_, bytecode} # Done
+  defp parse_instruction(:i32_shr_u, bytecode), do: {:i32_shr_u, bytecode} # Done
   defp parse_instruction(:i64_shl, bytecode), do: {:i64_shl, bytecode} # Done
   defp parse_instruction(:f32_gt, bytecode), do: {:f32_gt, bytecode} # Done
   defp parse_instruction(:f32_le, bytecode), do: {:f32_le, bytecode} # Done
@@ -236,13 +234,13 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   defp parse_instruction(:i32_add, bytecode), do: {:i32_add, bytecode} # Done
   defp parse_instruction(:i32_sub, bytecode), do: {:i32_sub, bytecode} # Done
   defp parse_instruction(:i32_mul, bytecode), do: {:i32_mul, bytecode} # Done
-  defp parse_instruction(:i32_div_s, bytecode), do: {:i32_div_, bytecode} # Done
-  defp parse_instruction(:i32_div_u, bytecode), do: {:i32_div_, bytecode} # Done
-  defp parse_instruction(:i32_rem_s, bytecode), do: {:i32_rem_, bytecode} # Done
-  defp parse_instruction(:i32_rem_u, bytecode), do: {:i32_rem_, bytecode} # Done
+  defp parse_instruction(:i32_div_s, bytecode), do: {:i32_div_s, bytecode} # Done
+  defp parse_instruction(:i32_div_u, bytecode), do: {:i32_div_u, bytecode} # Done
+  defp parse_instruction(:i32_rem_s, bytecode), do: {:i32_rem_s, bytecode} # Done
+  defp parse_instruction(:i32_rem_u, bytecode), do: {:i32_rem_u, bytecode} # Done
   defp parse_instruction(:i32_or, bytecode), do: {:i32_or, bytecode} # Done
   defp parse_instruction(:i32_xor, bytecode), do: {:i32_xor, bytecode} # Done
-  defp parse_instruction(:i32_shr_s, bytecode), do: {:i32_shr_, bytecode} # Done
+  defp parse_instruction(:i32_shr_s, bytecode), do: {:i32_shr_s, bytecode} # Done
   defp parse_instruction(:i64_eqz, bytecode), do: {:i64_eqz, bytecode} # Done
   defp parse_instruction(:i64_eq, bytecode), do: {:i64_eq, bytecode} # Done
   defp parse_instruction(:i64_ne, bytecode), do: {:i64_ne, bytecode} # Done

@@ -178,7 +178,7 @@ defmodule WaspVM.Executor do
     Map.put(vm, :stack, Stack.push(stack, a * b))
   end
 
-  defp exec_inst(stack, :i32_rem_) do
+  defp exec_inst(vm, :i32_rem_s) do
     {[a, b], stack} = Stack.pop_multiple(vm.stack)
 
     Map.put(vm, :stack, Stack.push(stack, rem(a, b)))
