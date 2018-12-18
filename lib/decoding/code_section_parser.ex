@@ -125,36 +125,7 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   defp parse_instruction(:i64_shl, bytecode), do: {:i64_shl, bytecode}
   defp parse_instruction(:i64_rotl, bytecode), do: {:i64_rotl, bytecode}
   defp parse_instruction(:i64_rotr, bytecode), do: {:i64_rotr, bytecode}
-  defp parse_instruction(:f32_eq, bytecode), do: {:f32_eq, bytecode}
-  defp parse_instruction(:f32_ne, bytecode), do: {:f32_ne, bytecode}
-  defp parse_instruction(:f32_lt, bytecode), do: {:f32_lt, bytecode}
-  defp parse_instruction(:f32_gt, bytecode), do: {:f32_gt, bytecode}
-  defp parse_instruction(:f32_le, bytecode), do: {:f32_le, bytecode}
-  defp parse_instruction(:f32_ge, bytecode), do: {:f32_ge, bytecode}
-  defp parse_instruction(:f32_abs, bytecode), do: {:f32_abs, bytecode}
-  defp parse_instruction(:f32_neg, bytecode), do: {:f32_neg, bytecode}
-  defp parse_instruction(:f32_ceil, bytecode), do: {:f32_ceil, bytecode}
-  defp parse_instruction(:f32_floor, bytecode), do: {:f32_floor, bytecode}
-  defp parse_instruction(:f32_trunc, bytecode), do: {:f32_trunc, bytecode}
-  defp parse_instruction(:f32_nearest, bytecode), do: {:f32_nearest, bytecode}
-
-
-
-
   defp parse_instruction(:f32_copysign, bytecode), do: {:f32_copysign, bytecode}
-  defp parse_instruction(:f64_eq, bytecode), do: {:f64_eq, bytecode}
-  defp parse_instruction(:f64_ne, bytecode), do: {:f64_ne, bytecode}
-  defp parse_instruction(:f64_lt, bytecode), do: {:f64_lt, bytecode}
-  defp parse_instruction(:f64_gt, bytecode), do: {:f64_gt, bytecode}
-  defp parse_instruction(:f64_le, bytecode), do: {:f64_le, bytecode}
-  defp parse_instruction(:f64_ge, bytecode), do: {:f64_ge, bytecode}
-  defp parse_instruction(:f64_abs, bytecode), do: {:f64_abs, bytecode}
-  defp parse_instruction(:f64_neg, bytecode), do: {:f64_neg, bytecode}
-  defp parse_instruction(:f64_ceil, bytecode), do: {:f64_ceil, bytecode}
-  defp parse_instruction(:f64_floor, bytecode), do: {:f64_floor, bytecode}
-  defp parse_instruction(:f64_trunc, bytecode), do: {:f64_trunc, bytecode}
-  defp parse_instruction(:f64_nearest, bytecode), do: {:f64_nearest, bytecode}
-
   defp parse_instruction(:f64_copysign, bytecode), do: {:f64_copysign, bytecode}
   defp parse_instruction(:i32_wrap_i64, bytecode), do: {:i32_wrap_i64, bytecode}
   defp parse_instruction(:i32_trunc_s_f32, bytecode), do: {:i32_trunc_s_f32, bytecode}
@@ -189,7 +160,30 @@ defmodule WaspVM.Decoder.CodeSectionParser do
 
 
   #################### COMPLETED WITH NOTES ###############################
-
+  defp parse_instruction(:f32_gt, bytecode), do: {:f32_gt, bytecode} # Done
+  defp parse_instruction(:f32_le, bytecode), do: {:f32_le, bytecode} # Done
+  defp parse_instruction(:f32_ge, bytecode), do: {:f32_ge, bytecode} # Done
+  defp parse_instruction(:f64_gt, bytecode), do: {:f64_gt, bytecode} # Done
+  defp parse_instruction(:f64_le, bytecode), do: {:f64_le, bytecode} # Done
+  defp parse_instruction(:f64_ge, bytecode), do: {:f64_ge, bytecode} # Done
+  defp parse_instruction(:f32_lt, bytecode), do: {:f32_lt, bytecode} # Done
+  defp parse_instruction(:f64_lt, bytecode), do: {:f64_lt, bytecode} # Done
+  defp parse_instruction(:f32_ne, bytecode), do: {:f32_ne, bytecode} # Done
+  defp parse_instruction(:f64_ne, bytecode), do: {:f64_ne, bytecode} # Done
+  defp parse_instruction(:f32_eq, bytecode), do: {:f32_eq, bytecode} # Done
+  defp parse_instruction(:f64_eq, bytecode), do: {:f64_eq, bytecode} # Done
+  defp parse_instruction(:f32_nearest, bytecode), do: {:f32_nearest, bytecode} # Done
+  defp parse_instruction(:f64_nearest, bytecode), do: {:f64_nearest, bytecode} # Done
+  defp parse_instruction(:f32_trunc, bytecode), do: {:f32_trunc, bytecode} # Done
+  defp parse_instruction(:f64_trunc, bytecode), do: {:f64_trunc, bytecode} # Done
+  defp parse_instruction(:f32_floor, bytecode), do: {:f32_floor, bytecode} # Done
+  defp parse_instruction(:f64_floor, bytecode), do: {:f64_floor, bytecode} # Done
+  defp parse_instruction(:f32_ceil, bytecode), do: {:f32_ceil, bytecode} # Done
+  defp parse_instruction(:f64_ceil, bytecode), do: {:f64_ceil, bytecode} # Done
+  defp parse_instruction(:f32_neg, bytecode), do: {:f32_neg, bytecode} # Done
+  defp parse_instruction(:f64_neg, bytecode), do: {:f64_neg, bytecode} # Done
+  defp parse_instruction(:f32_abs, bytecode), do: {:f32_abs, bytecode} # Done
+  defp parse_instruction(:f64_abs, bytecode), do: {:f64_abs, bytecode} # Done
   defp parse_instruction(:f64_sqrt, bytecode), do: {:f64_sqrt, bytecode} # Done
   defp parse_instruction(:f64_add, bytecode), do: {:f64_add, bytecode} # Done
   defp parse_instruction(:f64_sub, bytecode), do: {:f64_sub, bytecode} # Done
