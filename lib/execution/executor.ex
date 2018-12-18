@@ -316,12 +316,13 @@ defmodule WaspVM.Executor do
     Map.put(vm, :stack, Stack.push(stack, Kernel.div(a, b)))
   end
 
-  defp exec_inst(vm, :i64_div_u) do
-    # Floored
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    Map.put(vm, :stack, Stack.push(stack, floor_div(a, b)))
-  end
+  # Not working, floor div undefined
+  # defp exec_inst(vm, :i64_div_u) do
+  #   # Floored
+  #   {[a, b], stack} = Stack.pop_multiple(vm.stack)
+  #
+  #   Map.put(vm, :stack, Stack.push(stack, floor_div(a, b)))
+  # end
 
   defp exec_inst(vm, :i64_rem_s) do
     # Truncated to zero
