@@ -107,8 +107,7 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   defp parse_instruction(:i64_store16, bytecode), do: get_two_values(:i64_store16, bytecode)
   defp parse_instruction(:i64_store32, bytecode), do: get_two_values(:i64_store32, bytecode)
 
-  defp parse_instruction(:i32_shl, bytecode), do: {:i32_shl, bytecode}
-  defp parse_instruction(:i32_shr_u, bytecode), do: {:i32_shr_, bytecode}
+
   defp parse_instruction(:i32_rotl, bytecode), do: {:i32_rotl, bytecode}
   defp parse_instruction(:i32_rotr, bytecode), do: {:i32_rotr, bytecode}
   defp parse_instruction(:i32_lt_u, bytecode), do: {:i32_lt_u, bytecode}
@@ -122,7 +121,7 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   defp parse_instruction(:i64_clz, bytecode), do: {:i64_clz, bytecode}
   defp parse_instruction(:i64_ctz, bytecode), do: {:i64_ctz, bytecode}
 
-  defp parse_instruction(:i64_shl, bytecode), do: {:i64_shl, bytecode}
+
   defp parse_instruction(:i64_rotl, bytecode), do: {:i64_rotl, bytecode}
   defp parse_instruction(:i64_rotr, bytecode), do: {:i64_rotr, bytecode}
   defp parse_instruction(:f32_copysign, bytecode), do: {:f32_copysign, bytecode}
@@ -160,6 +159,9 @@ defmodule WaspVM.Decoder.CodeSectionParser do
 
 
   #################### COMPLETED WITH NOTES ###############################
+  defp parse_instruction(:i32_shl, bytecode), do: {:i32_shl, bytecode} # Done
+  defp parse_instruction(:i32_shr_u, bytecode), do: {:i32_shr_, bytecode} # Done
+  defp parse_instruction(:i64_shl, bytecode), do: {:i64_shl, bytecode} # Done
   defp parse_instruction(:f32_gt, bytecode), do: {:f32_gt, bytecode} # Done
   defp parse_instruction(:f32_le, bytecode), do: {:f32_le, bytecode} # Done
   defp parse_instruction(:f32_ge, bytecode), do: {:f32_ge, bytecode} # Done

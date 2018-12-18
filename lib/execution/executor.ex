@@ -130,11 +130,13 @@ defmodule WaspVM.Executor do
 
   defp exec_inst(vm, :i32_add) do
     {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
     Map.put(vm, :stack, Stack.push(stack, a + b))
   end
 
   defp exec_inst(vm, :i32_sub) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
     Map.put(vm, :stack, Stack.push(stack, a - b))
   end
 
@@ -365,6 +367,7 @@ defmodule WaspVM.Executor do
     Map.put(vm, :stack, Stack.push(stack, a ^^^ b))
   end
 
+
   defp exec_inst(vm, :i32_shr_s) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
@@ -563,7 +566,25 @@ defmodule WaspVM.Executor do
     Map.put(vm, :stack, Stack.push(stack, a >>> b))
   end
 
+  defp exec_inst(vm, :i32_shl) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a <<< b))
+  end
+
+  defp exec_inst(vm, :i64_shl) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a <<< b))
+  end
+
   defp exec_inst(vm, :i64_shr_u) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a >>> b))
+  end
+
+  defp exec_inst(vm, :i32_shr_u) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
     Map.put(vm, :stack, Stack.push(stack, a >>> b))
