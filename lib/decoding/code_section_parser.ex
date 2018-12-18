@@ -90,8 +90,6 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   defp parse_instruction(:block, bytecode), do: parse_block_type_instruction(:block, bytecode)
   defp parse_instruction(:loop, bytecode), do: parse_block_type_instruction(:loop, bytecode)
   defp parse_instruction(:call, bytecode), do: get_single_value(:call, bytecode)
-  defp parse_instruction(:set_global, bytecode), do: get_single_value(:set_global, bytecode)
-  defp parse_instruction(:get_global, bytecode), do: get_single_value(:get_global, bytecode)
   defp parse_instruction(:br, bytecode), do: get_single_value(:br, bytecode)
   defp parse_instruction(:br_if, bytecode), do: get_single_value(:br_if, bytecode)
   defp parse_instruction(:i32_load8_s, bytecode), do: get_two_values(:i32_load8_s, bytecode)
@@ -108,6 +106,7 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   defp parse_instruction(:i64_store8, bytecode), do: get_two_values(:i64_store8, bytecode)
   defp parse_instruction(:i64_store16, bytecode), do: get_two_values(:i64_store16, bytecode)
   defp parse_instruction(:i64_store32, bytecode), do: get_two_values(:i64_store32, bytecode)
+
   defp parse_instruction(:i32_shl, bytecode), do: {:i32_shl, bytecode}
   defp parse_instruction(:i32_shr_u, bytecode), do: {:i32_shr_, bytecode}
   defp parse_instruction(:i32_rotl, bytecode), do: {:i32_rotl, bytecode}
@@ -122,13 +121,8 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   defp parse_instruction(:i64_ge_u, bytecode), do: {:i64_ge_u, bytecode}
   defp parse_instruction(:i64_clz, bytecode), do: {:i64_clz, bytecode}
   defp parse_instruction(:i64_ctz, bytecode), do: {:i64_ctz, bytecode}
-  defp parse_instruction(:i64_popcnt, bytecode), do: {:i64_popcnt, bytecode}
-  defp parse_instruction(:i64_div_s, bytecode), do: {:i64_div_s, bytecode}
-  defp parse_instruction(:i64_div_u, bytecode), do: {:i64_div_u, bytecode}
-  defp parse_instruction(:i64_rem_s, bytecode), do: {:i64_rem_s, bytecode}
-  defp parse_instruction(:i64_rem_u, bytecode), do: {:i64_rem_u, bytecode}
+
   defp parse_instruction(:i64_shl, bytecode), do: {:i64_shl, bytecode}
-  defp parse_instruction(:i64_shr_u, bytecode), do: {:i64_shr_u, bytecode}
   defp parse_instruction(:i64_rotl, bytecode), do: {:i64_rotl, bytecode}
   defp parse_instruction(:i64_rotr, bytecode), do: {:i64_rotr, bytecode}
   defp parse_instruction(:f32_eq, bytecode), do: {:f32_eq, bytecode}
@@ -143,13 +137,10 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   defp parse_instruction(:f32_floor, bytecode), do: {:f32_floor, bytecode}
   defp parse_instruction(:f32_trunc, bytecode), do: {:f32_trunc, bytecode}
   defp parse_instruction(:f32_nearest, bytecode), do: {:f32_nearest, bytecode}
-  defp parse_instruction(:f32_sqrt, bytecode), do: {:f32_sqrt, bytecode}
-  defp parse_instruction(:f32_add, bytecode), do: {:f32_add, bytecode}
-  defp parse_instruction(:f32_sub, bytecode), do: {:f32_sub, bytecode}
-  defp parse_instruction(:f32_mul, bytecode), do: {:f32_mul, bytecode}
-  defp parse_instruction(:f32_div, bytecode), do: {:f32_div, bytecode}
-  defp parse_instruction(:f32_min, bytecode), do: {:f32_min, bytecode}
-  defp parse_instruction(:f32_max, bytecode), do: {:f32_max, bytecode}
+
+
+
+
   defp parse_instruction(:f32_copysign, bytecode), do: {:f32_copysign, bytecode}
   defp parse_instruction(:f64_eq, bytecode), do: {:f64_eq, bytecode}
   defp parse_instruction(:f64_ne, bytecode), do: {:f64_ne, bytecode}
@@ -163,13 +154,7 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   defp parse_instruction(:f64_floor, bytecode), do: {:f64_floor, bytecode}
   defp parse_instruction(:f64_trunc, bytecode), do: {:f64_trunc, bytecode}
   defp parse_instruction(:f64_nearest, bytecode), do: {:f64_nearest, bytecode}
-  defp parse_instruction(:f64_sqrt, bytecode), do: {:f64_sqrt, bytecode}
-  defp parse_instruction(:f64_add, bytecode), do: {:f64_add, bytecode}
-  defp parse_instruction(:f64_sub, bytecode), do: {:f64_sub, bytecode}
-  defp parse_instruction(:f64_mul, bytecode), do: {:f64_mul, bytecode}
-  defp parse_instruction(:f64_div, bytecode), do: {:f64_div, bytecode}
-  defp parse_instruction(:f64_min, bytecode), do: {:f64_min, bytecode}
-  defp parse_instruction(:f64_max, bytecode), do: {:f64_max, bytecode}
+
   defp parse_instruction(:f64_copysign, bytecode), do: {:f64_copysign, bytecode}
   defp parse_instruction(:i32_wrap_i64, bytecode), do: {:i32_wrap_i64, bytecode}
   defp parse_instruction(:i32_trunc_s_f32, bytecode), do: {:i32_trunc_s_f32, bytecode}
@@ -205,6 +190,28 @@ defmodule WaspVM.Decoder.CodeSectionParser do
 
   #################### COMPLETED WITH NOTES ###############################
 
+  defp parse_instruction(:f64_sqrt, bytecode), do: {:f64_sqrt, bytecode} # Done
+  defp parse_instruction(:f64_add, bytecode), do: {:f64_add, bytecode} # Done
+  defp parse_instruction(:f64_sub, bytecode), do: {:f64_sub, bytecode} # Done
+  defp parse_instruction(:f64_mul, bytecode), do: {:f64_mul, bytecode} # Done
+  defp parse_instruction(:f64_div, bytecode), do: {:f64_div, bytecode} # Done
+  defp parse_instruction(:f64_min, bytecode), do: {:f64_min, bytecode} # Done
+  defp parse_instruction(:f64_max, bytecode), do: {:f64_max, bytecode} # Done
+  defp parse_instruction(:f32_sqrt, bytecode), do: {:f32_sqrt, bytecode} # Done
+  defp parse_instruction(:f32_min, bytecode), do: {:f32_min, bytecode} # Done
+  defp parse_instruction(:f32_max, bytecode), do: {:f32_max, bytecode} # Done
+  defp parse_instruction(:f32_div, bytecode), do: {:f32_div, bytecode} # Done
+  defp parse_instruction(:f32_add, bytecode), do: {:f32_add, bytecode} # Done
+  defp parse_instruction(:f32_sub, bytecode), do: {:f32_sub, bytecode} # Done
+  defp parse_instruction(:f32_mul, bytecode), do: {:f32_mul, bytecode} # Done
+  defp parse_instruction(:i64_rem_s, bytecode), do: {:i64_rem_s, bytecode} # Done NEEDS FIXING
+  defp parse_instruction(:i64_rem_u, bytecode), do: {:i64_rem_u, bytecode} # Done NEEDS FIXING
+  defp parse_instruction(:i64_div_s, bytecode), do: {:i64_div_s, bytecode} # Done
+  defp parse_instruction(:i64_div_u, bytecode), do: {:i64_div_u, bytecode} # Done
+  defp parse_instruction(:i64_popcnt, bytecode), do: {:i64_popcnt, bytecode} # Done
+  defp parse_instruction(:set_global, bytecode), do: get_single_value(:set_global, bytecode) # Done
+  defp parse_instruction(:get_global, bytecode), do: get_single_value(:get_global, bytecode) # Done
+  defp parse_instruction(:i64_shr_u, bytecode), do: {:i64_shr_u, bytecode} # Done
   defp parse_instruction(:get_local, bytecode), do: get_single_value(:get_local, bytecode) # Done
   defp parse_instruction(:set_local, bytecode), do: get_single_value(:set_local, bytecode) # Done
   defp parse_instruction(:tee_local, bytecode), do: get_single_value(:tee_local, bytecode) # Done

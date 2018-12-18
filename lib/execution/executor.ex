@@ -98,6 +98,20 @@ defmodule WaspVM.Executor do
     Map.put(vm, :stack, Stack.push(vm.stack, local))
   end
 
+  defp exec_inst(vm, {:get_global, idx}) do
+    global = Enum.at(vm.globals, idx)
+
+    Map.put(vm, :stack, Stack.push(vm.stack, global))
+  end
+
+  defp exec_inst(vm, {:set_global, idx}) do
+    {value, stack} = Stack.pop(vm.stack)
+
+    globals = List.replace_at(vm.globals, idx, value)
+
+    Map.merge(vm, %{globals: globals, stack: stack})
+  end
+
   defp exec_inst(vm, {:set_local, idx}) do
     {value, stack} = Stack.pop(vm.stack)
 
@@ -130,10 +144,89 @@ defmodule WaspVM.Executor do
     Map.put(vm, :stack, Stack.push(stack, a * b))
   end
 
+  defp exec_inst(vm, :f32_add) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    Map.put(vm, :stack, Stack.push(stack, a + b))
+  end
+
+  defp exec_inst(vm, :f32_sub) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+    Map.put(vm, :stack, Stack.push(stack, a - b))
+  end
+
+  defp exec_inst(vm, :f32_mul) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a * b))
+  end
+
+  defp exec_inst(vm, :f64_add) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    Map.put(vm, :stack, Stack.push(stack, a + b))
+  end
+
+  defp exec_inst(vm, :f64_sub) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+    Map.put(vm, :stack, Stack.push(stack, a - b))
+  end
+
+  defp exec_inst(vm, :f64_mul) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a * b))
+  end
+
   defp exec_inst(stack, :i32_rem_) do
     {[a, b], stack} = Stack.pop_multiple(vm.stack)
 
     Map.put(vm, :stack, Stack.push(stack, rem(a, b)))
+  end
+
+  defp exec_inst(vm, :f32_min) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    min = Enum.min([a, b])
+    Map.put(vm, :stack, Stack.push(stack, min))
+  end
+
+  defp exec_inst(vm, :f32_max) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    max = Enum.max([a, b])
+
+    Map.put(vm, :stack, Stack.push(stack, max))
+  end
+
+  defp exec_inst(vm, :f64_min) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    min = Enum.min([a, b])
+    Map.put(vm, :stack, Stack.push(stack, min))
+  end
+
+  defp exec_inst(vm, :f64_max) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    max = Enum.max([a, b])
+
+    Map.put(vm, :stack, Stack.push(stack, max))
+  end
+
+  defp exec_inst(vm, :f32_sqrt) do
+    {[a], stack} = Stack.pop(vm.stack)
+
+
+    Map.put(vm, :stack, Stack.push(stack, :math.sqrt(a)))
+  end
+
+  defp exec_inst(vm, :f64_sqrt) do
+    {[a], stack} = Stack.pop(vm.stack)
+
+
+    Map.put(vm, :stack, Stack.push(stack, :math.sqrt(a)))
+  end
+
+
+  defp exec_inst(vm, :f32_div) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a / b))
   end
 
   defp exec_inst(vm, :i32_div_) do
@@ -142,7 +235,41 @@ defmodule WaspVM.Executor do
     Map.put(vm, :stack, Stack.push(stack, a / b))
   end
 
+  defp exec_inst(vm, :i64_div_s) do
+    # Truncated to zero
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, Kernel.div(a, b)))
+  end
+
+  defp exec_inst(vm, :i64_div_u) do
+    # Floored
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, floor_div(a, b)))
+  end
+
+  defp exec_inst(vm, :i64_rem_s) do
+    # Truncated to zero
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, Kernel.rem(a, b)))
+  end
+
+  defp exec_inst(vm, :i64_rem_u) do
+    # Floored
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, rem(a, b)))
+  end
+
   defp exec_inst(vm, :i32_popcnt) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, []))
+  end
+
+  defp exec_inst(vm, :i64_popcnt) do
     {a, stack} = Stack.pop(vm.stack)
 
     Map.put(vm, :stack, Stack.push(stack, []))
@@ -263,6 +390,12 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst(vm, :i64_shr_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a >>> b))
+  end
+
+  defp exec_inst(vm, :i64_shr_u) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
     Map.put(vm, :stack, Stack.push(stack, a >>> b))
