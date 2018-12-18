@@ -1,6 +1,7 @@
 defmodule WaspVM.Executor do
   alias WaspVM.Stack
   alias WaspVM.Memory
+  use Bitwise
   require Logger
   require IEx
 
@@ -15,12 +16,46 @@ defmodule WaspVM.Executor do
     Map.put(vm, :stack, Stack.push(vm.stack, i32))
   end
 
+  defp exec_inst(vm, {:i64_const, i64}) do
+    Map.put(vm, :stack, Stack.push(vm.stack, i64))
+  end
+
+  defp exec_inst(vm, {:f32_const, f32}) do
+    Map.put(vm, :stack, Stack.push(vm.stack, f32))
+  end
+
+  defp exec_inst(vm, {:f64_const, f64}) do
+    Map.put(vm, :stack, Stack.push(vm.stack, f64))
+  end
+
   defp exec_inst(vm, {:i32_store, alignment, offset}) do
-    {[value, address], stack} = Stack.pop_multiple(vm.stack, 2)
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
 
-    binary_val = <<value::32>>
+    mem = Memory.put_at(vm.memory, address + offset, <<value::32>>)
 
-    mem = Memory.put_at(vm.memory, address + offset, binary_val)
+    Map.merge(vm, %{memory: mem, stack: stack})
+  end
+
+  defp exec_inst(vm, {:i64_store, alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    mem = Memory.put_at(vm.memory, address + offset, <<value::64>>)
+
+    Map.merge(vm, %{memory: mem, stack: stack})
+  end
+
+  defp exec_inst(vm, {:f32_store, alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    mem = Memory.put_at(vm.memory, address + offset, <<value::32>>)
+
+    Map.merge(vm, %{memory: mem, stack: stack})
+  end
+
+  defp exec_inst(vm, {:f64_store, alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    mem = Memory.put_at(vm.memory, address + offset, <<value::64>>)
 
     Map.merge(vm, %{memory: mem, stack: stack})
   end
@@ -31,6 +66,30 @@ defmodule WaspVM.Executor do
     <<i32::32>> = Memory.get_at(vm.memory, address + offset, 4)
 
     Map.put(vm, :stack, Stack.push(stack, i32))
+  end
+
+  defp exec_inst(vm, {:i64_load, alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    <<i64::64>> = Memory.get_at(vm.memory, address + offset, 8)
+
+    Map.put(vm, :stack, Stack.push(stack, i64))
+  end
+
+  defp exec_inst(vm, {:f32_load, alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    <<f32::32-float>> = Memory.get_at(vm.memory, address + offset, 4)
+
+    Map.put(vm, :stack, Stack.push(stack, f32))
+  end
+
+  defp exec_inst(vm, {:f64_load, alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    <<f64::64-float>> = Memory.get_at(vm.memory, address + offset, 8)
+
+    Map.put(vm, :stack, Stack.push(stack, f64))
   end
 
   defp exec_inst(vm, {:get_local, idx}) do
@@ -47,26 +106,227 @@ defmodule WaspVM.Executor do
     Map.merge(vm, %{locals: locals, stack: stack})
   end
 
+  defp exec_inst(vm, {:tee_local, idx}) do
+    value = Stack.read(vm.stack)
+
+    locals = List.replace_at(vm.locals, idx, value)
+
+    Map.put(vm, :locals, locals)
+  end
+
   defp exec_inst(vm, :i32_add) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack, 2)
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
     Map.put(vm, :stack, Stack.push(stack, a + b))
   end
 
-  defp exec_inst(vm, :end), do: vm
-
-  defp exec_inst(vm, op) do
-    IEx.pry
-  end
-
   defp exec_inst(vm, :i32_sub) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack, 2)
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
     Map.put(vm, :stack, Stack.push(stack, a - b))
   end
 
   defp exec_inst(vm, :i32_mul) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack, 2)
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
 
     Map.put(vm, :stack, Stack.push(stack, a * b))
+  end
+
+  defp exec_inst(vm, :i32_and) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a &&& b))
+  end
+
+  defp exec_inst(vm, :i32_or) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a ||| b))
+  end
+
+  defp exec_inst(vm, :i32_xor) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a ^^^ b))
+  end
+
+  defp exec_inst(vm, :i32_shr_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a >>> b))
+  end
+
+  defp exec_inst(vm, :i32_eq) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a === b, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :i32_ne) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a !== b, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :i32_lt_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a < b, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :i32_le_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a <= b, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :i32_gt_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a > b, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :i32_ge_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a >= b, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :i32_eqz) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    val = if a === 0, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :i64_add) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    Map.put(vm, :stack, Stack.push(stack, a + b))
+  end
+
+  defp exec_inst(vm, :i64_sub) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+    Map.put(vm, :stack, Stack.push(stack, a - b))
+  end
+
+  defp exec_inst(vm, :i64_mul) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a * b))
+  end
+
+  defp exec_inst(vm, :i64_and) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a &&& b))
+  end
+
+  defp exec_inst(vm, :i64_or) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a ||| b))
+  end
+
+  defp exec_inst(vm, :i64_xor) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a ^^^ b))
+  end
+
+  defp exec_inst(vm, :i64_shr_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    Map.put(vm, :stack, Stack.push(stack, a >>> b))
+  end
+
+  defp exec_inst(vm, :i64_eq) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a === b, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :i64_ne) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a !== b, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :i64_lt_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a < b, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :i64_le_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a <= b, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :i64_gt_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a > b, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :i64_ge_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a >= b, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :i64_eqz) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    val = if a === 0, do: 1, else: 0
+
+    Map.put(vm, :stack, Stack.push(stack, val))
+  end
+
+  defp exec_inst(vm, :current_memory) do
+    size = length(vm.memory.pages)
+
+    Map.put(vm, :stack, Stack.push(vm.stack, size))
+  end
+
+  defp exec_inst(vm, :grow_memory) do
+    {pages, stack} = Stack.pop(vm.stack)
+
+    Map.merge(vm, %{memory: Memory.grow(vm.memory, pages), stack: Stack.push(stack, length(vm.memory))})
+  end
+
+  defp exec_inst(vm, :unreachable), do: vm
+
+  defp exec_inst(vm, :nop), do: vm
+
+  defp exec_inst(vm, :end), do: vm
+
+
+  defp exec_inst(vm, op) do
+    IEx.pry
   end
 
   # Sign-agnostic count number of one bits

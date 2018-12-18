@@ -57,8 +57,8 @@ defmodule WaspVM.OpCodes do
       <<0x3C>> -> :i64_store8
       <<0x3D>> -> :i64_store16
       <<0x3E>> -> :i64_store32
-      <<0x3F, 0x00>> -> :memory_size
-      <<0x40, 0x00>> -> :memory_grow
+      <<0x3F>> -> :current_memory
+      <<0x40>> -> :grow_memory
 
       # Numberic instructions . [Spec reference.](http://webassembly.github.io/spec/core/bikeshed/index.html#numeric-instructions)
       # Constant followed by immedaite arg

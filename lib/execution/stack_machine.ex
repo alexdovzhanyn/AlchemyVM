@@ -47,7 +47,7 @@ defmodule WaspVM.StackMachine do
               if updated_vm.stack.elements == [] do
                 :ok
               else
-                hd(updated_vm.stack.elements)
+                {:ok, hd(updated_vm.stack.elements)}
               end
 
             {result, updated_vm}

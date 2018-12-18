@@ -14,11 +14,15 @@ defmodule WaspVM.Stack do
    {top, %Stack{elements: rest}}
   end
 
-  def pop_multiple(%Stack{elements: elem}, count) do
+  def pop_multiple(%Stack{elements: elem}, count \\ 2) do
     {popped, rest} = Enum.split(elem, count)
 
     {popped, %Stack{elements: rest}}
   end
+
+  def read(%Stack{elements: elem}), do: hd(elem)
+
+  def read_multiple(%Stack{elements: elem}, count), do: Enum.take(elem, count)
 
   def depth(%WaspVM.Stack{elements: elements}), do: length(elements)
 end
