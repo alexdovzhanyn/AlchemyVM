@@ -3,19 +3,18 @@ defmodule WaspVM.Module do
   defstruct sections: %{},
             magic: nil,
             version: nil,
-            types: nil,
+            types: [],
             memory: nil,
-            exports: nil,
-            imports: nil,
-            function_types: nil,
+            exports: [],
+            imports: [],
+            function_types: [],
             table: nil,
             start: nil,
-            functions: nil
+            functions: []
 
   def add_section(module, sec_code, section) do
     sections = Map.put(module.sections, sec_code, section)
 
     Map.put(module, :sections, sections)
   end
-
 end

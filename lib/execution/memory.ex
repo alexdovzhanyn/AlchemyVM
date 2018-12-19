@@ -1,7 +1,8 @@
 defmodule WaspVM.Memory do
   alias WaspVM.Memory
   require IEx
-  defstruct pages: []
+  defstruct data: {},
+            limit: :infinity
 
   @moduledoc """
     Virtual Memory representation and interaction
@@ -10,14 +11,11 @@ defmodule WaspVM.Memory do
   @doc """
     Creates a new memory instance, with a given number of 64kb pages
   """
-  @spec new(integer) :: Memory
-  def new(pages \\ 1) do
-    mem =
-      1
-      |> Range.new(pages)
-      |> Enum.map(fn _ -> initialize_empty_mem() end)
+  @spec new(map) :: Memory
+  def new(memory_immediate) do
+    mem = initialize_empty_mem(memory_immediate.initial)
 
-    %Memory{pages: mem}
+    %Memory{data: mem, limit: Map.get(memory_immediate, :max, :infinity)}
   end
 
   @doc """
@@ -25,14 +23,7 @@ defmodule WaspVM.Memory do
   """
   @spec get_at(Memory, integer, integer) :: binary
   def get_at(memory, address, bytes \\ 1) do
-    mem = Enum.at(memory.pages, calculate_page_for_address(address))
-
-    for i <- address..(address + (bytes - 1)), into: <<>>, do: elem(mem, i)
-  end
-
-  def get_end(memory, page \\ 0) do
-    mem = Enum.at(memory.pages, page)
-    # Need to implement
+    for i <- address..(address + (bytes - 1)), into: <<>>, do: elem(memory.data, i)
   end
 
   @doc """
@@ -40,22 +31,16 @@ defmodule WaspVM.Memory do
   """
   @spec put_at(Memory, integer, binary) :: Memory
   def put_at(memory, address, bytes) when is_binary(bytes) do
-    page = calculate_page_for_address(address)
-    mem = Enum.at(memory.pages, page)
-
     bytes = for <<byte::8 <- bytes>>, do: <<byte>>
-
-    # Will have issues if writing to last few bytes in page if
-    # bytes > bytes remaining in page. Will fix later
 
     mem =
       bytes
       |> Enum.with_index()
-      |> Enum.reduce(mem, fn {byte, idx}, acc -> put_elem(acc, address + idx, byte) end)
+      |> Enum.reduce(memory.data, fn {byte, idx}, acc ->
+        put_elem(acc, address + idx, byte)
+      end)
 
-    pages = List.replace_at(memory.pages, page, mem)
-
-    Map.put(memory, :pages, pages)
+    Map.put(memory, :data, mem)
   end
 
   @doc """
@@ -63,20 +48,16 @@ defmodule WaspVM.Memory do
   """
   @spec grow(Memory, integer) :: Memory
   def grow(memory, pages) do
-    new_pages =
-      1
-      |> Range.new(pages)
-      |> Enum.map(fn _ -> initialize_empty_mem() end)
+    new_mem = initialize_empty_mem(pages)
 
-    Map.put(memory, :pages, memory.pages ++ new_pages)
+    mem = List.to_tuple(Tuple.to_list(memory.data) ++ Tuple.to_list(new_mem))
+
+    Map.put(memory, :data, mem)
   end
 
-  defp initialize_empty_mem do
+  defp initialize_empty_mem(pages) do
     <<0>>
-    |> List.duplicate(1024 * 64)
+    |> List.duplicate((1024 * 64) * pages)
     |> List.to_tuple()
   end
-
-  defp calculate_page_for_address(address), do: div(address, 1024 * 64)
-
 end

@@ -1,37 +1,95 @@
 defmodule WaspVM do
+  use GenServer
   alias WaspVM.Decoder
   alias WaspVM.Stack
-  alias WaspVM.Memory
-  alias WaspVM.StackMachine
+  alias WaspVM.ModuleInstance
+  alias WaspVM.Store
+  alias WaspVM.Frame
+  alias WaspVM.Executor
+  require IEx
 
-  @enforce_keys [:module, :stack, :memory]
-  defstruct [:module, :stack, :memory, locals: []]
+  @enforce_keys [:modules, :stack, :store]
+  defstruct [:modules, :stack, :store]
 
-  def load_file(filename) do
-    filename
-    |> Decoder.decode_file()
-    |> do_load()
-  end
+  def start, do: GenServer.start_link(__MODULE__, [])
 
-  def load(binary) when is_binary(binary) do
-    binary
-    |> Decoder.decode()
-    |> do_load
-  end
-
-  defp do_load(module) do
-    vm = %WaspVM{
-      module: module,
-      stack: Stack.new(),
-      memory: Memory.new()
+  def init(_args) do
+    {
+      :ok,
+      %WaspVM{
+        modules: [],
+        stack: Stack.new(),
+        store: %Store{}
+      }
     }
-
-    {:ok, sup} = WaspVM.Supervisor.start_link(vm)
-
-    [{_, vm_pid, _, _}] = Supervisor.which_children(sup)
-
-    vm_pid
   end
 
-  def execute(vm, func, args \\ []), do: StackMachine.execute(vm, func, args)
+  def load_file(ref, filename) do
+    GenServer.call(ref, {:load_module, Decoder.decode_file(filename)}, :infinity)
+  end
+
+  def load(ref, binary) when is_binary(binary) do
+    GenServer.call(ref, {:load_module, Decoder.decode(binary)}, :infinity)
+  end
+
+  def execute(ref, func, args \\ []) do
+    GenServer.call(ref, {:execute, func, args}, :infinity)
+  end
+
+  def handle_call({:load_module, module}, _from, vm) do
+    {moduleinst, store} = ModuleInstance.instantiate(ModuleInstance.new(), module, vm.store)
+
+    modules = [moduleinst | vm.modules]
+
+    {:reply, :ok, Map.merge(vm, %{modules: modules, store: store})}
+  end
+
+  def handle_call({:execute, fname, args}, _from, vm) do
+    {func_addr, module} =
+      Enum.find_value(vm.modules, fn module ->
+        a =
+          Enum.find_value(module.exports, fn {name, addr} ->
+            if name == fname, do: addr, else: false
+          end)
+
+        if a, do: {a, module}, else: {:not_found, 0}
+      end)
+
+    {reply, vm} =
+      case func_addr do
+        :not_found -> {{:error, :no_exported_function, fname}, vm}
+        addr -> execute_func(vm, addr, module, args)
+      end
+
+    {:reply, reply, vm}
+  end
+
+  @spec execute_func(WaspVM, integer, ModuleInstance, list) :: tuple
+  defp execute_func(vm, addr, module, args) do
+    {{inputs, _outputs}, _module_ref, instr, locals} = Enum.at(vm.store.funcs, addr)
+
+    {res, vm} =
+      if tuple_size(inputs) != length(args) do
+        {{:error, :param_mismatch, tuple_size(inputs), length(args)}, vm}
+      else
+        frame = %Frame{
+          module: module,
+          instructions: instr,
+          locals: args ++ Enum.map(locals, fn _ -> 0 end),
+          next_instr: 0
+        }
+
+        final_vm = Executor.execute(frame, vm)
+
+        result =
+          if final_vm.stack.elements == [] do
+            :ok
+          else
+            {:ok, hd(final_vm.stack.elements)}
+          end
+
+        {result, final_vm}
+      end
+    {res, vm}
+  end
 end
