@@ -377,86 +377,82 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, a / b))}
   end
 
-  defp signed_bits(bytecode, 32), do: <<1::32-integer, bytecode::binary>>
-  defp signed_bits(bytecode, 64), do: <<1::64-integer, bytecode::binary>>
-  defp sign_value(<<0, a, b, c, d>>, bytecode, n \\ 32) do
-    #Lower // Lower Quad
-     bytecode
-  end
-  defp sign_value(<<1, a, b, c, d>>, bytecode, n \\ 32) do
-    #Higher, Upper Quad
-     bytecode - :math.pow(2, 32)
-  end
+  defp signed_bits(integer, 32), do: <<integer::32>>
+  defp signed_bits(integer, 64), do: <<integer::64>>
 
 
-  defp exec_inst({frame, vm}, :i64_div_s) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+  # Reference https://lemire.me/blog/2017/05/29/unsigned-vs-signed-integer-arithmetic/
+  defp sign_value(integer, n), do: sign_value(integer, n, :math.pow(-2, 31), :math.pow(2, 31))
 
-    a_bin = signed_bits(a, 64)
-    b_bin = signed_bits(b, 64)
+  defp sign_value(integer, n, upper, lower) when integer >= 0 and integer < lower, do: integer
 
-    j1 = sign_value(a_bin, a, 64)
-    j2 = sign_value(b_bin, b, 64)
 
-    j1j2_check =  div(a_value, b_value)
+  defp sign_value(integer, n, upper, lower) when integer > upper and integer < -1, do: :math.pow(2, 32) + integer
 
-    result =
-    if sign_value(b) == 0 do
-      WaspVM.trap("Signed Division is Undefined")
-    else
-      if j1j2_check == :math.pow(2, 63) do
-        WaspVM.trap("Signed Division is Undefined")
-      else
-        div(j1, j2)
-    end
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, result))}
-  end
+
+  #defp exec_inst({frame, vm}, :i64_div_s) do
+  #  {[a, b], stack} = Stack.pop_multiple(vm.stack)
+#
+  #  a_bin = signed_bits(a, 64)
+  #  b_bin = signed_bits(b, 64)
+#
+  #  j1 = sign_value(a_bin, a, 64)
+  #  j2 = sign_value(b_bin, b, 64)
+#
+  #  j1j2_check =  div(j1, j2)
+
+
+  #  if j2 == 0 do
+  #    {:error, :undefined}
+  #  else
+  #    if j1j2_check == :math.pow(2, 63) do
+  #      {:error, :undefined}
+  #    else
+  #        {frame, Map.put(vm, :stack, Stack.push(stack, div(j1, j2)))}
+  #    end
+  #  end
+#  end
 
 
   defp exec_inst({frame, vm}, :i32_div_s) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    a_bin = signed_bits(a, 32)
-    b_bin = signed_bits(b, 32)
+    j1 = sign_value(a, 32)
+    j2 = sign_value(b, 32)
 
-    j1 = sign_value(a_bin, a, 32)
-    j2 = sign_value(b_bin, b, 32)
 
-    j1j2_check =  div(a_value, b_value)
-
-    result =
-    if sign_value(b) == 0 do
-      WaspVM.trap("Signed Division is Undefined")
+    if j2 == 0 do
+      {:error, :undefined}
     else
-      if j1j2_check == :math.pow(2, 31) do
-        WaspVM.trap("Signed Division is Undefined")
+      if j1/j2 == :math.pow(2, 31) do
+        {:error, :undefined}
       else
-        div(j1, j2)
+        {frame, Map.put(vm, :stack, Stack.push(stack, trunc(j1/j2)))}
+      end
     end
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, result))}
   end
 
   defp exec_inst({frame, vm}, :i32_div_u) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-    result =
-      if b == 0 do
-        WaspVM.trap("Signed Division is Undefined")
-      else
-        div(a, b)
-      end
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, result))}
+      if b == 0 do
+        {:error, :undefined}
+      else
+        {frame, Map.put(vm, :stack, Stack.push(stack, abs(trunc(a/b))))}
+      end
   end
 
-  # Not working, floor div undefined
-  # defp exec_inst(vm, :i64_div_u) do
-  #   # Floored
-  #   {[a, b], stack} = Stack.pop_multiple(vm.stack)
-  #
-  #   {frame, Map.put(vm, :stack, Stack.push(stack, floor_div(a, b)))}
-  # end
+   defp exec_inst({frame, vm}, :i64_div_u) do
+
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    if b == 0 do
+      {:error, :undefined}
+    else
+        {frame, Map.put(vm, :stack, Stack.push(stack, abs(Integer.floor_div(a, b))))}
+    end
+   end
 
   defp exec_inst({frame, vm}, :i64_rem_s) do
     # Truncated to zero
