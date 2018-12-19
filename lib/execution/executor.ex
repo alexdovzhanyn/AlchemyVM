@@ -377,17 +377,76 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, a / b))}
   end
 
-  defp exec_inst({frame, vm}, :i32_div_) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, a / b))}
+  defp signed_bits(bytecode, 32), do: <<1::32-integer, bytecode::binary>>
+  defp signed_bits(bytecode, 64), do: <<1::64-integer, bytecode::binary>>
+  defp sign_value(<<0, a, b, c, d>>, bytecode, n \\ 32) do
+    #Lower // Lower Quad
+     bytecode
+  end
+  defp sign_value(<<1, a, b, c, d>>, bytecode, n \\ 32) do
+    #Higher, Upper Quad
+     bytecode - :math.pow(2, 32)
   end
 
-  defp exec_inst({frame, vm}, :i64_div_s) do
-    # Truncated to zero
+
+  defp exec_inst(vm, :i64_div_s) do
     {[a, b], stack} = Stack.pop_multiple(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, Kernel.div(a, b)))}
+    a_bin = signed_bits(a, 64)
+    b_bin = signed_bits(b, 64)
+
+    j1 = sign_value(a_bin, a, 64)
+    j2 = sign_value(b_bin, b, 64)
+
+    j1j2_check =  div(a_value, b_value)
+
+    result =
+    if sign_value(b) == 0 do
+      StackMachine.trap("Signed Division is Undefined")
+    else
+      if j1j2_check == :math.pow(2, 63) do
+        StackMachine.trap("Signed Division is Undefined")
+      else
+        div(j1, j2)
+    end
+
+    Map.put(vm, :stack, Stack.push(stack, result))
+  end
+
+
+  defp exec_inst(vm, :i32_div_s) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    a_bin = signed_bits(a, 32)
+    b_bin = signed_bits(b, 32)
+
+    j1 = sign_value(a_bin, a, 32)
+    j2 = sign_value(b_bin, b, 32)
+
+    j1j2_check =  div(a_value, b_value)
+
+    result =
+    if sign_value(b) == 0 do
+      :undefined
+    else
+      if j1j2_check == :math.pow(2, 31) do
+        :undefined
+      else
+        div(j1, j2)
+    end
+
+    Map.put(vm, :stack, Stack.push(stack, result))
+  end
+
+  defp exec_inst(vm, :i32_div_u) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    result =
+      if b == 0 do
+        :undefined
+      else
+        div(a, b)
+      end
+    Map.put(vm, :stack, Stack.push(stack, result))
   end
 
   # Not working, floor div undefined

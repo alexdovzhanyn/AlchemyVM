@@ -32,6 +32,16 @@ defmodule WaspVM do
     GenServer.call(ref, {:load_module, Decoder.decode(binary)}, :infinity)
   end
 
+  def trap(reason) do
+    GenServer.cast(ref, {:trap, reason})
+  end
+
+  def handle_cast({:trap, reason}, _from, vm) do
+    Logger.warn("EXITING STACK MACHINE: #{reason}")
+    Process.exit(self(), :normal)
+    {:noreply, vm}
+  end
+
   def execute(ref, func, args \\ []) do
     GenServer.call(ref, {:execute, func, args}, :infinity)
   end
