@@ -79,33 +79,42 @@ defmodule WaspVM.ExecutorTest do
     #### Basic div Operations
     test "32 bit unsgined int can divide properly" do
       {:ok, pid} = WaspVM.start()
-      WaspVM.load_file(pid, "test/fixtures/wasm/int_div.wasm")
-      result = WaspVM.execute(pid, "main", [4])
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      result = WaspVM.execute(pid, "i32__div_u", [4, 2])
       assert result == {:ok, 2}
     end
 
-    test "32 bit sgined int can divide properly" do
+    test "32 bit signed int can divide properly" do
       {:ok, pid} = WaspVM.start()
-      WaspVM.load_file(pid, "test/fixtures/wasm/int_div.wasm")
-      result = WaspVM.execute(pid, "main", [-4])
-      assert result == {:ok, 2}
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      result = WaspVM.execute(pid, "i32__div_s", [-4, 2])
+      assert result == {:ok, 4294967294}
     end
-  #test "unsigned integers with - divide properly" do
-  #  {:ok, pid} = WaspVM.start()
-  #  WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-  #  assert WaspVM.execute(pid, "i32__div_u", [-4, 2]) == {:ok, 2}
-  #end
 
-  #test "signed integers with - divide properly" do
-#    {:ok, pid} = WaspVM.start()
-#    WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-#    assert WaspVM.execute(pid, "i32__div_s", [-4, 2]) == {:ok, 0}
-#  end
+    #### Basic REM Operations
 
-  #test "unsigned 64 integers with - divide properly" do
-#    {:ok, pid} = WaspVM.start()
-  #  WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-#    assert WaspVM.execute(pid, "i64__div_u", [-4, 2]) == {:ok, 2}
-  #end
+    test "32 bit uint can rem properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "i32__rem_u", [5, 2]) == {:ok, 1}
+    end
+
+    test "64 bit uint can rem properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "i64__rem_u", [5, 2]) == {:ok, 1}
+    end
+
+    test "32 bit sint can rem properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "i32__rem_s", [-5, 2]) == {:ok, 4294967295}
+    end
+
+    test "64 bit sint can rem properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "i64__rem_s", [-5, 2]) == {:ok, 1.8446744073709552e19}
+    end
 
 end
