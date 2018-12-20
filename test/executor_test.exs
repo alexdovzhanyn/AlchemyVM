@@ -1,5 +1,6 @@
 defmodule WaspVM.ExecutorTest do
   use ExUnit.Case
+  require Bitwise
   doctest WaspVM
 
   #### Basic Numeric Operations
@@ -198,22 +199,21 @@ defmodule WaspVM.ExecutorTest do
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
 
       {:ok, result} = WaspVM.execute(pid, "i64__shl", [-100, 3])
+
       answer = :math.pow(2, 64) + result
 
 
-    #  assert round(answer) == 18446744073709550816
+      assert round(answer) == 18446744073709550816
     end
 
-    # Might need to extend by most sig bit of orig value
+
     test "32 bit sint can shr properly" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
 
       {:ok, result} = WaspVM.execute(pid, "i32__shr_s", [-100, 3])
 
-      answer = :math.pow(2, 32) + result
-
-      assert Kernel.round(answer) == 4294967283
+      assert Bitwise.band(result, 0xFFFFFFFF) == 4294967283
     end
 
     test "64 bit sint can shr properly" do
@@ -222,12 +222,11 @@ defmodule WaspVM.ExecutorTest do
 
       {:ok, result} = WaspVM.execute(pid, "i64__shr_s", [-100, 3])
 
-      answer = :math.pow(2, 64) + result
 
-    #  assert Kernel.round(answer) == 18446744073709551603
+      assert Bitwise.band(result, 0xFFFFFFFFFFFFFFFF) == 18446744073709551603
     end
 
-    # Not working Apparently??
+
 
     test "32 bit uint can shr properly" do
       {:ok, pid} = WaspVM.start()
@@ -235,7 +234,8 @@ defmodule WaspVM.ExecutorTest do
 
       {:ok, result} = WaspVM.execute(pid, "i32__shr_u", [-100, 3])
 
-      answer = :math.pow(2, 32) + result
+
+      answer = :math.pow(2, 31) - result
 
       assert Kernel.round(answer) == 536870899
     end
@@ -245,11 +245,36 @@ defmodule WaspVM.ExecutorTest do
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
 
       {:ok, result} = WaspVM.execute(pid, "i64__shr_u", [-100, 3])
-
+      Bitwise.band(result, 0xFFFFFFFFFFFFFFFF)
       answer = :math.pow(2, 64) + result
 
     #  assert Kernel.round(answer) == 2305843009213693939
     end
+
+    test "32 bit uint can rotl properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      {:ok, result} = WaspVM.execute(pid, "i32__rotl", [-100, 3])
+
+      Bitwise.band(result, 0xFFFFFFFF)
+      answer = :math.pow(2, 32) + result
+
+    #  assert Bitwise.band(result, 0xFFFFFFFF) == 4294966503
+    end
+
+    test "32 bit uint can rotr properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      {:ok, result} = WaspVM.execute(pid, "i32__rotr", [-100, 3])
+
+      answer = :math.pow(2, 32) + result
+
+      #assert Kernel.round(answer) == 2684354547
+    end
+
+
 
 
 

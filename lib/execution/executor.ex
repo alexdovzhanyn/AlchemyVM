@@ -537,6 +537,32 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, result))}
   end
 
+  defp rotl(number, shift) do
+    number <<< shift ||| number >>> (32 - shift)
+  end
+
+  defp rotr(number, shift) do
+    (32- number) <<< shift ||| number >>> shift
+  end
+
+  defp exec_inst({frame, vm}, :i32_rotl) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+    j2 = b - (32 * Integer.floor_div(b, 32))
+
+    answer = rotl(a, j2)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, answer))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_rotr) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+    j2 = Integer.mod(b, 32)
+
+    answer = rotr(a, j2)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, answer))}
+  end
+
   defp exec_inst({frame, vm}, :i32_and) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
@@ -773,9 +799,9 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, :i32_shr_u) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
-    j2 = b - (32 * Integer.floor_div(b, 32))
-
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    j2 = b - (32 * Integer.floor_div(b, 32)) |> IO.inspect
+    Bitwise.band(bsr(a, j2), 0xFFFFFFFF) |> IO.inspect
 
     {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, j2)))}
   end
