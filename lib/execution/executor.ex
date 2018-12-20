@@ -5,6 +5,7 @@ defmodule WaspVM.Executor do
   require Logger
   require IEx
 
+  # Reference for tests being used: https://github.com/WebAssembly/wabt/tree/master/test
 
   def execute(%{next_instr: n, instructions: i}, vm) when n == length(i), do: vm
 
@@ -386,7 +387,7 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, :f32_div) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
     {frame, Map.put(vm, :stack, Stack.push(stack, a / b))}
   end
@@ -419,7 +420,30 @@ defmodule WaspVM.Executor do
       else
         res = trunc(j1/j2)
         n = :math.pow(2, 31)
-        ans = n + res
+        s_1 = n + res
+        ans = s_1 - :math.pow(2, 32)
+        {frame, Map.put(vm, :stack, Stack.push(stack, ans))}
+      end
+    end
+  end
+
+  defp exec_inst({frame, vm}, :i64_div_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    j1 = sign_value(a, 64)
+    j2 = sign_value(b, 64)
+
+
+    if j2 == 0 do
+      {:error, :undefined}
+    else
+      if j1/j2 == :math.pow(2, 63) do
+        {:error, :undefined}
+      else
+        res = trunc(j1/j2)
+        n = :math.pow(2, 63)
+        s_1 = n + res
+        ans = s_1 - :math.pow(2, 64)
         {frame, Map.put(vm, :stack, Stack.push(stack, ans))}
       end
     end
@@ -465,7 +489,7 @@ defmodule WaspVM.Executor do
 
         rem = j1 - (j2*trunc(j1/j2))
         n = :math.pow(2, 64)
-        res = n - rem |> IO.inspect
+        res = n - rem
 
 
         {frame, Map.put(vm, :stack, Stack.push(stack, res))}
@@ -485,40 +509,56 @@ defmodule WaspVM.Executor do
     end
    end
 
+   defp popcnt(integer, 32) do
+     bin_rep = <<integer::32>>
+     bin_rep
+     |> Binary.to_list
+     |> Enum.reject(&(&1 == 0))
+     |> Enum.count
+   end
+
+   defp popcnt(integer, 64) do
+     bin_rep = <<integer::64>>
+     bin_rep
+     |> Binary.to_list
+     |> Enum.reject(&(&1 == 0))
+     |> Enum.count
+   end
+
   defp exec_inst({frame, vm}, :i32_popcnt) do
     {a, stack} = Stack.pop(vm.stack)
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, []))}
+    result = popcnt(a, 32)
+    {frame, Map.put(vm, :stack, Stack.push(stack, result))}
   end
 
   defp exec_inst({frame, vm}, :i64_popcnt) do
     {a, stack} = Stack.pop(vm.stack)
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, []))}
+    result = popcnt(a, 64)
+    {frame, Map.put(vm, :stack, Stack.push(stack, result))}
   end
 
   defp exec_inst({frame, vm}, :i32_and) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, a &&& b))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, band(a, b)))}
   end
 
   defp exec_inst({frame, vm}, :i32_or) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, a ||| b))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, bor(a, b)))}
   end
 
   defp exec_inst({frame, vm}, :i32_xor) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, a ^^^ b))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, bxor(a, b)))}
   end
 
   defp exec_inst({frame, vm}, :i32_shr_s) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, a >>> b))}
+    j2 = Integer.mod(b, 32)
+    {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, j2)))}
   end
 
   defp exec_inst({frame, vm}, :i32_eq) do
@@ -692,49 +732,52 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm}, :i64_and) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, a &&& b))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, band(a, b)))}
   end
 
   defp exec_inst({frame, vm}, :i64_or) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, a ||| b))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, bor(a, b)))}
   end
 
   defp exec_inst({frame, vm}, :i64_xor) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, a ^^^ b))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, bxor(a, b)))}
   end
 
   defp exec_inst({frame, vm}, :i64_shr_s) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
+    j2 = Integer.mod(b, 64)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, a >>> b))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, j2)))}
   end
 
   defp exec_inst({frame, vm}, :i32_shl) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, a <<< b))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, bsl(a, b)))}
   end
 
   defp exec_inst({frame, vm}, :i64_shl) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, a <<< b))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, bsl(a, b)))}
   end
 
   defp exec_inst({frame, vm}, :i64_shr_u) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, a >>> b))}
+    j2 = Integer.mod(b, 64)
+    {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, j2)))}
   end
 
   defp exec_inst({frame, vm}, :i32_shr_u) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
+    j2 = b - (32 * Integer.floor_div(b, 32))
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, a >>> b))}
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, j2)))}
   end
 
   defp exec_inst({frame, vm}, :i64_eq) do

@@ -239,6 +239,8 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   defp parse_instruction(:i32_rem_s, bytecode), do: {:i32_rem_s, bytecode} # Done
   defp parse_instruction(:i32_rem_u, bytecode), do: {:i32_rem_u, bytecode} # Done
   defp parse_instruction(:i32_or, bytecode), do: {:i32_or, bytecode} # Done
+  defp parse_instruction(:i32_and, bytecode), do: {:i32_and, bytecode} # Done
+  defp parse_instruction(:i64_and, bytecode), do: {:i64_and, bytecode} # Done
   defp parse_instruction(:i32_xor, bytecode), do: {:i32_xor, bytecode} # Done
   defp parse_instruction(:i32_shr_s, bytecode), do: {:i32_shr_s, bytecode} # Done
   defp parse_instruction(:i64_eqz, bytecode), do: {:i64_eqz, bytecode} # Done

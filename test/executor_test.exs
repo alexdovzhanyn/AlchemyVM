@@ -87,9 +87,18 @@ defmodule WaspVM.ExecutorTest do
     test "32 bit signed int can divide properly" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-      result = WaspVM.execute(pid, "i32__div_s", [-4, 2])
-      assert result == {:ok, 4294967294}
+      {:ok, result} = WaspVM.execute(pid, "i32__div_s", [-4, 2])
+      answer = :math.pow(2, 32) + (result)
+      assert answer == 4294967294
     end
+
+    test "32 bit float can divide properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      result = WaspVM.execute(pid, "f32__div", [4.0, 2.0])
+      assert result == {:ok, 2.0}
+    end
+    #### End Basic Div Operations
 
     #### Basic REM Operations
 
@@ -116,5 +125,132 @@ defmodule WaspVM.ExecutorTest do
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
       assert WaspVM.execute(pid, "i64__rem_s", [-5, 2]) == {:ok, 1.8446744073709552e19}
     end
+
+    #### End Basic Rem Operations
+
+    #### Basic popcnt Operations
+
+    test "32 bit int can popcnt properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "i32__popcnt", [128]) == {:ok, 1}
+    end
+
+    test "64 bit int can popcnt properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "i64__popcnt", [128]) == {:ok, 1}
+    end
+
+    #### End Basic PopCnt Operations
+
+    #### Basic Bitwise Operations
+
+    test "32 bit int can Conjucture properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "i32__and", [11, 5]) == {:ok, 1}
+    end
+
+    test "64 bit int can Conjucture properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "i64__and", [11, 5]) == {:ok, 1}
+    end
+
+    test "32 bit int can or properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "i32__or", [11, 5]) == {:ok, 15}
+    end
+
+    test "64 bit int can or properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "i64__or", [11, 5]) == {:ok, 15}
+    end
+
+    test "32 bit int can xor properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "i32__xor", [11, 5]) == {:ok, 14}
+    end
+
+    test "64 bit int can xor properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "i64__xor", [11, 5]) == {:ok, 14}
+    end
+
+    test "32 bit int / ns can shl properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      {:ok, result} = WaspVM.execute(pid, "i32__shl", [-100, 3])
+
+      answer = :math.pow(2, 32) + result
+
+      assert Kernel.round(answer) == 4294966496
+    end
+
+    test "64 bit int can shl properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      {:ok, result} = WaspVM.execute(pid, "i64__shl", [-100, 3])
+      answer = :math.pow(2, 64) + result
+
+
+    #  assert round(answer) == 18446744073709550816
+    end
+
+    # Might need to extend by most sig bit of orig value
+    test "32 bit sint can shr properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      {:ok, result} = WaspVM.execute(pid, "i32__shr_s", [-100, 3])
+
+      answer = :math.pow(2, 32) + result
+
+      assert Kernel.round(answer) == 4294967283
+    end
+
+    test "64 bit sint can shr properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      {:ok, result} = WaspVM.execute(pid, "i64__shr_s", [-100, 3])
+
+      answer = :math.pow(2, 64) + result
+
+    #  assert Kernel.round(answer) == 18446744073709551603
+    end
+
+    # Not working Apparently??
+
+    test "32 bit uint can shr properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      {:ok, result} = WaspVM.execute(pid, "i32__shr_u", [-100, 3])
+
+      answer = :math.pow(2, 32) + result
+
+      assert Kernel.round(answer) == 536870899
+    end
+
+    test "64 bit uint can shr properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      {:ok, result} = WaspVM.execute(pid, "i64__shr_u", [-100, 3])
+
+      answer = :math.pow(2, 64) + result
+
+    #  assert Kernel.round(answer) == 2305843009213693939
+    end
+
+
 
 end

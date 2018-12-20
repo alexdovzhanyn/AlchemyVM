@@ -89,7 +89,7 @@ defmodule WaspVM.OpCodes do
       <<0x6E>> -> :i32_div_u
       <<0x6F>> -> :i32_rem_s
       <<0x70>> -> :i32_rem_u
-      <<0x71>> -> :i32_add
+      <<0x71>> -> :i32_and
       <<0x72>> -> :i32_or
       <<0x73>> -> :i32_xor
       <<0x74>> -> :i32_shl
@@ -118,7 +118,7 @@ defmodule WaspVM.OpCodes do
       <<0x80>> -> :i64_div_u
       <<0x81>> -> :i64_rem_s
       <<0x82>> -> :i64_rem_u
-      <<0x83>> -> :i64_add
+      <<0x83>> -> :i64_and
       <<0x84>> -> :i64_or
       <<0x85>> -> :i64_xor
       <<0x86>> -> :i64_shl
