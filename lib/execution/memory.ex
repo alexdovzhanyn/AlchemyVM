@@ -1,8 +1,11 @@
 defmodule WaspVM.Memory do
   alias WaspVM.Memory
   require IEx
+
   defstruct data: {},
             limit: :infinity
+
+  @page_size 0x10000 # 64 KiB
 
   @moduledoc """
     Virtual Memory representation and interaction
@@ -57,7 +60,7 @@ defmodule WaspVM.Memory do
 
   defp initialize_empty_mem(pages) do
     <<0>>
-    |> List.duplicate((1024 * 64) * pages)
+    |> List.duplicate(@page_size * pages)
     |> List.to_tuple()
   end
 end

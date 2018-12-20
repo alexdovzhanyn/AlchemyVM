@@ -1,7 +1,5 @@
 defmodule WaspVM.Decoder.TableSectionParser do
   alias WaspVM.LEB128
-  alias WaspVM.OpCodes
-  alias WaspVM.Module
 
   def parse(module) do
     {count, entries} =
@@ -9,8 +7,8 @@ defmodule WaspVM.Decoder.TableSectionParser do
       |> Map.get(4)
       |> LEB128.decode()
 
-
     entries =
+      # Not correct. Only parses first item out
       if count > 0 do
         <<flags, rest::binary>> = entries
 
@@ -29,8 +27,7 @@ defmodule WaspVM.Decoder.TableSectionParser do
         []
       end
 
-    Map.put(module, :table, {entries})
+    Map.put(module, :table, entries)
   end
-
 
 end

@@ -10,17 +10,18 @@ defmodule WaspVM.Executor do
   def execute(%{next_instr: n, instructions: i}, vm) when n == length(i), do: vm
 
   def execute(frame, vm) do
-    instr = Enum.at(frame.instructions, frame.next_instr)
-
-    {frame, vm} = instruction({frame, vm}, instr)
+    {frame, vm} =
+      frame.instructions
+      |> Enum.at(frame.next_instr)
+      |> instruction({frame, vm})
 
     frame = Map.put(frame, :next_instr, frame.next_instr + 1)
 
     execute(frame, vm)
   end
 
-  def instruction(ctx, opcode) when is_atom(opcode), do: exec_inst(ctx, opcode)
-  def instruction(ctx, op) when is_tuple(op), do: exec_inst(ctx, op)
+  def instruction(opcode, ctx) when is_atom(opcode), do: exec_inst(ctx, opcode)
+  def instruction(opcode, ctx) when is_tuple(opcode), do: exec_inst(ctx, opcode)
 
   defp exec_inst({frame, vm}, {:i32_const, i32}) do
     {frame, Map.put(vm, :stack, Stack.push(vm.stack, i32))}
@@ -256,6 +257,7 @@ defmodule WaspVM.Executor do
 
   defp exec_inst({frame, vm}, :i32_rem_u) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
     if b == 0 do
       {:error, :undefined}
     else
@@ -265,7 +267,6 @@ defmodule WaspVM.Executor do
 
   defp exec_inst({frame, vm}, :i64_rem_u) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
-
 
     if b == 0 do
       {:error, :undefined}
@@ -375,13 +376,11 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm}, :f32_sqrt) do
     {[a], stack} = Stack.pop(vm.stack)
 
-
     {frame, Map.put(vm, :stack, Stack.push(stack, :math.sqrt(a)))}
   end
 
   defp exec_inst({frame, vm}, :f64_sqrt) do
     {[a], stack} = Stack.pop(vm.stack)
-
 
     {frame, Map.put(vm, :stack, Stack.push(stack, :math.sqrt(a)))}
   end
@@ -392,25 +391,11 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, a / b))}
   end
 
-  defp signed_bits(integer, 32), do: <<integer::32>>
-  defp signed_bits(integer, 64), do: <<integer::64>>
-
-
-  # Reference https://lemire.me/blog/2017/05/29/unsigned-vs-signed-integer-arithmetic/
-  defp sign_value(integer, n), do: sign_value(integer, n, :math.pow(-2, 31), :math.pow(2, 31))
-
-  defp sign_value(integer, n, upper, lower) when integer >= 0 and integer < lower, do: integer
-
-
-  defp sign_value(integer, n, upper, lower) when integer > upper and integer < -1, do: :math.pow(2, 32) + integer
-
-
   defp exec_inst({frame, vm}, :i32_div_s) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
     j1 = sign_value(a, 32)
     j2 = sign_value(b, 32)
-
 
     if j2 == 0 do
       {:error, :undefined}
@@ -452,52 +437,50 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm}, :i32_div_u) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-      if b == 0 do
-        {:error, :undefined}
-      else
-        rem = a - (b*trunc(a/b))
-        result = Integer.floor_div((a - rem), b)
-        {frame, Map.put(vm, :stack, Stack.push(stack, result))}
-      end
+    if b == 0 do
+      {:error, :undefined}
+    else
+      rem = a - (b*trunc(a/b))
+      result = Integer.floor_div((a - rem), b)
+      {frame, Map.put(vm, :stack, Stack.push(stack, result))}
+    end
   end
 
   defp exec_inst({frame, vm}, :i32_rem_s) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-      if b == 0 do
-        {:error, :undefined}
-      else
-        j1 = sign_value(a, 32)
-        j2 = sign_value(b, 32)
+    if b == 0 do
+      {:error, :undefined}
+    else
+      j1 = sign_value(a, 32)
+      j2 = sign_value(b, 32)
 
-        rem = j1 - (j2*trunc(j1/j2))
-        n = :math.pow(2, 32)
-        res = n - rem
+      rem = j1 - (j2*trunc(j1/j2))
+      n = :math.pow(2, 32)
+      res = n - rem
 
-        {frame, Map.put(vm, :stack, Stack.push(stack, res))}
-      end
+      {frame, Map.put(vm, :stack, Stack.push(stack, res))}
+    end
   end
 
   defp exec_inst({frame, vm}, :i64_rem_s) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-      if b == 0 do
-        {:error, :undefined}
-      else
-        j1 = sign_value(a, 64)
-        j2 = sign_value(b, 64)
+    if b == 0 do
+      {:error, :undefined}
+    else
+      j1 = sign_value(a, 64)
+      j2 = sign_value(b, 64)
 
-        rem = j1 - (j2*trunc(j1/j2))
-        n = :math.pow(2, 64)
-        res = n - rem
+      rem = j1 - (j2*trunc(j1/j2))
+      n = :math.pow(2, 64)
+      res = n - rem
 
-
-        {frame, Map.put(vm, :stack, Stack.push(stack, res))}
-      end
+      {frame, Map.put(vm, :stack, Stack.push(stack, res))}
+    end
   end
 
-   defp exec_inst({frame, vm}, :i64_div_u) do
-
+  defp exec_inst({frame, vm}, :i64_div_u) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
     if b == 0 do
@@ -507,23 +490,7 @@ defmodule WaspVM.Executor do
       result = Integer.floor_div((a - rem), b)
       {frame, Map.put(vm, :stack, Stack.push(stack, result))}
     end
-   end
-
-   defp popcnt(integer, 32) do
-     bin_rep = <<integer::32>>
-     bin_rep
-     |> Binary.to_list
-     |> Enum.reject(&(&1 == 0))
-     |> Enum.count
-   end
-
-   defp popcnt(integer, 64) do
-     bin_rep = <<integer::64>>
-     bin_rep
-     |> Binary.to_list
-     |> Enum.reject(&(&1 == 0))
-     |> Enum.count
-   end
+  end
 
   defp exec_inst({frame, vm}, :i32_popcnt) do
     {a, stack} = Stack.pop(vm.stack)
@@ -535,14 +502,6 @@ defmodule WaspVM.Executor do
     {a, stack} = Stack.pop(vm.stack)
     result = popcnt(a, 64)
     {frame, Map.put(vm, :stack, Stack.push(stack, result))}
-  end
-
-  defp rotl(number, shift) do
-    number <<< shift ||| number >>> (32 - shift)
-  end
-
-  defp rotr(number, shift) do
-    (32- number) <<< shift ||| number >>> shift
   end
 
   defp exec_inst({frame, vm}, :i32_rotl) do
@@ -875,12 +834,37 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, :unreachable), do: {frame, vm}
-
   defp exec_inst({frame, vm}, :nop), do: {frame, vm}
-
   defp exec_inst({frame, vm}, :end), do: {frame, vm}
 
   defp exec_inst({frame, vm}, op) do
     IEx.pry
+  end
+
+  # Reference https://lemire.me/blog/2017/05/29/unsigned-vs-signed-integer-arithmetic/
+  defp sign_value(integer, n), do: sign_value(integer, n, :math.pow(-2, 31), :math.pow(2, 31))
+  defp sign_value(integer, n, upper, lower) when integer >= 0 and integer < lower, do: integer
+  defp sign_value(integer, n, upper, lower) when integer > upper and integer < -1, do: :math.pow(2, 32) + integer
+
+  defp popcnt(integer, 32) do
+    <<integer::32>>
+    |> Binary.to_list()
+    |> Enum.reject(& &1 == 0)
+    |> Enum.count()
+  end
+
+  defp popcnt(integer, 64) do
+    <<integer::64>>
+    |> Binary.to_list()
+    |> Enum.reject(& &1 == 0)
+    |> Enum.count()
+  end
+
+  defp rotl(number, shift) do
+    number <<< shift ||| number >>> (32 - shift)
+  end
+
+  defp rotr(number, shift) do
+    (32 - number) <<< shift ||| number >>> shift
   end
 end

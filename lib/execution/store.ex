@@ -2,8 +2,12 @@ defmodule WaspVM.Store do
   require IEx
   alias WaspVM.Memory
   alias WaspVM.Store
-  alias WaspVM.Module
-  alias WaspVM.ModuleInstance
+
+  defstruct funcs: [],
+            mems: [],
+            globals: [],
+            tables: []
+
   @moduledoc """
     The store represents all global state that can be manipulated
     by WebAssembly programs. It consists of the runtime representation
@@ -11,11 +15,10 @@ defmodule WaspVM.Store do
     have been allocated during the life time of the abstract machine.
   """
 
-  defstruct funcs: [],
-            mems: [],
-            globals: [],
-            tables: []
-
+  @doc """
+    Allocate new memory to the store. Returns a tuple with the address
+    of the allocated memory and the new store.
+  """
   @spec allocate_memory(Store, Memory) :: {:ok, integer, Store}
   def allocate_memory(store, memory) do
     index = length(store.mems)
@@ -24,6 +27,11 @@ defmodule WaspVM.Store do
     {:ok, index, Map.put(store, :mems, mems)}
   end
 
+  @doc """
+    Allocate a function to the store. Returns a tuple with the address
+    of the allocated function and the new store.
+  """
+  @spec allocate_func(Store, map) :: {:ok, integer, Store}
   def allocate_func(store, func) do
     index = length(store.funcs)
     funcs = List.insert_at(store.funcs, index, func)
