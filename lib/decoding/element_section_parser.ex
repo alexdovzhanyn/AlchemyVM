@@ -8,7 +8,7 @@ defmodule WaspVM.Decoder.ElementSectionParser do
     {count, entries} =
       module.sections
       |> Map.get(9)
-      |> LEB128.decode()
+      |> LEB128.decode_unsigned()
 
     entries = if count > 0, do: parse_entries(entries), else: []
 
@@ -19,7 +19,7 @@ defmodule WaspVM.Decoder.ElementSectionParser do
   defp parse_entries(parsed, <<>>), do: parsed
 
   defp parse_entries(parsed, entries) do
-    {index, entries} = LEB128.decode(entries)
+    {index, entries} = LEB128.decode_unsigned(entries)
 
     end_opcode = 0x0b
 

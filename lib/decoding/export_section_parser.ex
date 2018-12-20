@@ -7,7 +7,7 @@ defmodule WaspVM.Decoder.ExportSectionParser do
     {count, entries} =
       module.sections
       |> Map.get(7)
-      |> LEB128.decode()
+      |> LEB128.decode_unsigned()
 
     entries = if count > 0, do: parse_entries(entries), else: []
     entries = entries |> Enum.reject(&(&1 == nil))
@@ -19,11 +19,11 @@ defmodule WaspVM.Decoder.ExportSectionParser do
   defp parse_entries(parsed, <<>>), do: parsed
 
   defp parse_entries(parsed, entries) do
-    {field_len, entries} = LEB128.decode(entries)
+    {field_len, entries} = LEB128.decode_unsigned(entries)
 
     <<field_str::bytes-size(field_len), kind, entries::binary>> = entries
 
-    {index, entries} = LEB128.decode(entries)
+    {index, entries} = LEB128.decode_unsigned(entries)
 
     entry = %{
       name: field_str,

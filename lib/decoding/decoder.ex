@@ -54,7 +54,7 @@ defmodule WaspVM.Decoder do
   end
 
   defp decode_section(sec_code, bin) when sec_code > 0 do
-    {size, rest} = LEB128.decode(bin)
+    {size, rest} = LEB128.decode_unsigned(bin)
 
     <<section::bytes-size(size), rest::binary>> = rest
 

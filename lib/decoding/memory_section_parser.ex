@@ -5,7 +5,7 @@ defmodule WaspVM.Decoder.MemorySectionParser do
     {count, entries} =
       module.sections
       |> Map.get(5)
-      |> LEB128.decode()
+      |> LEB128.decode_unsigned()
 
     # Right now each module can have only 1 memory entry.
     # Might have to refactor this if a new version of Wasm
@@ -14,12 +14,12 @@ defmodule WaspVM.Decoder.MemorySectionParser do
       if count > 0 do
         <<flags, rest::binary>> = entries
 
-        {initial, rest} = LEB128.decode(rest)
+        {initial, rest} = LEB128.decode_unsigned(rest)
 
         entry = %{initial: initial}
 
         if flags == 1 do
-          {max, _rest} = LEB128.decode(rest)
+          {max, _rest} = LEB128.decode_unsigned(rest)
 
           Map.put(entry, :max, max)
         else
