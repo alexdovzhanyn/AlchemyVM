@@ -416,6 +416,7 @@ defmodule WaspVM.Executor do
 
 
   defp exec_inst({frame, vm}, :i32_div_s) do
+    IO.puts "IN DIV"
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
     j1 = sign_value(a, 32)
@@ -428,7 +429,12 @@ defmodule WaspVM.Executor do
       if j1/j2 == :math.pow(2, 31) do
         {:error, :undefined}
       else
-        {frame, Map.put(vm, :stack, Stack.push(stack, trunc(j1/j2)))}
+        res = trunc(j1/j2) |> IO.inspect
+        n = :math.pow(2, 32)
+        n_1 = :math.pow(2, 31) |> IO.inspect
+        q = res - n |> IO.inspect
+
+        {frame, Map.put(vm, :stack, Stack.push(stack, res - n))}
       end
     end
   end

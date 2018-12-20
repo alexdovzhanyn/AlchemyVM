@@ -39,7 +39,7 @@ defmodule WaspVM do
   def handle_call({:load_module, module}, _from, vm) do
     {moduleinst, store} = ModuleInstance.instantiate(ModuleInstance.new(), module, vm.store)
 
-    modules = [moduleinst | vm.modules] |> IO.inspect
+    modules = [moduleinst | vm.modules]
 
     {:reply, :ok, Map.merge(vm, %{modules: modules, store: store})}
   end
@@ -48,8 +48,13 @@ defmodule WaspVM do
     {func_addr, module} =
       Enum.find_value(vm.modules, fn module ->
         a =
-          Enum.find_value(module.exports, fn {name, addr} ->
-            if name == fname, do: addr, else: false
+          Enum.find_value(module.exports, fn export ->
+            if export !== nil do
+              {name, addr} = export
+              if name == fname, do: addr, else: false
+            else
+              false
+            end
           end)
 
         if a, do: {a, module}, else: {:not_found, 0}

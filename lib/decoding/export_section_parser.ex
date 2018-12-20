@@ -10,7 +10,8 @@ defmodule WaspVM.Decoder.ExportSectionParser do
       |> LEB128.decode()
 
     entries = if count > 0, do: parse_entries(entries), else: []
-
+    entries = entries |> Enum.reject(&(&1 == nil))
+  
     Map.put(module, :exports, Enum.reverse(entries))
   end
 
