@@ -11,9 +11,7 @@ defmodule WaspVM.Decoder.GlobalSectionParser do
       |> Map.get(6)
       |> LEB128.decode_unsigned()
 
-    IO.inspect(count, label: "GLOBAL COUNT")
-
-    globals = if count > 0, do: parse_entries(entries), else: []
+    globals = if count > 0, do: Enum.reverse(parse_entries(entries)), else: []
 
     Map.put(module, :globals, globals)
   end
@@ -32,9 +30,15 @@ defmodule WaspVM.Decoder.GlobalSectionParser do
 
     {initial, entries} = evaluate_init_expr(entries)
 
-    IEx.pry
+    global = %{type: type, mutable: mutable, initial: initial}
+
+    parse_entries([global | parsed], entries)
   end
 
+  # In the MVP, to keep things simple while still supporting the basic
+  # needs of dynamic linking, initializer expressions are restricted to
+  # the four constant operators and get_global, where the global index
+  # must refer to an immutable import.
   defp evaluate_init_expr(entries), do: evaluate_init_expr([], entries)
   defp evaluate_init_expr(parsed, bytecode) do
     <<opcode::bytes-size(1), bytecode::binary>> = bytecode
@@ -45,17 +49,18 @@ defmodule WaspVM.Decoder.GlobalSectionParser do
       |> InstructionParser.parse_instruction(bytecode)
 
     if instruction == :end do
-      execute_init_expr({parsed, bytecode})
+      # Should only be one instruction in the MVP, no other combination is valid
+      [{instr, val}] = parsed
+
+      if instr == :get_global do
+        raise "Not implemented: :get_global in init expression"
+      else
+        {val, bytecode}
+      end
     else
       evaluate_init_expr([instruction | parsed], bytecode)
     end
   end
 
-  defp execute_init_expr({expr, bytecode}) do
-    IEx.pry
-    #
-    #
-    # {, bytecode}
-  end
 
 end

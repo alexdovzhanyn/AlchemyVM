@@ -1,6 +1,7 @@
 defmodule WaspVM.Decoder.InstructionParser do
   alias WaspVM.LEB128
   alias WaspVM.OpCodes
+  require IEx
 
   # Needs revisiting
   def parse_instruction(:call_indirect, bytecode) do
@@ -145,8 +146,8 @@ defmodule WaspVM.Decoder.InstructionParser do
   def parse_instruction(:tee_local, bytecode), do: get_single_value(:tee_local, bytecode) # Done
   def parse_instruction(:i32_const, bytecode), do: get_single_value(:i32_const, bytecode) # Done
   def parse_instruction(:i64_const, bytecode), do: get_single_value(:i64_const, bytecode) # Done
-  def parse_instruction(:f32_const, bytecode), do: get_single_value(:f32_const, bytecode) # Done
-  def parse_instruction(:f64_const, bytecode), do: get_single_value(:f64_const, bytecode) # Done
+  def parse_instruction(:f32_const, bytecode), do: get_single_float(:f32_const, bytecode) # Done
+  def parse_instruction(:f64_const, bytecode), do: get_single_float(:f64_const, bytecode) # Done
   def parse_instruction(:i32_store, bytecode), do: get_two_values(:i32_store, bytecode) # Done
   def parse_instruction(:i32_load, bytecode), do: get_two_values(:i32_load, bytecode) # Done
   def parse_instruction(:i64_load, bytecode), do: get_two_values(:i64_load, bytecode) # Done
@@ -215,6 +216,22 @@ defmodule WaspVM.Decoder.InstructionParser do
     {{opcode, val}, rest}
   end
 
+  defp get_single_float(:f32_const = opcode, bytecode) do
+    <<little_endian::bytes-size(4), rest::binary>> = bytecode
+
+    <<val::32-float>> = little_to_big(little_endian)
+
+    {{opcode, val}, rest}
+  end
+
+  defp get_single_float(:f64_const = opcode, bytecode) do
+    <<little_endian::bytes-size(8), rest::binary>> = bytecode
+
+    <<val::64-float>> = little_to_big(little_endian)
+
+    {{opcode, val}, rest}
+  end
+
   defp get_two_values(opcode, bytecode) do
     {val1, rest} = LEB128.decode_signed(bytecode)
     {val2, rest} = LEB128.decode_signed(rest)
@@ -230,4 +247,9 @@ defmodule WaspVM.Decoder.InstructionParser do
     get_entries([entry | entries], bin, count - 1)
   end
 
+  defp little_to_big(bin) do
+    bin
+    |> :binary.decode_unsigned(:little)
+    |> :binary.encode_unsigned(:big)
+  end
 end
