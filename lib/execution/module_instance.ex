@@ -41,10 +41,18 @@ defmodule WaspVM.ModuleInstance do
         {addr, updated_s}
       end)
 
-    # TODO: Implement table & global initialization
+    {globaladdrs, store} =
+      Enum.map_reduce(module.globals, store, fn glob, s ->
+        {:ok, addr, updated_s} = Store.allocate_global(s, glob)
+
+        {addr, updated_s}
+      end)
+
+    # TODO: Implement table initialization
     instance = Map.merge(instance, %{
       memaddrs: memaddrs,
       funcaddrs: funcaddrs,
+      globaladdrs: globaladdrs,
       types: module.types
     })
 
