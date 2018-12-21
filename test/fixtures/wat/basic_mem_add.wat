@@ -4,7 +4,7 @@
   (global $a i32 (i32.const -2))
   (start 1)
   (memory 1)
-  (func (export "fill_mem")
+  (func
   	i32.const 0
     i32.const 1512
     i32.store
@@ -14,6 +14,7 @@
     i32.store
   )
   (func (export "basic_mem_add") (param i32 i32) (result i32) (local i32)
+    call 1
     get_local 0
     i32.load
     set_local 2
