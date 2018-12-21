@@ -1,11 +1,35 @@
 defmodule WaspVM.Executor do
   alias WaspVM.Stack
+  alias WaspVM.Frame
   alias WaspVM.Memory
   use Bitwise
   require Logger
   require IEx
 
   # Reference for tests being used: https://github.com/WebAssembly/wabt/tree/master/test
+
+  def create_frame_and_execute(vm, addr) do
+    {{inputs, _outputs}, module_ref, instr, locals} = Enum.at(vm.store.funcs, addr)
+
+    {args, stack} = Stack.pop_multiple(vm.stack, tuple_size(inputs))
+
+    if tuple_size(inputs) != length(args) do
+      {{:error, :param_mismatch, tuple_size(inputs), length(args)}, vm}
+    else
+      module = Enum.find(vm.modules, & &1.ref == module_ref)
+
+      vm = Map.put(vm, :stack, stack)
+
+      frame = %Frame{
+        module: module,
+        instructions: instr,
+        locals: args ++ Enum.map(locals, fn _ -> 0 end),
+        next_instr: 0
+      }
+
+      execute(frame, vm)
+    end
+  end
 
   def execute(%{next_instr: n, instructions: i}, vm) when n == length(i), do: vm
 
@@ -831,6 +855,14 @@ defmodule WaspVM.Executor do
     {pages, stack} = Stack.pop(vm.stack)
 
     {frame, Map.merge(vm, %{memory: Memory.grow(vm.memory, pages), stack: Stack.push(stack, length(vm.memory))})}
+  end
+
+  defp exec_inst({frame, vm}, {:call, funcidx}) do
+    func_addr = Enum.at(frame.module.funcaddrs, funcidx)
+
+    vm = create_frame_and_execute(vm, func_addr)
+
+    {frame, vm}
   end
 
   defp exec_inst({frame, vm}, :unreachable), do: {frame, vm}

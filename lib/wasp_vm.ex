@@ -4,7 +4,6 @@ defmodule WaspVM do
   alias WaspVM.Stack
   alias WaspVM.ModuleInstance
   alias WaspVM.Store
-  alias WaspVM.Frame
   alias WaspVM.Executor
   require IEx
 
@@ -47,7 +46,7 @@ defmodule WaspVM do
   end
 
   def handle_call({:execute, fname, args}, _from, vm) do
-    {func_addr, module} =
+    {func_addr, _module} =
       Enum.find_value(vm.modules, fn module ->
         a =
           Enum.find_value(module.exports, fn export ->
@@ -65,7 +64,7 @@ defmodule WaspVM do
     {reply, vm} =
       case func_addr do
         :not_found -> {{:error, :no_exported_function, fname}, vm}
-        addr -> execute_func(vm, addr, module, args)
+        addr -> execute_func(vm, addr, args)
       end
 
     {:reply, reply, vm}
@@ -73,32 +72,18 @@ defmodule WaspVM do
 
   def handle_call(:vm_state, _from, vm), do: {:reply, vm, vm}
 
-  @spec execute_func(WaspVM, integer, ModuleInstance, list) :: tuple
-  defp execute_func(vm, addr, module, args) do
-    {{inputs, _outputs}, _module_ref, instr, locals} = Enum.at(vm.store.funcs, addr)
+  @spec execute_func(WaspVM, integer, list) :: tuple
+  defp execute_func(vm, addr, args) do
+    stack = Enum.reduce(args, vm.stack, fn arg, s -> Stack.push(s, arg) end)
 
-    {res, vm} =
-      if tuple_size(inputs) != length(args) do
-        {{:error, :param_mismatch, tuple_size(inputs), length(args)}, vm}
-      else
-        frame = %Frame{
-          module: module,
-          instructions: instr,
-          locals: args ++ Enum.map(locals, fn _ -> 0 end),
-          next_instr: 0
-        }
+    vm =
+      vm
+      |> Map.put(:stack, stack)
+      |> Executor.create_frame_and_execute(addr)
 
-        final_vm = Executor.execute(frame, vm)
-
-        result =
-          if final_vm.stack.elements == [] do
-            :ok
-          else
-            {:ok, hd(final_vm.stack.elements)}
-          end
-
-        {result, final_vm}
-      end
-    {res, vm}
+    case vm do
+      tuple when is_tuple(tuple) -> tuple
+      _ -> {{:ok, hd(vm.stack.elements)}, vm}
+    end
   end
 end
