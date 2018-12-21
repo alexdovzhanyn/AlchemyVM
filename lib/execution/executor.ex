@@ -428,9 +428,8 @@ defmodule WaspVM.Executor do
         {:error, :undefined}
       else
         res = trunc(j1/j2)
-        n = :math.pow(2, 31)
-        s_1 = n + res
-        ans = s_1 - :math.pow(2, 32)
+        ans = sign_value(res, 32)
+
         {frame, Map.put(vm, :stack, Stack.push(stack, ans))}
       end
     end
@@ -450,9 +449,8 @@ defmodule WaspVM.Executor do
         {:error, :undefined}
       else
         res = trunc(j1/j2)
-        n = :math.pow(2, 63)
-        s_1 = n + res
-        ans = s_1 - :math.pow(2, 64)
+        ans = sign_value(res, 64)
+
         {frame, Map.put(vm, :stack, Stack.push(stack, ans))}
       end
     end
@@ -530,18 +528,36 @@ defmodule WaspVM.Executor do
 
   defp exec_inst({frame, vm}, :i32_rotl) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
-    j2 = b - (32 * Integer.floor_div(b, 32))
 
-    answer = rotl(a, j2)
+    #a =
+    #<<a::32>>
+    #|> Binary.to_list()
+    #|> Enum.reverse
+    #|> Binary.from_list
+
+    #b =
+  #  <<b::32>>
+    #|> Binary.to_list()
+  #  |> Enum.reverse
+  #  |> Binary.from_list
+
+  #  Enum.into([1,0,0,1,1,0,0,1,0,0,0,1,1,1,0,0], <<>>, fn bit -> <<bit :: 1>> end)
+
+    #a_S = sign_value(a, 32)
+    #b_S = round(sign_value(:binary.decode_unsigned(b), 32)) |> IO.inspect
+
+    #j2 = Integer.mod(32, b)#32 - (b * Integer.floor_div(32, b))
+
+    answer = rotl(b, a)
+
 
     {frame, Map.put(vm, :stack, Stack.push(stack, answer))}
   end
 
   defp exec_inst({frame, vm}, :i32_rotr) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
-    j2 = Integer.mod(b, 32)
 
-    answer = rotr(a, j2)
+    answer = rotl(-b, -a) |> IO.inspect(label: "rotr")
 
     {frame, Map.put(vm, :stack, Stack.push(stack, answer))}
   end
@@ -874,9 +890,13 @@ defmodule WaspVM.Executor do
   end
 
   # Reference https://lemire.me/blog/2017/05/29/unsigned-vs-signed-integer-arithmetic/
-  defp sign_value(integer, n), do: sign_value(integer, n, :math.pow(-2, 31), :math.pow(2, 31))
-  defp sign_value(integer, n, upper, lower) when integer >= 0 and integer < lower, do: integer
-  defp sign_value(integer, n, upper, lower) when integer > upper and integer < -1, do: :math.pow(2, 32) + integer
+
+  defp sign_value(integer, n), do: sign_value(integer, n, :math.pow(2, 31), :math.pow(2, 32))
+  defp sign_value(integer, n, lower, upper) when integer > 0 and integer < lower, do: integer
+  defp sign_value(integer, n, lower, upper) when integer < 0 and integer > -lower, do: integer
+  defp sign_value(integer, n, lower, upper) when integer > lower and integer < upper, do: :math.pow(2, 32) + integer
+  defp sign_value(integer, n, lower, upper) when integer > -lower and integer < -upper, do: :math.pow(2, 32) + integer
+
 
   defp popcnt(integer, 32) do
     <<integer::32>>
@@ -892,11 +912,19 @@ defmodule WaspVM.Executor do
     |> Enum.count()
   end
 
-  defp rotl(number, shift) do
-    number <<< shift ||| number >>> (32 - shift)
+  def rotl(number, shift) do
+
+
+    (number <<< shift) ||| (number >>> (0x1F &&& (32 + ~~~(shift + 1)))) &&& ~~~(0xFFFFFFFF <<< shift)
+
   end
 
+
+
   defp rotr(number, shift) do
-    (32 - number) <<< shift ||| number >>> shift
+  #  ((value << rotation) & bitMask) | (value >>> (bitWidth - rotation))
+
+    #(number >>> shift) ||| (number <<< -shift)
+      (number >>> shift) ||| (number <<< ((32 + ~~~(shift + 1)) &&& 0x1F)) &&& ~~~(0xFFFFFFFF <<< shift)
   end
 end
