@@ -3,10 +3,10 @@ defmodule WaspVM.Decoder.Util do
 
   def decode_resizeable_limits(bin) do
     <<flags, rest::binary>> = bin
-    {initial, rest} = LEB128.decode(rest)
+    {initial, rest} = LEB128.decode_unsigned(rest)
 
     if flags > 0 do
-      {max, rest} = LEB128.decode(rest)
+      {max, rest} = LEB128.decode_unsigned(rest)
 
       {%{initial: initial, max: max}, rest}
     else

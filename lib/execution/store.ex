@@ -38,4 +38,16 @@ defmodule WaspVM.Store do
 
     {:ok, index, Map.put(store, :funcs, funcs)}
   end
+
+  @doc """
+    Allocate a global to the store. Returns a tuple with the address
+    of the allocated global and the new store.
+  """
+  @spec allocate_global(Store, map) :: {:ok, integer, Store}
+  def allocate_global(store, global) do
+    index = length(store.globals)
+    globals = List.insert_at(store.globals, index, global)
+
+    {:ok, index, Map.put(store, :globals, globals)}
+  end
 end

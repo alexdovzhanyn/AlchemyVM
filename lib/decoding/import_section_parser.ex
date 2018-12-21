@@ -7,7 +7,7 @@ defmodule WaspVM.Decoder.ImportSectionParser do
     {count, entries} =
       module.sections
       |> Map.get(2)
-      |> LEB128.decode()
+      |> LEB128.decode_unsigned()
 
     entries = if count > 0, do: parse_entries(entries), else: []
 
@@ -18,11 +18,11 @@ defmodule WaspVM.Decoder.ImportSectionParser do
   defp parse_entries(parsed, <<>>), do: parsed
 
   defp parse_entries(parsed, entries) do
-    {module_len, entries} = LEB128.decode(entries)
+    {module_len, entries} = LEB128.decode_unsigned(entries)
 
     <<module_str::bytes-size(module_len), entries::binary>> = entries
 
-    {field_len, entries} = LEB128.decode(entries)
+    {field_len, entries} = LEB128.decode_unsigned(entries)
 
     <<field_str::bytes-size(field_len), kind, entries::binary>> = entries
 
@@ -36,7 +36,7 @@ defmodule WaspVM.Decoder.ImportSectionParser do
     {entry, entries} =
       case kind do
         :func ->
-          {index, entries} = LEB128.decode(entries)
+          {index, entries} = LEB128.decode_unsigned(entries)
 
           entry =
             entry

@@ -6,7 +6,7 @@ defmodule WaspVM.Decoder.TypeSectionParser do
     {count, entries} =
       module.sections
       |> Map.get(1)
-      |> LEB128.decode()
+      |> LEB128.decode_unsigned()
 
     entries =
       if count > 0 do
@@ -27,7 +27,7 @@ defmodule WaspVM.Decoder.TypeSectionParser do
   end
 
   defp parse_type_entry(entry) do
-    {count, entry} = LEB128.decode(entry)
+    {count, entry} = LEB128.decode_unsigned(entry)
 
     if count > 0 do
       <<the_types::bytes-size(count), rest::binary>> = entry

@@ -1,6 +1,7 @@
 (module
   (import "console" "log" (func $log (param i32)))
   (global $g (import "js" "global") (mut i32))
+  (global $a i32 (i32.const -2))
   (start 1)
   (memory 1)
   (func (export "fill_mem")

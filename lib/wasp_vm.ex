@@ -36,6 +36,8 @@ defmodule WaspVM do
     GenServer.call(ref, {:execute, func, args}, :infinity)
   end
 
+  def vm_state(ref), do: GenServer.call(ref, :vm_state, :infinity)
+
   def handle_call({:load_module, module}, _from, vm) do
     {moduleinst, store} = ModuleInstance.instantiate(ModuleInstance.new(), module, vm.store)
 
@@ -68,6 +70,8 @@ defmodule WaspVM do
 
     {:reply, reply, vm}
   end
+
+  def handle_call(:vm_state, _from, vm), do: {:reply, vm, vm}
 
   @spec execute_func(WaspVM, integer, ModuleInstance, list) :: tuple
   defp execute_func(vm, addr, module, args) do

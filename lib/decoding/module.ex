@@ -10,7 +10,8 @@ defmodule WaspVM.Module do
             function_types: [],
             table: nil,
             start: nil,
-            functions: []
+            functions: [],
+            globals: []
 
   def add_section(module, sec_code, section) do
     sections = Map.put(module.sections, sec_code, section)
