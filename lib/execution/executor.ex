@@ -51,18 +51,46 @@ defmodule WaspVM.Executor do
 
   ### Begin PArametric Instructions
 
-  def exec_inst({frame, vm}, :drop) do
+  defp exec_inst({frame, vm}, :drop) do
     {a, stack} = Stack.pop(vm.stack)
 
-    {frame, Map.put(vm, :stack, stack}
+    {frame, Map.put(vm, :stack, stack)}
   end
 
-  def exec_inst({frame, vm}, :select) do
+  defp exec_inst({frame, vm}, :select) do
     {[c, b, a], stack} = Stack.pop_multiple(vm.stack)
 
     val = if c !== 0, do: b, else: a
 
-    {frame, Map.put(vm, :stack, Stack.push(vm.stack, val)}
+    {frame, Map.put(vm, :stack, Stack.push(vm.stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, {:if, res}) do
+    IO.inspect vm
+    IO.inspect frame
+  #  IO.inspect idx1
+    #IO.inspect idx2
+    {a, stack} = Stack.pop(vm.stack)
+    IO.inspect res, label: "Result"
+    IO.inspect a, label: "A"
+    n = 1#Enum.count(result_type)
+    case a do
+      0 -> {Map.put(frame, :next_instr, {n, res}), vm}
+      1 -> {Map.put(frame, :next_instr, {n, res}), vm}
+      _-> {:error, "Incorrect Stack Value from Structured Instruction"}
+    end
+  end
+
+  defp exec_inst({frame, vm}, {:if, result_type, idx1, idx2}) do
+  #  IO.inspect idx1
+    #IO.inspect idx2
+    {a, stack} = Stack.pop(vm.stack)
+  #  n = Enum.count(result_type)
+  #  case a do
+    #  0 -> Map.put(vm.frame, :next_instr, {n, idx1})
+    #  1 -> Map.put(vm.frame, :next_instr, {n, idx2})
+    #  _-> {:error, "Incorrect Stack Value from Structured Instruction"}
+  #  end
   end
 
   defp exec_inst({frame, vm}, {:call, funcidx}) do
@@ -1009,7 +1037,7 @@ defmodule WaspVM.Executor do
   # Reference https://lemire.me/blog/2017/05/29/unsigned-vs-signed-integer-arithmetic/
 
   defp sign_value(integer, n), do: sign_value(integer, n, :math.pow(2, 31), :math.pow(2, 32))
-  defp sign_value(integer, n, lower, upper) when integer > 0 and integer < lower, do: integer
+  defp sign_value(integer, n, lower, upper) when integer >= 0 and integer < lower, do: integer
   defp sign_value(integer, n, lower, upper) when integer < 0 and integer > -lower, do: integer
   defp sign_value(integer, n, lower, upper) when integer > lower and integer < upper, do: :math.pow(2, 32) + integer
   defp sign_value(integer, n, lower, upper) when integer > -lower and integer < -upper, do: :math.pow(2, 32) + integer

@@ -497,6 +497,13 @@ defmodule WaspVM.ExecutorTest do
 
     ### BEGIN PARAMETRIC TEST
 
+    test "if statement works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/if_2.wasm") |> IO.inspect
+      WaspVM.execute(pid, "ifOne", [2]) |> IO.inspect
+
+    end
+
     ### END PARAMTERIC TEST
 
 

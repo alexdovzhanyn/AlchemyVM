@@ -40,7 +40,7 @@ defmodule WaspVM do
   def handle_call({:load_module, module}, _from, vm) do
     {moduleinst, store} = ModuleInstance.instantiate(ModuleInstance.new(), module, vm.store)
 
-    modules = [moduleinst | vm.modules]
+    modules = [moduleinst | vm.modules] |> IO.inspect
 
     {:reply, :ok, Map.merge(vm, %{modules: modules, store: store})}
   end
