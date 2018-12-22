@@ -5,6 +5,7 @@ defmodule WaspVM.Executor do
   use Bitwise
   require Logger
   require IEx
+  alias Decimal, as: D
 
   # Reference for tests being used: https://github.com/WebAssembly/wabt/tree/master/test
 
@@ -300,16 +301,17 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, :f32_min) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-    min = Enum.min([a, b])
-    {frame, Map.put(vm, :stack, Stack.push(stack, min))}
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(Enum.min([a, b]))))}
   end
 
-  defp exec_inst({frame, vm}, :f32_max) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-    max = Enum.max([a, b])
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, max))}
+
+  defp exec_inst({frame, vm}, :f32_max) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(Enum.max([a, b]))))}
   end
 
   defp exec_inst({frame, vm}, :f64_min) do
@@ -890,7 +892,14 @@ defmodule WaspVM.Executor do
 
   defp rotl(number, shift), do: (number <<< shift) ||| (number >>> (0x1F &&& (32 + ~~~(shift + 1)))) &&& ~~~(0xFFFFFFFF <<< shift)
   defp rotr(number, shift), do: (number >>> shift) ||| (number <<< (0x1F &&& (32 + ~~~(-shift + 1)))) &&& ~~~(0xFFFFFFFF <<< -shift)
+  def float_point_op(number) do
+    D.set_context(%D.Context{D.get_context | precision: 6})
 
+    res =
+      number
+      |> :erlang.float_to_binary([decimals: 6])
+      |> D.new()
+  end
 
     #Other Valid & Working
     #a =  Bitwise.bsr(number, shift) |> IO.inspect

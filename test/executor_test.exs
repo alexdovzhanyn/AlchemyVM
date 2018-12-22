@@ -2,6 +2,7 @@ defmodule WaspVM.ExecutorTest do
   use ExUnit.Case
   require Bitwise
   doctest WaspVM
+  alias Decimal, as: D
 
   #### Basic Numeric Operations
   test "32 bit integers with add properly" do
@@ -143,7 +144,8 @@ defmodule WaspVM.ExecutorTest do
       assert WaspVM.execute(pid, "i64__popcnt", [128]) == {:ok, 1}
     end
 
-    #### End Basic PopCnt Operations
+    #### End Basic PopCnt  Operations
+
 
     #### Basic Bitwise Operations
 
@@ -282,6 +284,21 @@ defmodule WaspVM.ExecutorTest do
 
     ### End simnple BitWise Ops
 
+    ### Begin Float Operations
+
+    test "32 bit Floats Min Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      
+      assert WaspVM.execute(pid, "f32__min", [0.00, 0.00]) == {:ok, WaspVM.Executor.float_point_op(0.0)}
+    end
+
+    test "32 bit Floats Max Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      
+      assert WaspVM.execute(pid, "f32__max", [0.00, 0.00]) == {:ok,  WaspVM.Executor.float_point_op(0.0)}
+    end
 
 
 end
