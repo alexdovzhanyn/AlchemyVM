@@ -40,23 +40,6 @@ defmodule WaspVM.Decoder.InstructionParser do
   def parse_instruction(:i64_store16, bytecode), do: get_two_values(:i64_store16, bytecode)
   def parse_instruction(:i64_store32, bytecode), do: get_two_values(:i64_store32, bytecode)
 
-
-
-
-  def parse_instruction(:i32_gt_u, bytecode), do: {:i32_gt_u, bytecode}
-  def parse_instruction(:i32_le_u, bytecode), do: {:i32_le_u, bytecode}
-  def parse_instruction(:i32_ge_u, bytecode), do: {:i32_ge_u, bytecode}
-
-  def parse_instruction(:i64_gt_u, bytecode), do: {:i64_gt_u, bytecode}
-  def parse_instruction(:i64_le_u, bytecode), do: {:i64_le_u, bytecode}
-  def parse_instruction(:i64_ge_u, bytecode), do: {:i64_ge_u, bytecode}
-  def parse_instruction(:i64_clz, bytecode), do: {:i64_clz, bytecode}
-  def parse_instruction(:i64_ctz, bytecode), do: {:i64_ctz, bytecode}
-
-
-
-  def parse_instruction(:f32_copysign, bytecode), do: {:f32_copysign, bytecode}
-  def parse_instruction(:f64_copysign, bytecode), do: {:f64_copysign, bytecode}
   def parse_instruction(:i32_wrap_i64, bytecode), do: {:i32_wrap_i64, bytecode}
   def parse_instruction(:i32_trunc_s_f32, bytecode), do: {:i32_trunc_s_f32, bytecode}
   def parse_instruction(:i32_trunc_u_f32, bytecode), do: {:i32_trunc_u_f32, bytecode}
@@ -90,6 +73,18 @@ defmodule WaspVM.Decoder.InstructionParser do
 
 
   #################### COMPLETED WITH NOTES ###############################
+  def parse_instruction(:i64_clz, bytecode), do: {:i64_clz, bytecode} # Done
+  def parse_instruction(:i64_ctz, bytecode), do: {:i64_ctz, bytecode} # Done
+  def parse_instruction(:i32_clz, bytecode), do: {:i32_clz, bytecode} # Done
+  def parse_instruction(:i32_ctz, bytecode), do: {:i32_ctz, bytecode} # Done
+  def parse_instruction(:i32_ge_u, bytecode), do: {:i32_ge_u, bytecode} # Done
+  def parse_instruction(:i64_ge_u, bytecode), do: {:i64_ge_u, bytecode} # Done
+  def parse_instruction(:i32_le_u, bytecode), do: {:i32_le_u, bytecode} # Done
+  def parse_instruction(:i64_le_u, bytecode), do: {:i64_le_u, bytecode} # Done
+  def parse_instruction(:i32_gt_u, bytecode), do: {:i32_gt_u, bytecode} # Done
+  def parse_instruction(:i64_gt_u, bytecode), do: {:i64_gt_u, bytecode} # Done
+  def parse_instruction(:f32_copysign, bytecode), do: {:f32_copysign, bytecode} # Done
+  def parse_instruction(:f64_copysign, bytecode), do: {:f64_copysign, bytecode} # Done
   def parse_instruction(:i32_lt_u, bytecode), do: {:i32_lt_u, bytecode} # Done
   def parse_instruction(:i64_lt_u, bytecode), do: {:i64_lt_u, bytecode} # Done
   def parse_instruction(:i32_rotl, bytecode), do: {:i32_rotl, bytecode} # Done

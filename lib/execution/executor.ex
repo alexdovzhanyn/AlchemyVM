@@ -691,37 +691,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, val))}
   end
 
-  defp exec_inst({frame, vm}, :i32_lt_s) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    val = if a < b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :i32_le_s) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a <= b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :i32_gt_s) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a > b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :i32_ge_s) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a >= b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
 
   defp exec_inst({frame, vm}, :i32_eqz) do
     {a, stack} = Stack.pop(vm.stack)
@@ -814,13 +784,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, val))}
   end
 
-  defp exec_inst({frame, vm}, :i64_lt_s) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    val = if a < b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
 
   defp exec_inst({frame, vm}, :i64_le_s) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
@@ -830,13 +794,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, val))}
   end
 
-  defp exec_inst({frame, vm}, :i64_gt_s) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    val = if a > b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
 
   defp exec_inst({frame, vm}, :i64_ge_s) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
@@ -854,16 +812,27 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, val))}
   end
 
-  ### Complex Integer Operations
+  ### Complex Integer Operations Tests Done
+  defp exec_inst({frame, vm}, :i32_le_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if sign_value(a, 32) <= sign_value(b, 32), do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_ge_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if sign_value(a, 32) >= sign_value(b, 32), do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
   defp exec_inst({frame, vm}, :i32_lt_u) do
     {[a, b], stack} = Stack.pop_multiple(vm.stack)
 
-    val =
-    if a < b do
-      1
-    else
-      0
-    end
+    val = if a < b, do: 1, else: 0
 
     {frame, Map.put(vm, :stack, Stack.push(stack, val))}
   end
@@ -871,14 +840,113 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm}, :i64_lt_u) do
     {[a, b], stack} = Stack.pop_multiple(vm.stack)
 
-    val =
-    if a < b do
-      1
-    else
-      0
-    end
+    val = if a < b, do: 1, else: 0
 
     {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_lt_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if sign_value(a, 32) < sign_value(b, 32), do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_lt_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+      val = if sign_value(a, 64) < sign_value(b, 64), do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_gt_u) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a > b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_gt_u) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+      val = if a > b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_gt_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if sign_value(a, 32) > sign_value(b, 32), do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_gt_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if sign_value(a, 64) > sign_value(b, 64), do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_le_u) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a <= b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_le_u) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a <= b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_ge_u) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a >= b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_ge_u) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a >= b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_clz) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, count_bits(:l, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_clz) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, count_bits(:l, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_ctz) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, count_bits(:t, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_ctz) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, count_bits(:t, a)))}
   end
 
   ###
@@ -912,6 +980,7 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm}, :end), do: {frame, vm}
 
   defp exec_inst({frame, vm}, op) do
+    IO.inspect op
     IEx.pry
   end
 
@@ -967,6 +1036,27 @@ defmodule WaspVM.Executor do
         b*-1 |> IO.inspect
       end
     end
+  end
+
+
+  defp check_value([0, b, c, d]) when b and c and d !== 0, do: 1
+  defp check_value([0, 0, c, d]) when c and d != 0, do: 2
+  defp check_value([0, 0, 0, d]) when d !== 0, do: 3
+  defp check_value([0, 0, 0, 0]), do: 4
+  defp check_value([a, b, c, d]), do: 0
+
+  defp count_bits(:l, number) do
+    <<number::32>>
+    |> Binary.to_list
+    |> check_value
+  end
+
+
+  defp count_bits(:t, number) do
+    <<number::32>>
+    |> Binary.to_list
+    |> Enum.reverse
+    |> check_value
   end
 
     #Other Valid & Working

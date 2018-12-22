@@ -385,6 +385,114 @@ defmodule WaspVM.ExecutorTest do
       assert WaspVM.execute(pid, "i64__lt_u", [0, 1]) == {:ok, 1}
     end
 
+    test "32 bit Integer lt_s Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i32__lt_s", [2, 1]) == {:ok, 1}
+      assert WaspVM.execute(pid, "i32__lt_s", [1, 2]) == {:ok, 0}
+    end
+
+    test "64 bit Integer lt_s Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i64__lt_s", [2, 1]) == {:ok, 1}
+      assert WaspVM.execute(pid, "i64__lt_s", [1, 2]) == {:ok, 0}
+    end
+
+    test "32 bit Integer gt_u Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i32__gt_u", [2, 1]) == {:ok, 0}
+      assert WaspVM.execute(pid, "i32__gt_u", [1, 2]) == {:ok, 1}
+    end
+
+    test "64 bit Integer gt_u Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i64__gt_u", [2, 1]) == {:ok, 0}
+      assert WaspVM.execute(pid, "i64__gt_u", [1, 2]) == {:ok, 1}
+    end
+
+    test "32 bit Integer gt_s Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i32__gt_u", [2, 1]) == {:ok, 0}
+      assert WaspVM.execute(pid, "i32__gt_u", [1, 2]) == {:ok, 1}
+    end
+
+    test "64 bit Integer gt_s Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i64__gt_s", [2, 1]) == {:ok, 0}
+      assert WaspVM.execute(pid, "i64__gt_s", [1, 2]) == {:ok, 1}
+    end
+
+    test "32 bit Integer le_u Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i32__le_u", [2, 1]) == {:ok, 1}
+      assert WaspVM.execute(pid, "i32__le_u", [1, 2]) == {:ok, 0}
+    end
+
+    test "64 bit Integer le_u Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i64__le_u", [2, 1]) == {:ok, 1}
+      assert WaspVM.execute(pid, "i64__le_u", [1, 2]) == {:ok, 0}
+    end
+
+    test "32 bit Integer ge_u Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i32__ge_u", [2, 1]) == {:ok, 0}
+      assert WaspVM.execute(pid, "i32__ge_u", [1, 2]) == {:ok, 1}
+    end
+
+    test "64 bit Integer ge_u Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i64__ge_u", [2, 1]) == {:ok, 0}
+      assert WaspVM.execute(pid, "i64__ge_u", [1, 2]) == {:ok, 1}
+    end
+
+    test "32 bit Integer clz Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i32__clz", [2]) == {:ok, 3}
+    end
+
+    test "64 bit Integer clz Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i64__clz", [2]) == {:ok, 3}
+    end
+
+    test "32 bit Integer ctz Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i32__ctz", [2]) == {:ok, 0}
+    end
+
+    test "64 bit Integer ctz Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i64__ctz", [2]) == {:ok, 0}
+    end
+
 
 
 end
