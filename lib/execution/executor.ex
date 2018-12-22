@@ -529,37 +529,13 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm}, :i32_rotl) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    #a =
-    #<<a::32>>
-    #|> Binary.to_list()
-    #|> Enum.reverse
-    #|> Binary.from_list
-
-    #b =
-  #  <<b::32>>
-    #|> Binary.to_list()
-  #  |> Enum.reverse
-  #  |> Binary.from_list
-
-  #  Enum.into([1,0,0,1,1,0,0,1,0,0,0,1,1,1,0,0], <<>>, fn bit -> <<bit :: 1>> end)
-
-    #a_S = sign_value(a, 32)
-    #b_S = round(sign_value(:binary.decode_unsigned(b), 32)) |> IO.inspect
-
-    #j2 = Integer.mod(32, b)#32 - (b * Integer.floor_div(32, b))
-
-    answer = rotl(b, a)
-
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, answer))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, rotl(b, a)))}
   end
 
   defp exec_inst({frame, vm}, :i32_rotr) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    answer = rotl(-b, -a) |> IO.inspect(label: "rotr")
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, answer))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, rotr(b, a)))}
   end
 
   defp exec_inst({frame, vm}, :i32_and) do
@@ -912,19 +888,13 @@ defmodule WaspVM.Executor do
     |> Enum.count()
   end
 
-  def rotl(number, shift) do
+  defp rotl(number, shift), do: (number <<< shift) ||| (number >>> (0x1F &&& (32 + ~~~(shift + 1)))) &&& ~~~(0xFFFFFFFF <<< shift)
+  defp rotr(number, shift), do: (number >>> shift) ||| (number <<< (0x1F &&& (32 + ~~~(-shift + 1)))) &&& ~~~(0xFFFFFFFF <<< -shift)
 
 
-    (number <<< shift) ||| (number >>> (0x1F &&& (32 + ~~~(shift + 1)))) &&& ~~~(0xFFFFFFFF <<< shift)
+    #Other Valid & Working
+    #a =  Bitwise.bsr(number, shift) |> IO.inspect
+    #b = Bitwise.bsl(number, (-shift)) |> IO.inspect
+  #  Bitwise.bor(a, b) |> IO.inspect
 
-  end
-
-
-
-  defp rotr(number, shift) do
-  #  ((value << rotation) & bitMask) | (value >>> (bitWidth - rotation))
-
-    #(number >>> shift) ||| (number <<< -shift)
-      (number >>> shift) ||| (number <<< ((32 + ~~~(shift + 1)) &&& 0x1F)) &&& ~~~(0xFFFFFFFF <<< shift)
-  end
 end

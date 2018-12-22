@@ -251,8 +251,6 @@ defmodule WaspVM.ExecutorTest do
     #  assert Kernel.round(answer) == 2305843009213693939
     end
 
-
-
     test "32 bit uint can rotl properly" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
@@ -267,11 +265,9 @@ defmodule WaspVM.ExecutorTest do
     test "32 bit uint can rotr properly" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      {:ok, result} = WaspVM.execute(pid, "i32__rotr", [16, 2])
 
-      {:ok, result} = WaspVM.execute(pid, "i32__rotr", [-100, 3])
-
-      answer = :math.pow(2, 32) + result |> IO.inspect
-      assert answer == 2684354547
+      assert result == 4
     end
 
 
@@ -283,6 +279,8 @@ defmodule WaspVM.ExecutorTest do
 
       assert result == -7367
     end
+
+    ### End simnple BitWise Ops
 
 
 
