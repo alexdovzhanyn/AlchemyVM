@@ -350,5 +350,41 @@ defmodule WaspVM.ExecutorTest do
       assert WaspVM.execute(pid, "f64__abs", [-1.0]) == {:ok, WaspVM.Executor.float_point_op(1.0)}
     end
 
+    test "32 bit Floats neg Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "f32__neg", [0.0]) == {:ok, WaspVM.Executor.float_point_op(0.0)}
+      assert WaspVM.execute(pid, "f32__neg", [-1.0]) == {:ok, WaspVM.Executor.float_point_op(1.0)}
+    end
+
+    test "64 bit Floats neg Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "f64__neg", [0.0]) == {:ok, WaspVM.Executor.float_point_op(0.0)}
+      assert WaspVM.execute(pid, "f64__neg", [-1.0]) == {:ok, WaspVM.Executor.float_point_op(1.0)}
+    end
+
+    ### End of Basic Float Point Operations
+
+    ### Begin Complex Integer Operations
+    test "32 bit Integer lt_u Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i32__lt_u", [1, 0]) == {:ok, 0}
+      assert WaspVM.execute(pid, "i32__lt_u", [0, 1]) == {:ok, 1}
+    end
+
+    test "64 bit Integer lt_u Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "i64__lt_u", [1, 0]) == {:ok, 0}
+      assert WaspVM.execute(pid, "i64__lt_u", [0, 1]) == {:ok, 1}
+    end
+
+
 
 end

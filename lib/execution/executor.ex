@@ -365,9 +365,16 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, :f32_neg) do
-    {[a], stack} = Stack.pop_multiple(vm.stack)
+    {a, stack} = Stack.pop(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, a*-1))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a*-1)))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_neg) do
+    {a, stack} = Stack.pop(vm.stack)
+
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a*-1)))}
   end
 
   defp exec_inst({frame, vm}, :f32_ceil) do
@@ -394,11 +401,6 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(copysign(a, b))))}
   end
 
-  defp exec_inst({frame, vm}, :f64_neg) do
-    {[a], stack} = Stack.pop_multiple(vm.stack)
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, a*-1))}
-  end
 
   defp exec_inst({frame, vm}, :f32_abs) do
     {a, stack} = Stack.pop(vm.stack)
@@ -852,6 +854,37 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, val))}
   end
 
+  ### Complex Integer Operations
+  defp exec_inst({frame, vm}, :i32_lt_u) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val =
+    if a < b do
+      1
+    else
+      0
+    end
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_lt_u) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val =
+    if a < b do
+      1
+    else
+      0
+    end
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  ###
+
+
+  ### Memory Operations
   defp exec_inst({frame, vm}, :current_memory) do
     size = length(vm.memory.pages)
 
@@ -863,6 +896,8 @@ defmodule WaspVM.Executor do
 
     {frame, Map.merge(vm, %{memory: Memory.grow(vm.memory, pages), stack: Stack.push(stack, length(vm.memory))})}
   end
+
+  ### End Memory Operations
 
   defp exec_inst({frame, vm}, {:call, funcidx}) do
     func_addr = Enum.at(frame.module.funcaddrs, funcidx)
