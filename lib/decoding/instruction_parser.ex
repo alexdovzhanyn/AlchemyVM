@@ -22,7 +22,7 @@ defmodule WaspVM.Decoder.InstructionParser do
   def parse_instruction(:if, bytecode), do: parse_block_type_instruction(:if, bytecode)
   def parse_instruction(:block, bytecode), do: parse_block_type_instruction(:block, bytecode)
   def parse_instruction(:loop, bytecode), do: parse_block_type_instruction(:loop, bytecode)
-  def parse_instruction(:call, bytecode), do: get_single_value(:call, bytecode)
+
   def parse_instruction(:br, bytecode), do: get_single_value(:br, bytecode)
   def parse_instruction(:br_if, bytecode), do: get_single_value(:br_if, bytecode)
   def parse_instruction(:i32_load8_s, bytecode), do: get_two_values(:i32_load8_s, bytecode)
@@ -65,14 +65,17 @@ defmodule WaspVM.Decoder.InstructionParser do
   def parse_instruction(:i64_reinterpret_f64, bytecode), do: {:i64_reinterpret_f64, bytecode}
   def parse_instruction(:f32_reinterpret_i32, bytecode), do: {:f32_reinterpret_i32, bytecode}
   def parse_instruction(:f64_reinterpret_i64, bytecode), do: {:f64_reinterpret_i64, bytecode}
-  def parse_instruction(:drop, bytecode), do: {:drop, bytecode}
-  def parse_instruction(:select, bytecode), do: {:select, bytecode}
+
+
   def parse_instruction(:return, bytecode), do: {:return, bytecode}
   def parse_instruction(:memory_size, bytecode), do: {:memory_size, bytecode}
   def parse_instruction(:memory_grow, bytecode), do: {:memory_grow, bytecode}
 
 
   #################### COMPLETED WITH NOTES ###############################
+  def parse_instruction(:call, bytecode), do: get_single_value(:call, bytecode) # Done
+  def parse_instruction(:select, bytecode), do: {:select, bytecode} # Done
+  def parse_instruction(:drop, bytecode), do: {:drop, bytecode} # Done
   def parse_instruction(:i64_clz, bytecode), do: {:i64_clz, bytecode} # Done
   def parse_instruction(:i64_ctz, bytecode), do: {:i64_ctz, bytecode} # Done
   def parse_instruction(:i32_clz, bytecode), do: {:i32_clz, bytecode} # Done

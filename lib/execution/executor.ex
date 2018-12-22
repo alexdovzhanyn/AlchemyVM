@@ -48,6 +48,34 @@ defmodule WaspVM.Executor do
   def instruction(opcode, ctx) when is_atom(opcode), do: exec_inst(ctx, opcode)
   def instruction(opcode, ctx) when is_tuple(opcode), do: exec_inst(ctx, opcode)
 
+
+  ### Begin PArametric Instructions
+
+  def exec_inst({frame, vm}, :drop) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, stack}
+  end
+
+  def exec_inst({frame, vm}, :select) do
+    {[c, b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if c !== 0, do: b, else: a
+
+    {frame, Map.put(vm, :stack, Stack.push(vm.stack, val)}
+  end
+
+  defp exec_inst({frame, vm}, {:call, funcidx}) do
+    func_addr = Enum.at(frame.module.funcaddrs, funcidx)
+
+    vm = create_frame_and_execute(vm, func_addr)
+
+    {frame, vm}
+  end
+
+  ### END PARAMETRIC INSTRUCTIONS
+
+
   defp exec_inst({frame, vm}, {:i32_const, i32}) do
     {frame, Map.put(vm, :stack, Stack.push(vm.stack, i32))}
   end
@@ -967,13 +995,7 @@ defmodule WaspVM.Executor do
 
   ### End Memory Operations
 
-  defp exec_inst({frame, vm}, {:call, funcidx}) do
-    func_addr = Enum.at(frame.module.funcaddrs, funcidx)
 
-    vm = create_frame_and_execute(vm, func_addr)
-
-    {frame, vm}
-  end
 
   defp exec_inst({frame, vm}, :unreachable), do: {frame, vm}
   defp exec_inst({frame, vm}, :nop), do: {frame, vm}

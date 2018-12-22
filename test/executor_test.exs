@@ -493,6 +493,12 @@ defmodule WaspVM.ExecutorTest do
       assert WaspVM.execute(pid, "i64__ctz", [2]) == {:ok, 0}
     end
 
+    ### END COMPLEX INTEGER
+
+    ### BEGIN PARAMETRIC TEST
+
+    ### END PARAMTERIC TEST
+
 
 
 end
