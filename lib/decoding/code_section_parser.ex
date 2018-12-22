@@ -36,6 +36,7 @@ defmodule WaspVM.Decoder.CodeSectionParser do
       body
       |> parse_bytecode()
       |> Enum.reverse()
+      |> find_block_pairs()
 
     body = %{locals: locals, body: parsed_bytecode}
 
@@ -43,7 +44,7 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   end
 
   defp parse_locals(bin, count), do: parse_locals([], bin, count)
-  defp parse_locals(parsed, bin, 0), do: {parsed, bin}
+  defp parse_locals(parsed, bin, 0), do: {Enum.reverse(parsed), bin}
 
   defp parse_locals(parsed, bin, count) do
     {ct, bin} = LEB128.decode_unsigned(bin)
@@ -67,5 +68,53 @@ defmodule WaspVM.Decoder.CodeSectionParser do
       |> InstructionParser.parse_instruction(bytecode)
 
     parse_bytecode([instruction | instructions], bytecode)
+  end
+
+  defp find_block_pairs(instructions, idx \\ 0)
+  defp find_block_pairs(instructions, idx) when idx == length(instructions), do: instructions
+
+  defp find_block_pairs(instructions, idx) do
+    instructions =
+      case Enum.at(instructions, idx) do
+        {:if, v} ->
+          matched_else = find_matching(instructions, idx, :else)
+          matched_end = find_matching(instructions, idx, :end)
+          i = List.replace_at(instructions, idx, {:if, v, matched_else, matched_end})
+
+          if matched_else != :none do
+            List.replace_at(i, matched_else, {:else, matched_end})
+          else
+            i
+          end
+
+        {:block, _} ->
+          find_matching(instructions, idx, :end)
+        _ -> instructions
+      end
+
+    find_block_pairs(instructions, idx + 1)
+  end
+
+  defp find_matching(instructions, idx, type) do
+    {_, instr} = Enum.split(instructions, idx + 1)
+
+    match_idx =
+      instr
+      |> Enum.with_index()
+      |> Enum.reduce_while(0, fn {instr, i}, depth ->
+        if instr == type && depth == 0 do
+          {:halt, i}
+        else
+          case instr do
+            {:loop, _} -> {:cont, depth + 1}
+            {:if, _} -> {:cont, depth + 1}
+            {:block, _} -> {:cont, depth + 1}
+            :end -> {:cont, depth - 1}
+            _ -> {:cont, depth}
+          end
+        end
+      end)
+
+    if match_idx >= 0, do: idx + match_idx + 1, else: :none
   end
 end

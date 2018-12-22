@@ -20,6 +20,7 @@ defmodule WaspVM.Decoder.InstructionParser do
 
 #################### NOT COMPLETED ###############################
   def parse_instruction(:if, bytecode), do: parse_block_type_instruction(:if, bytecode)
+  def parse_instruction(:else, bytecode), do: {:else, bytecode}
   def parse_instruction(:block, bytecode), do: parse_block_type_instruction(:block, bytecode)
   def parse_instruction(:loop, bytecode), do: parse_block_type_instruction(:loop, bytecode)
   def parse_instruction(:call, bytecode), do: get_single_value(:call, bytecode)
