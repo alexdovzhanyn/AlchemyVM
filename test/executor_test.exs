@@ -4,7 +4,7 @@ defmodule WaspVM.ExecutorTest do
   doctest WaspVM
   alias Decimal, as: D
 
-  #### Basic Numeric Operations
+  #### Basic Int Numeric Operations
   test "32 bit integers with add properly" do
     {:ok, pid} = WaspVM.start()
     WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
@@ -15,42 +15,6 @@ defmodule WaspVM.ExecutorTest do
     {:ok, pid} = WaspVM.start()
     WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
     assert WaspVM.execute(pid, "i64__add", [4, 2]) == {:ok, 6}
-  end
-
-  test "32 bit float with add properly" do
-    {:ok, pid} = WaspVM.start()
-    WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-    assert WaspVM.execute(pid, "f32__add", [4.0, 2.0]) == {:ok, 6.0}
-  end
-
-  test "64 bit float with add properly" do
-    {:ok, pid} = WaspVM.start()
-    WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-    assert WaspVM.execute(pid, "f64__add", [4.0, 2.0]) == {:ok, 6.0}
-  end
-
-  test "32 bit integers with sub properly" do
-    {:ok, pid} = WaspVM.start()
-    WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-    assert WaspVM.execute(pid, "i32__sub", [4, 2]) == {:ok, 2}
-  end
-
-  test "64 bit integers with sub properly" do
-    {:ok, pid} = WaspVM.start()
-    WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-    assert WaspVM.execute(pid, "i64__sub", [4, 2]) == {:ok, 2}
-  end
-
-  test "32 bit float with sub properly" do
-    {:ok, pid} = WaspVM.start()
-    WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-    assert WaspVM.execute(pid, "f32__sub", [4.0, 2.0]) == {:ok, 2.0}
-  end
-
-  test "64 bit float with sub properly" do
-    {:ok, pid} = WaspVM.start()
-    WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-    assert WaspVM.execute(pid, "f64__sub", [4.0, 2.0]) == {:ok, 2.0}
   end
 
   test "32 bit integers with mult properly" do
@@ -65,17 +29,19 @@ defmodule WaspVM.ExecutorTest do
     assert WaspVM.execute(pid, "i64__mul", [4, 2]) == {:ok, 8}
   end
 
-  test "32 bit float with mult properly" do
+  test "32 bit integers with sub properly" do
     {:ok, pid} = WaspVM.start()
     WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-    assert WaspVM.execute(pid, "f32__mul", [4.0, 2.0]) == {:ok, 8.0}
+    assert WaspVM.execute(pid, "i32__sub", [4, 2]) == {:ok, 2}
   end
 
-  test "64 bit float with mult properly" do
+  test "64 bit integers with sub properly" do
     {:ok, pid} = WaspVM.start()
     WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-    assert WaspVM.execute(pid, "f64__mul", [4.0, 2.0]) == {:ok, 8.0}
+    assert WaspVM.execute(pid, "i64__sub", [4, 2]) == {:ok, 2}
   end
+
+
     #### END OF Basic Numeric Operations
 
     #### Basic div Operations
@@ -286,18 +252,102 @@ defmodule WaspVM.ExecutorTest do
 
     ### Begin Float Operations
 
+    test "32 bit float with add properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "f32__add", [4.0, 2.0]) == {:ok, WaspVM.Executor.float_point_op(6.0)}
+    end
+
+    test "64 bit float with add properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "f64__add", [4.0, 2.0]) == {:ok, WaspVM.Executor.float_point_op(6.0)}
+    end
+
+    test "32 bit float with sub properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "f32__sub", [4.0, 2.0]) == {:ok, WaspVM.Executor.float_point_op(2.0)}
+    end
+
+    test "64 bit float with sub properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "f64__sub", [4.0, 2.0]) == {:ok, WaspVM.Executor.float_point_op(2.0)}
+    end
+
+    test "32 bit float with mult properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "f32__mul", [4.0, 2.0]) == {:ok, WaspVM.Executor.float_point_op(8.0)}
+    end
+
+    test "64 bit float with mult properly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      assert WaspVM.execute(pid, "f64__mul", [4.0, 2.0]) == {:ok, WaspVM.Executor.float_point_op(8.0)}
+    end
+
     test "32 bit Floats Min Works Correctly" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-      
+
       assert WaspVM.execute(pid, "f32__min", [0.00, 0.00]) == {:ok, WaspVM.Executor.float_point_op(0.0)}
     end
 
     test "32 bit Floats Max Works Correctly" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-      
+
       assert WaspVM.execute(pid, "f32__max", [0.00, 0.00]) == {:ok,  WaspVM.Executor.float_point_op(0.0)}
+    end
+
+    test "64 bit Floats Min Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "f64__min", [0.00, 0.00]) == {:ok, WaspVM.Executor.float_point_op(0.0)}
+    end
+
+    test "64 bit Floats Max Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "f64__max", [0.00, 0.00]) == {:ok,  WaspVM.Executor.float_point_op(0.0)}
+    end
+
+    test "32 bit Floats copysign Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "f32__copysign", [0.0, 0.0]) == {:ok, WaspVM.Executor.float_point_op(0.0)}
+      assert WaspVM.execute(pid, "f32__copysign", [-1.0, 0.0]) == {:ok, WaspVM.Executor.float_point_op(0.0)}
+      assert WaspVM.execute(pid, "f32__copysign", [-1.0, 1.0]) == {:ok, WaspVM.Executor.float_point_op(-1.0)}
+    end
+
+    test "64 bit Floats copysign Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "f64__copysign", [0.0, 0.0]) == {:ok, WaspVM.Executor.float_point_op(0.0)}
+      assert WaspVM.execute(pid, "f64__copysign", [-1.0, 0.0]) == {:ok, WaspVM.Executor.float_point_op(0.0)}
+      assert WaspVM.execute(pid, "f64__copysign", [-1.0, 1.0]) == {:ok, WaspVM.Executor.float_point_op(-1.0)}
+    end
+
+    test "32 bit Floats abs Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "f32__abs", [0.0]) == {:ok, WaspVM.Executor.float_point_op(0.0)}
+      assert WaspVM.execute(pid, "f32__abs", [-1.0]) == {:ok, WaspVM.Executor.float_point_op(1.0)}
+    end
+
+    test "64 bit Floats abs Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "f64__abs", [0.0]) == {:ok, WaspVM.Executor.float_point_op(0.0)}
+      assert WaspVM.execute(pid, "f64__abs", [-1.0]) == {:ok, WaspVM.Executor.float_point_op(1.0)}
     end
 
 

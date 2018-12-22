@@ -41,8 +41,7 @@ defmodule WaspVM.Decoder.InstructionParser do
   def parse_instruction(:i64_store32, bytecode), do: get_two_values(:i64_store32, bytecode)
 
 
-  def parse_instruction(:i32_rotl, bytecode), do: {:i32_rotl, bytecode}
-  def parse_instruction(:i32_rotr, bytecode), do: {:i32_rotr, bytecode}
+
   def parse_instruction(:i32_lt_u, bytecode), do: {:i32_lt_u, bytecode}
   def parse_instruction(:i32_gt_u, bytecode), do: {:i32_gt_u, bytecode}
   def parse_instruction(:i32_le_u, bytecode), do: {:i32_le_u, bytecode}
@@ -55,8 +54,7 @@ defmodule WaspVM.Decoder.InstructionParser do
   def parse_instruction(:i64_ctz, bytecode), do: {:i64_ctz, bytecode}
 
 
-  def parse_instruction(:i64_rotl, bytecode), do: {:i64_rotl, bytecode}
-  def parse_instruction(:i64_rotr, bytecode), do: {:i64_rotr, bytecode}
+
   def parse_instruction(:f32_copysign, bytecode), do: {:f32_copysign, bytecode}
   def parse_instruction(:f64_copysign, bytecode), do: {:f64_copysign, bytecode}
   def parse_instruction(:i32_wrap_i64, bytecode), do: {:i32_wrap_i64, bytecode}
@@ -92,6 +90,10 @@ defmodule WaspVM.Decoder.InstructionParser do
 
 
   #################### COMPLETED WITH NOTES ###############################
+  def parse_instruction(:i32_rotl, bytecode), do: {:i32_rotl, bytecode} # Done
+  def parse_instruction(:i32_rotr, bytecode), do: {:i32_rotr, bytecode} # Done
+  def parse_instruction(:i64_rotl, bytecode), do: {:i64_rotl, bytecode} # Done
+  def parse_instruction(:i64_rotr, bytecode), do: {:i64_rotr, bytecode} # Done
   def parse_instruction(:i32_shl, bytecode), do: {:i32_shl, bytecode} # Done
   def parse_instruction(:i32_shr_u, bytecode), do: {:i32_shr_u, bytecode} # Done
   def parse_instruction(:i64_shl, bytecode), do: {:i64_shl, bytecode} # Done
