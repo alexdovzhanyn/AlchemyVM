@@ -1,6 +1,6 @@
-# WaspVM
-
 ![WaspVM Banner](https://s3-us-west-2.amazonaws.com/elixium-assets/waspban.png)
+
+[![Build Status](https://travis-ci.org/ElixiumNetwork/WaspVM.svg?branch=master)](https://travis-ci.org/ElixiumNetwork/WaspVM)
 
 WebAssembly Virtual Machine written in Elixir. Currently used as the Wasm VM in
 the [Elixium Network](https://www.elixiumnetwork.org)
