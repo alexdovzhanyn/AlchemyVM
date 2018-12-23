@@ -2,9 +2,7 @@ defmodule WaspVM.Stack do
   alias WaspVM.Stack
   defstruct elements: []
 
-  @moduledoc """
-    Virtual Stack Emulation
-  """
+  @moduledoc false
 
   @doc """
     Create a new stack
