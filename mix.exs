@@ -37,6 +37,9 @@ defmodule WaspVM.MixProject do
   end
 
   defp deps do
-    [{:ex_doc, ">= 0.0.0", only: :dev}]
+    [
+      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:binary, "~> 0.0.5"}
+    ]
   end
 end
