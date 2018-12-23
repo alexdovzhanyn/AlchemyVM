@@ -26,7 +26,7 @@ defmodule WaspVM.MixProject do
 
   defp package() do
     [
-      files: ["lib", "mix.exs", "README*", "LICENSE*", "priv"],
+      files: ["lib", "mix.exs", "README*", "LICENSE*"],
       maintainers: ["Alex Dovzhanyn", "Matthew Eaton"],
       licenses: ["MIT"],
       links: %{
