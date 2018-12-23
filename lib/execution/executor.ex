@@ -868,15 +868,17 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, {:loop, _result_type}) do
-    labels = [frame.next_instr | frame.labels]
+    labels = [{frame.next_instr, frame.next_instr} | frame.labels]
+    snapshots = [vm.stack | frame.snapshots]
 
-    {Map.put(frame, :labels, labels), vm}
+    {Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm}
   end
 
   defp exec_inst({frame, vm}, {:block, _result_type, end_idx}) do
-    labels = [end_idx - 1 | frame.labels]
+    labels = [{frame.next_instr, end_idx - 1} | frame.labels]
+    snapshots = [vm.stack | frame.snapshots]
 
-    {Map.put(frame, :labels, labels), vm}
+    {Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm}
   end
 
   defp exec_inst({frame, vm}, {:br, label_idx}), do: break_to(frame, vm, label_idx)
@@ -891,9 +893,10 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm}, {:if, _type, else_idx, end_idx}) do
     {val, stack} = Stack.pop(vm.stack)
     vm = Map.put(vm, :stack, stack)
-    labels = [end_idx | frame.labels]
+    labels = [{frame.next_instr, end_idx} | frame.labels]
+    snapshots = [vm.stack | frame.snapshots]
 
-    frame = Map.put(frame, :labels, labels)
+    frame = Map.merge(frame, %{labels: labels, snapshots: snapshots})
 
     if val != 1 do
       next_instr = if else_idx != :none, do: else_idx, else: end_idx
@@ -910,9 +913,10 @@ defmodule WaspVM.Executor do
   defp exec_inst({%{labels: []} = frame, vm}, :end), do: {frame, vm}
 
   defp exec_inst({frame, vm}, :end) do
-    [corresponding_label | labels] = frame.labels
+    [_ | labels] = frame.labels
+    [_ | snapshots] = frame.snapshots
 
-    {Map.put(frame, :labels, labels), vm}
+    {Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm}
   end
 
   defp exec_inst({frame, vm}, :return) do
@@ -927,9 +931,28 @@ defmodule WaspVM.Executor do
   end
 
   defp break_to(frame, vm, label_idx) do
-    next_instr = Enum.at(frame.labels, label_idx)
+    {label_instr_idx, next_instr} = Enum.at(frame.labels, label_idx)
+    snapshot = Enum.at(frame.snapshots, label_idx)
+    instr = Enum.at(frame.instructions, label_instr_idx)
 
-    {Map.put(frame, :next_instr, next_instr), vm}
+    drop_changes =
+      fn type ->
+        if type != :no_res do
+          {res, _} = Stack.pop(vm.stack)
+          Stack.push(snapshot, res)
+        else
+          snapshot
+        end
+      end
+
+    stack =
+      case instr do
+        {:loop, _} -> snapshot
+        {:if, res_type, _, _} -> drop_changes.(res_type)
+        {:block, res_type, _} -> drop_changes.(res_type)
+      end
+
+    {Map.put(frame, :next_instr, next_instr), Map.put(vm, :stack, stack)}
   end
 
   # Reference https://lemire.me/blog/2017/05/29/unsigned-vs-signed-integer-arithmetic/
