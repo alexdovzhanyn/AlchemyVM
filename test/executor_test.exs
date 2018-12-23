@@ -32,30 +32,31 @@ defmodule WaspVM.ExecutorTest do
   test "32 bit integers with sub properly" do
     {:ok, pid} = WaspVM.start()
     WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-    assert WaspVM.execute(pid, "i32__sub", [4, 2]) == {:ok, 2}
+    assert WaspVM.execute(pid, "i32__sub", [4, 2]) == {:ok, -2}
   end
 
   test "64 bit integers with sub properly" do
     {:ok, pid} = WaspVM.start()
     WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-    assert WaspVM.execute(pid, "i64__sub", [4, 2]) == {:ok, 2}
+    assert WaspVM.execute(pid, "i64__sub", [4, 2]) == {:ok, -2}
   end
 
 
     #### END OF Basic Numeric Operations
 
     #### Basic div Operations
+
     test "32 bit unsgined int can divide properly" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-      result = WaspVM.execute(pid, "i32__div_u", [4, 2])
+      result = WaspVM.execute(pid, "i32__div_u", [2, 4])
       assert result == {:ok, 2}
     end
 
     test "32 bit signed int can divide properly" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-      {:ok, result} = WaspVM.execute(pid, "i32__div_s", [-4, 2])
+      {:ok, result} = WaspVM.execute(pid, "i32__div_s", [2, -4])
       answer = :math.pow(2, 32) + (result)
       assert answer == 4294967294
     end
@@ -499,9 +500,9 @@ defmodule WaspVM.ExecutorTest do
 
     test "if statement works" do
       {:ok, pid} = WaspVM.start()
-      WaspVM.load_file(pid, "test/fixtures/wasm/if_2.wasm") |> IO.inspect
-      WaspVM.execute(pid, "ifOne", [2]) |> IO.inspect
-
+      WaspVM.load_file(pid, "test/fixtures/wasm/if_2.wasm")
+      {status, answer} = WaspVM.execute(pid, "ifOne", [0])
+      assert answer == 1
     end
 
     ### END PARAMTERIC TEST

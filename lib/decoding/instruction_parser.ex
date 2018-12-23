@@ -21,13 +21,7 @@ defmodule WaspVM.Decoder.InstructionParser do
   end
 
 #################### NOT COMPLETED ###############################
-  def parse_instruction(:if, bytecode), do: parse_block_type_instruction(:if, bytecode)
-  def parse_instruction(:else, bytecode), do: {:else, bytecode}
-  def parse_instruction(:block, bytecode), do: parse_block_type_instruction(:block, bytecode)
-  def parse_instruction(:loop, bytecode), do: parse_block_type_instruction(:loop, bytecode)
 
-  def parse_instruction(:br, bytecode), do: get_single_value(:br, bytecode)
-  def parse_instruction(:br_if, bytecode), do: get_single_value(:br_if, bytecode)
   def parse_instruction(:i32_load8_s, bytecode), do: get_two_values(:i32_load8_s, bytecode)
   def parse_instruction(:i32_load8_u, bytecode), do: get_two_values(:i32_load8_u, bytecode)
   def parse_instruction(:i32_load16_u, bytecode), do: get_two_values(:i32_load16_u, bytecode)
@@ -76,6 +70,12 @@ defmodule WaspVM.Decoder.InstructionParser do
 
 
   #################### COMPLETED WITH NOTES ###############################
+  def parse_instruction(:if, bytecode), do: parse_block_type_instruction(:if, bytecode) # Done
+  def parse_instruction(:else, bytecode), do: {:else, bytecode} # Done
+  def parse_instruction(:block, bytecode), do: parse_block_type_instruction(:block, bytecode) # Done
+  def parse_instruction(:loop, bytecode), do: parse_block_type_instruction(:loop, bytecode) # Done
+  def parse_instruction(:br, bytecode), do: get_single_value(:br, bytecode) # Done
+  def parse_instruction(:br_if, bytecode), do: get_single_value(:br_if, bytecode) # Done
   def parse_instruction(:call, bytecode), do: get_single_value(:call, bytecode) # Done
   def parse_instruction(:select, bytecode), do: {:select, bytecode} # Done
   def parse_instruction(:drop, bytecode), do: {:drop, bytecode} # Done
@@ -206,7 +206,7 @@ defmodule WaspVM.Decoder.InstructionParser do
     IO.inspect result_type
     IO.inspect rest
     IO.inspect opcode
-    
+
     if result_type == 0x40 do
       {{opcode, :no_res}, rest}
     else

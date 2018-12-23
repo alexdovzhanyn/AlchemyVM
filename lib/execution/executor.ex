@@ -67,33 +67,54 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(vm.stack, val))}
   end
 
-  defp exec_inst({frame, vm}, {:if, res}) do
-    IO.inspect vm
-    IO.inspect frame
-  #  IO.inspect idx1
-    #IO.inspect idx2
-    {a, stack} = Stack.pop(vm.stack)
-    IO.inspect res, label: "Result"
-    IO.inspect a, label: "A"
-    n = 1#Enum.count(result_type)
-    case a do
-      0 -> {Map.put(frame, :next_instr, {n, res}), vm}
-      1 -> {Map.put(frame, :next_instr, {n, res}), vm}
-      _-> {:error, "Incorrect Stack Value from Structured Instruction"}
+  defp exec_inst({frame, vm}, {:loop, _result_type}) do
+    labels = [{:loop, frame.next_instr} | frame.labels]
+
+    {Map.put(frame, :labels, labels), vm}
+  end
+
+  defp exec_inst({frame, vm}, {:br, label_idx}), do: break_to(frame, vm, label_idx)
+
+  defp exec_inst({frame, vm}, {:br_if, label_idx}) do
+    {val, stack} = Stack.pop(vm.stack)
+    vm = Map.put(vm, :stack, stack)
+
+    if val == 1, do: break_to(frame, vm, label_idx), else: {frame, vm}
+  end
+
+  defp exec_inst({frame, vm}, {:if, _type, else_idx, end_idx}) do
+    {val, stack} = Stack.pop(vm.stack)
+    vm = Map.put(vm, :stack, stack)
+
+    if val != 1 do
+      next_instr = if else_idx != :none, do: else_idx, else: end_idx
+      {Map.put(frame, :next_instr, next_instr), vm}
+    else
+      {frame, vm}
     end
   end
 
-  defp exec_inst({frame, vm}, {:if, result_type, idx1, idx2}) do
-  #  IO.inspect idx1
-    #IO.inspect idx2
-    {a, stack} = Stack.pop(vm.stack)
-  #  n = Enum.count(result_type)
-  #  case a do
-    #  0 -> Map.put(vm.frame, :next_instr, {n, idx1})
-    #  1 -> Map.put(vm.frame, :next_instr, {n, idx2})
-    #  _-> {:error, "Incorrect Stack Value from Structured Instruction"}
-  #  end
+  defp exec_inst({frame, vm}, {:else, end_idx}) do
+    {Map.put(frame, :next_instr, end_idx), vm}
   end
+
+  defp exec_inst({%{labels: []} = frame, vm}, :end), do: {frame, vm}
+
+  defp exec_inst({frame, vm}, :end) do
+    [corresponding_label | labels] = frame.labels
+
+    case corresponding_label do
+      {:loop, _instr} -> {Map.put(frame, :labels, labels), vm}
+      _ -> {frame, vm}
+    end
+  end
+
+  defp exec_inst({frame, vm}, :return) do
+    {Map.put(frame, :next_instr, length(frame.instructions)), vm}
+  end
+
+  defp exec_inst({frame, vm}, :unreachable), do: {frame, vm}
+  defp exec_inst({frame, vm}, :nop), do: {frame, vm}
 
   defp exec_inst({frame, vm}, {:call, funcidx}) do
     func_addr = Enum.at(frame.module.funcaddrs, funcidx)
@@ -288,20 +309,22 @@ defmodule WaspVM.Executor do
     {Map.put(frame, :locals, locals), vm}
   end
 
+
+  ### Begin Simple Integer Numerics
   defp exec_inst({frame, vm}, :i32_add) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
     {frame, Map.put(vm, :stack, Stack.push(stack, a + b))}
   end
 
   defp exec_inst({frame, vm}, :i32_sub) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
-
+    IO.inspect b
     {frame, Map.put(vm, :stack, Stack.push(stack, a - b))}
   end
 
   defp exec_inst({frame, vm}, :i32_mul) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
     {frame, Map.put(vm, :stack, Stack.push(stack, a * b))}
   end
@@ -1027,54 +1050,7 @@ defmodule WaspVM.Executor do
 
 
 
-  defp exec_inst({frame, vm}, {:loop, _result_type}) do
-    labels = [{:loop, frame.next_instr} | frame.labels]
 
-    {Map.put(frame, :labels, labels), vm}
-  end
-
-  defp exec_inst({frame, vm}, {:br, label_idx}), do: break_to(frame, vm, label_idx)
-
-  defp exec_inst({frame, vm}, {:br_if, label_idx}) do
-    {val, stack} = Stack.pop(vm.stack)
-    vm = Map.put(vm, :stack, stack)
-
-    if val == 1, do: break_to(frame, vm, label_idx), else: {frame, vm}
-  end
-
-  defp exec_inst({frame, vm}, {:if, _type, else_idx, end_idx}) do
-    {val, stack} = Stack.pop(vm.stack)
-    vm = Map.put(vm, :stack, stack)
-
-    if val != 1 do
-      next_instr = if else_idx != :none, do: else_idx, else: end_idx
-      {Map.put(frame, :next_instr, next_instr), vm}
-    else
-      {frame, vm}
-    end
-  end
-
-  defp exec_inst({frame, vm}, {:else, end_idx}) do
-    {Map.put(frame, :next_instr, end_idx), vm}
-  end
-
-  defp exec_inst({%{labels: []} = frame, vm}, :end), do: {frame, vm}
-
-  defp exec_inst({frame, vm}, :end) do
-    [corresponding_label | labels] = frame.labels
-
-    case corresponding_label do
-      {:loop, _instr} -> {Map.put(frame, :labels, labels), vm}
-      _ -> {frame, vm}
-    end
-  end
-
-  defp exec_inst({frame, vm}, :return) do
-    {Map.put(frame, :next_instr, length(frame.instructions)), vm}
-  end
-
-  defp exec_inst({frame, vm}, :unreachable), do: {frame, vm}
-  defp exec_inst({frame, vm}, :nop), do: {frame, vm}
 
   defp exec_inst({frame, vm}, op) do
     IO.inspect op
@@ -1162,9 +1138,5 @@ defmodule WaspVM.Executor do
     |> check_value
   end
 
-    #Other Valid & Working
-    #a =  Bitwise.bsr(number, shift) |> IO.inspect
-    #b = Bitwise.bsl(number, (-shift)) |> IO.inspect
-  #  Bitwise.bor(a, b) |> IO.inspect
 
 end
