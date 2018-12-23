@@ -868,7 +868,13 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, {:loop, _result_type}) do
-    labels = [{:loop, frame.next_instr} | frame.labels]
+    labels = [frame.next_instr | frame.labels]
+
+    {Map.put(frame, :labels, labels), vm}
+  end
+
+  defp exec_inst({frame, vm}, {:block, _result_type, end_idx}) do
+    labels = [end_idx - 1 | frame.labels]
 
     {Map.put(frame, :labels, labels), vm}
   end
@@ -885,6 +891,9 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm}, {:if, _type, else_idx, end_idx}) do
     {val, stack} = Stack.pop(vm.stack)
     vm = Map.put(vm, :stack, stack)
+    labels = [end_idx | frame.labels]
+
+    frame = Map.put(frame, :labels, labels)
 
     if val != 1 do
       next_instr = if else_idx != :none, do: else_idx, else: end_idx
@@ -903,10 +912,7 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm}, :end) do
     [corresponding_label | labels] = frame.labels
 
-    case corresponding_label do
-      {:loop, _instr} -> {Map.put(frame, :labels, labels), vm}
-      _ -> {frame, vm}
-    end
+    {Map.put(frame, :labels, labels), vm}
   end
 
   defp exec_inst({frame, vm}, :return) do
@@ -921,7 +927,7 @@ defmodule WaspVM.Executor do
   end
 
   defp break_to(frame, vm, label_idx) do
-    {_, next_instr} = Enum.at(frame.labels, label_idx)
+    next_instr = Enum.at(frame.labels, label_idx)
 
     {Map.put(frame, :next_instr, next_instr), vm}
   end
