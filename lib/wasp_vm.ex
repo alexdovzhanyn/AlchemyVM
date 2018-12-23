@@ -10,8 +10,18 @@ defmodule WaspVM do
   @enforce_keys [:modules, :stack, :store]
   defstruct [:modules, :stack, :store]
 
+  @moduledoc """
+    Execute WebAssembly code
+  """
+
+  @doc """
+    Starts the Virtual Machine and returns the PID which is used to
+    interface with the VM.
+  """
+  @spec start :: {:ok, pid}
   def start, do: GenServer.start_link(__MODULE__, [])
 
+  @doc false
   def init(_args) do
     {
       :ok,
@@ -23,18 +33,35 @@ defmodule WaspVM do
     }
   end
 
+  @doc """
+    Load a binary WebAssembly file (.wasm) as a module into the VM
+  """
+  @spec load_file(pid, String.t()) :: :ok
   def load_file(ref, filename) do
     GenServer.call(ref, {:load_module, Decoder.decode_file(filename)}, :infinity)
   end
 
+  @doc """
+    Load a WebAssembly module directly from a binary into the VM
+  """
+  @spec load(pid, binary) :: :ok
   def load(ref, binary) when is_binary(binary) do
     GenServer.call(ref, {:load_module, Decoder.decode(binary)}, :infinity)
   end
 
+  @doc """
+    Call an exported function by name from the VM. The function must have
+    been loaded in through a module using load_file/2 or load/2 previously
+  """
+  @spec execute(pid, String.t(), list) :: :ok | {:ok, any} | {:error, any}
   def execute(ref, func, args \\ []) do
     GenServer.call(ref, {:execute, func, args}, :infinity)
   end
 
+  @doc """
+    Returns the state for a given VM instance
+  """
+  @spec vm_state(pid) :: WaspVM
   def vm_state(ref), do: GenServer.call(ref, :vm_state, :infinity)
 
   def handle_call({:load_module, module}, _from, vm) do

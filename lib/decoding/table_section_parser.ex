@@ -1,6 +1,8 @@
 defmodule WaspVM.Decoder.TableSectionParser do
   alias WaspVM.LEB128
 
+  @moduledoc false
+
   def parse(module) do
     {count, entries} =
       module.sections

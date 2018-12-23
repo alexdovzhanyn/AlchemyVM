@@ -1,7 +1,5 @@
 defmodule WaspVM.LEB128 do
-  @moduledoc """
-    Decode signed and unsigned LEB128 encoded integers
-  """
+  @moduledoc false
 
   @doc """
     Decode an unsigned LEB128 encoded integer from binary, return any

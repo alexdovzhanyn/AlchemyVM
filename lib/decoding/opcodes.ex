@@ -1,6 +1,8 @@
 defmodule WaspVM.OpCodes do
   require IEx
 
+  @moduledoc false
+
   @doc """
     Returns an atom representing a given language opcode
   """
@@ -12,6 +14,7 @@ defmodule WaspVM.OpCodes do
       <<0x02>> -> :block
       <<0x03>> -> :loop
       <<0x04>> -> :if
+      <<0x05>> -> :else
       <<0x0C>> -> :br
       <<0x0D>> -> :br_if
       <<0x0E>> -> :br_table

@@ -3,6 +3,8 @@ defmodule WaspVM.Decoder.InstructionParser do
   alias WaspVM.OpCodes
   require IEx
 
+  @moduledoc false
+
   # Needs revisiting
   def parse_instruction(:call_indirect, bytecode) do
     {type_index, rest} = LEB128.decode_unsigned(bytecode)
@@ -20,6 +22,7 @@ defmodule WaspVM.Decoder.InstructionParser do
 
 #################### NOT COMPLETED ###############################
   def parse_instruction(:if, bytecode), do: parse_block_type_instruction(:if, bytecode)
+  def parse_instruction(:else, bytecode), do: {:else, bytecode}
   def parse_instruction(:block, bytecode), do: parse_block_type_instruction(:block, bytecode)
   def parse_instruction(:loop, bytecode), do: parse_block_type_instruction(:loop, bytecode)
 
