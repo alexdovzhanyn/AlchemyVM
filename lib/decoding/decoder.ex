@@ -13,6 +13,8 @@ defmodule WaspVM.Decoder do
   alias WaspVM.Decoder.CodeSectionParser
   require IEx
 
+  @moduledoc false
+
   def decode_file(file_path) do
     {:ok, bin} = File.read(file_path)
 

@@ -3,6 +3,8 @@ defmodule WaspVM.Decoder.ExportSectionParser do
   alias WaspVM.OpCodes
   require IEx
 
+  @moduledoc false
+
   def parse(module) do
     {count, entries} =
       module.sections
@@ -11,7 +13,7 @@ defmodule WaspVM.Decoder.ExportSectionParser do
 
     entries = if count > 0, do: parse_entries(entries), else: []
     entries = entries |> Enum.reject(&(&1 == nil))
-  
+
     Map.put(module, :exports, Enum.reverse(entries))
   end
 

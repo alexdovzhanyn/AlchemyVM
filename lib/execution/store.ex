@@ -8,12 +8,12 @@ defmodule WaspVM.Store do
             globals: [],
             tables: []
 
-  @moduledoc """
-    The store represents all global state that can be manipulated
-    by WebAssembly programs. It consists of the runtime representation
-    of all instances of functions, tables, memories, and globals that
-    have been allocated during the life time of the abstract machine.
-  """
+  @moduledoc false
+
+  # The store represents all global state that can be manipulated
+  # by WebAssembly programs. It consists of the runtime representation
+  # of all instances of functions, tables, memories, and globals that
+  # have been allocated during the life time of the abstract machine.
 
   @doc """
     Allocate new memory to the store. Returns a tuple with the address

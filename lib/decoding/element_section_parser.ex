@@ -2,6 +2,8 @@ defmodule WaspVM.Decoder.ElementSectionParser do
   alias WaspVM.LEB128
   require IEx
 
+  @moduledoc false
+
   def parse(module) do
     raise "Element section parser not implemented"
 
