@@ -1,5 +1,7 @@
 ![WaspVM Banner](https://s3-us-west-2.amazonaws.com/elixium-assets/waspban.png)
 
+[![Packagist](https://img.shields.io/badge/license-MIT-blue.svg)]()
+[![](https://img.shields.io/hexpm/v/wasp_vm.svg)](https://hex.pm/packages/wasp_vm)
 [![Build Status](https://travis-ci.org/ElixiumNetwork/WaspVM.svg?branch=master)](https://travis-ci.org/ElixiumNetwork/WaspVM)
 
 WebAssembly Virtual Machine written in Elixir. Currently used as the Wasm VM in
@@ -22,7 +24,7 @@ by adding `wasp_vm` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:wasp_vm, "~> 0.1.0"}
+    {:wasp_vm, "~> 0.7"}
   ]
 end
 ```

@@ -3,6 +3,8 @@ defmodule WaspVM.Decoder.ImportSectionParser do
   alias WaspVM.OpCodes
   alias WaspVM.Decoder.Util
 
+  @moduledoc false
+
   def parse(module) do
     {count, entries} =
       module.sections

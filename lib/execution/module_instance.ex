@@ -13,10 +13,10 @@ defmodule WaspVM.ModuleInstance do
             exports: [],
             types: []
 
-  @moduledoc """
-    Module instantiation as described at
-    https://webassembly.github.io/spec/core/exec/modules.html#alloc-module
-  """
+  @moduledoc false
+
+  # Module instantiation as described at
+  # https://webassembly.github.io/spec/core/exec/modules.html#alloc-module
 
   @spec new :: ModuleInstance
   def new, do: %ModuleInstance{ref: make_ref()}

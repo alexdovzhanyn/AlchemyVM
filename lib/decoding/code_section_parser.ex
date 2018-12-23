@@ -4,6 +4,8 @@ defmodule WaspVM.Decoder.CodeSectionParser do
   alias WaspVM.Decoder.InstructionParser
   require IEx
 
+  @moduledoc false
+
   def parse(module) do
     {count, bodies} =
       module.sections

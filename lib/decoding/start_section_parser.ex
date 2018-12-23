@@ -1,6 +1,8 @@
 defmodule WaspVM.Decoder.StartSectionParser do
   alias WaspVM.LEB128
 
+  @moduledoc false
+
    def parse(module) do
      {index, _entries} =
        module.sections

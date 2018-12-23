@@ -1,6 +1,8 @@
 defmodule WaspVM.Decoder.FunctionSectionParser do
   alias WaspVM.LEB128
 
+  @moduledoc false
+
   @spec parse(WaspVM.Module) :: WaspVM.Module
   def parse(module) do
     values = Map.get(module.sections, 3)

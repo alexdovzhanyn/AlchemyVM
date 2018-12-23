@@ -13,6 +13,8 @@ defmodule WaspVM.Module do
             functions: [],
             globals: []
 
+  @moduledoc false
+
   def add_section(module, sec_code, section) do
     sections = Map.put(module.sections, sec_code, section)
 
