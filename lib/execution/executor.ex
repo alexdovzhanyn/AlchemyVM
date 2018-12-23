@@ -6,6 +6,8 @@ defmodule WaspVM.Executor do
   require Logger
   require IEx
 
+  @moduledoc false
+
   # Reference for tests being used: https://github.com/WebAssembly/wabt/tree/master/test
 
   def create_frame_and_execute(vm, addr) do

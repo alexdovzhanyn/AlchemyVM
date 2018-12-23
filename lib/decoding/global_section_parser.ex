@@ -5,6 +5,8 @@ defmodule WaspVM.Decoder.GlobalSectionParser do
   alias WaspVM.Decoder.InstructionParser
   require IEx
 
+  @moduledoc false
+
   def parse(module) do
     {count, entries} =
       module.sections

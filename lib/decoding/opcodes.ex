@@ -1,6 +1,8 @@
 defmodule WaspVM.OpCodes do
   require IEx
 
+  @moduledoc false
+
   @doc """
     Returns an atom representing a given language opcode
   """
