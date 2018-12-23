@@ -1,3 +1,5 @@
+[![Packagist](https://img.shields.io/badge/license-MIT-blue.svg)]()
+[![](https://img.shields.io/hexpm/v/wasp_vm.svg)](https://hex.pm/packages/wasp_vm)
 ![WaspVM Banner](https://s3-us-west-2.amazonaws.com/elixium-assets/waspban.png)
 
 [![Build Status](https://travis-ci.org/ElixiumNetwork/WaspVM.svg?branch=master)](https://travis-ci.org/ElixiumNetwork/WaspVM)
