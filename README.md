@@ -1,4 +1,4 @@
-# WaspVM
+[![Build Status](https://travis-ci.org/ElixiumNetwork/WaspVM.svg?branch=master)](https://travis-ci.org/ElixiumNetwork/WaspVM)
 
 ![WaspVM Banner](https://s3-us-west-2.amazonaws.com/elixium-assets/waspban.png)
 
