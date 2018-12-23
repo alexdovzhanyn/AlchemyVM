@@ -329,7 +329,116 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, a * b))}
   end
 
+  defp exec_inst({frame, vm}, :i32_div_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
+    j1 = sign_value(a, 32)
+    j2 = sign_value(b, 32)
+
+    if j2 == 0 do
+      {:error, :undefined}
+    else
+      if j1/j2 == :math.pow(2, 31) do
+        {:error, :undefined}
+      else
+        res = trunc(j1/j2)
+        ans = sign_value(res, 32)
+
+        {frame, Map.put(vm, :stack, Stack.push(stack, ans))}
+      end
+    end
+  end
+
+  defp exec_inst({frame, vm}, :i64_div_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    j1 = sign_value(a, 64)
+    j2 = sign_value(b, 64)
+
+
+    if j2 == 0 do
+      {:error, :undefined}
+    else
+      if j1/j2 == :math.pow(2, 63) do
+        {:error, :undefined}
+      else
+        res = trunc(j1/j2)
+        ans = sign_value(res, 64)
+
+        {frame, Map.put(vm, :stack, Stack.push(stack, ans))}
+      end
+    end
+  end
+
+  defp exec_inst({frame, vm}, :i32_div_u) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    if b == 0 do
+      {:error, :undefined}
+    else
+      rem = a - (b*trunc(a/b))
+      result = Integer.floor_div((a - rem), b)
+      {frame, Map.put(vm, :stack, Stack.push(stack, result))}
+    end
+  end
+
+  defp exec_inst({frame, vm}, :i32_rem_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    if b == 0 do
+      {:error, :undefined}
+    else
+      j1 = sign_value(a, 32)
+      j2 = sign_value(b, 32)
+
+      rem = j1 - (j2*trunc(j1/j2))
+      n = :math.pow(2, 32)
+      res = n - rem
+
+      {frame, Map.put(vm, :stack, Stack.push(stack, rem))}
+    end
+  end
+
+  defp exec_inst({frame, vm}, :i64_rem_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    if b == 0 do
+      {:error, :undefined}
+    else
+      j1 = sign_value(a, 64)
+      j2 = sign_value(b, 64)
+
+      rem = j1 - (j2*trunc(j1/j2))
+      n = :math.pow(2, 64)
+      res = n - rem
+
+      {frame, Map.put(vm, :stack, Stack.push(stack, res))}
+    end
+  end
+
+  defp exec_inst({frame, vm}, :i64_div_u) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    if b == 0 do
+      {:error, :undefined}
+    else
+      rem = a - (b*trunc(a/b))
+      result = Integer.floor_div((a - rem), b)
+      {frame, Map.put(vm, :stack, Stack.push(stack, result))}
+    end
+  end
+
+  defp exec_inst({frame, vm}, :i32_popcnt) do
+    {a, stack} = Stack.pop(vm.stack)
+    result = popcnt(a, 32)
+    {frame, Map.put(vm, :stack, Stack.push(stack, result))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_popcnt) do
+    {a, stack} = Stack.pop(vm.stack)
+    result = popcnt(a, 64)
+    {frame, Map.put(vm, :stack, Stack.push(stack, result))}
+  end
 
   defp exec_inst({frame, vm}, :i32_rem_u) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
@@ -350,6 +459,27 @@ defmodule WaspVM.Executor do
       {frame, Map.put(vm, :stack, Stack.push(stack, a - (b*trunc(a/b))))}
     end
   end
+
+  defp exec_inst({frame, vm}, :i64_add) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+    {frame, Map.put(vm, :stack, Stack.push(stack, a + b))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_sub) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+    {frame, Map.put(vm, :stack, Stack.push(stack, a - b))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_mul) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, a * b))}
+  end
+
+  ### END INTEGER NUMERICS
+
+
+ ###  Begin Float Numerics
 
   defp exec_inst({frame, vm}, :f32_add) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
@@ -406,8 +536,6 @@ defmodule WaspVM.Executor do
 
     {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(Enum.max([a, b]))))}
   end
-
-
 
   defp exec_inst({frame, vm}, :f32_nearest) do
     {[a], stack} = Stack.pop_multiple(vm.stack)
@@ -490,7 +618,7 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, :f64_abs) do
-    {a, stack} = Stack.pop_multiple(vm.stack)
+    {[a], stack} = Stack.pop_multiple(vm.stack)
 
     {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(abs(a))))}
   end
@@ -510,120 +638,12 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm}, :f32_div) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, a / b))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, WaspVM.Executor.float_point_op(a / b)))}
   end
 
-  defp exec_inst({frame, vm}, :i32_div_s) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+  ### END FLOAT NUMERICS
 
-    j1 = sign_value(a, 32)
-    j2 = sign_value(b, 32)
-
-    if j2 == 0 do
-      {:error, :undefined}
-    else
-      if j1/j2 == :math.pow(2, 31) do
-        {:error, :undefined}
-      else
-        res = trunc(j1/j2)
-        ans = sign_value(res, 32)
-
-        {frame, Map.put(vm, :stack, Stack.push(stack, ans))}
-      end
-    end
-  end
-
-  defp exec_inst({frame, vm}, :i64_div_s) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
-
-    j1 = sign_value(a, 64)
-    j2 = sign_value(b, 64)
-
-
-    if j2 == 0 do
-      {:error, :undefined}
-    else
-      if j1/j2 == :math.pow(2, 63) do
-        {:error, :undefined}
-      else
-        res = trunc(j1/j2)
-        ans = sign_value(res, 64)
-
-        {frame, Map.put(vm, :stack, Stack.push(stack, ans))}
-      end
-    end
-  end
-
-  defp exec_inst({frame, vm}, :i32_div_u) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
-
-    if b == 0 do
-      {:error, :undefined}
-    else
-      rem = a - (b*trunc(a/b))
-      result = Integer.floor_div((a - rem), b)
-      {frame, Map.put(vm, :stack, Stack.push(stack, result))}
-    end
-  end
-
-  defp exec_inst({frame, vm}, :i32_rem_s) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
-
-    if b == 0 do
-      {:error, :undefined}
-    else
-      j1 = sign_value(a, 32)
-      j2 = sign_value(b, 32)
-
-      rem = j1 - (j2*trunc(j1/j2))
-      n = :math.pow(2, 32)
-      res = n - rem
-
-      {frame, Map.put(vm, :stack, Stack.push(stack, res))}
-    end
-  end
-
-  defp exec_inst({frame, vm}, :i64_rem_s) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
-
-    if b == 0 do
-      {:error, :undefined}
-    else
-      j1 = sign_value(a, 64)
-      j2 = sign_value(b, 64)
-
-      rem = j1 - (j2*trunc(j1/j2))
-      n = :math.pow(2, 64)
-      res = n - rem
-
-      {frame, Map.put(vm, :stack, Stack.push(stack, res))}
-    end
-  end
-
-  defp exec_inst({frame, vm}, :i64_div_u) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
-
-    if b == 0 do
-      {:error, :undefined}
-    else
-      rem = a - (b*trunc(a/b))
-      result = Integer.floor_div((a - rem), b)
-      {frame, Map.put(vm, :stack, Stack.push(stack, result))}
-    end
-  end
-
-  defp exec_inst({frame, vm}, :i32_popcnt) do
-    {a, stack} = Stack.pop(vm.stack)
-    result = popcnt(a, 32)
-    {frame, Map.put(vm, :stack, Stack.push(stack, result))}
-  end
-
-  defp exec_inst({frame, vm}, :i64_popcnt) do
-    {a, stack} = Stack.pop(vm.stack)
-    result = popcnt(a, 64)
-    {frame, Map.put(vm, :stack, Stack.push(stack, result))}
-  end
-
+  ### Being Integer STructure
   defp exec_inst({frame, vm}, :i32_rotl) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
@@ -654,11 +674,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, bxor(a, b)))}
   end
 
-  defp exec_inst({frame, vm}, :i32_shr_s) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
-    j2 = Integer.mod(b, 32)
-    {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, j2)))}
-  end
+
 
   defp exec_inst({frame, vm}, :i32_eq) do
     {[a, b], stack} = Stack.pop_multiple(vm.stack)
@@ -668,112 +684,6 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, val))}
   end
 
-  defp exec_inst({frame, vm}, :f32_eq) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a === b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :f64_eq) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a === b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :i32_ne) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a !== b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :f32_lt) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a !== b && a < b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :f64_lt) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a !== b && a < b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :f32_le) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a !== b && a <= b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :f64_le) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a !== b && a <= b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :f32_ge) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a !== b && a <= b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :f64_ge) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a !== b && a <= b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :f32_gt) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a !== b && a > b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :f64_gt) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a !== b && a > b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :f32_ne) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a !== b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-  defp exec_inst({frame, vm}, :f64_ne) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    val = if a !== b, do: 1, else: 0
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
-  end
-
-
-
   defp exec_inst({frame, vm}, :i32_eqz) do
     {a, stack} = Stack.pop(vm.stack)
 
@@ -782,21 +692,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, val))}
   end
 
-  defp exec_inst({frame, vm}, :i64_add) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-    {frame, Map.put(vm, :stack, Stack.push(stack, a + b))}
-  end
 
-  defp exec_inst({frame, vm}, :i64_sub) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
-    {frame, Map.put(vm, :stack, Stack.push(stack, a - b))}
-  end
-
-  defp exec_inst({frame, vm}, :i64_mul) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, a * b))}
-  end
 
   defp exec_inst({frame, vm}, :i64_and) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
@@ -816,12 +712,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, bxor(a, b)))}
   end
 
-  defp exec_inst({frame, vm}, :i64_shr_s) do
-    {[b, a], stack} = Stack.pop_multiple(vm.stack)
-    j2 = Integer.mod(b, 64)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, j2)))}
-  end
 
   defp exec_inst({frame, vm}, :i32_shl) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
@@ -835,16 +726,33 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, bsl(a, b)))}
   end
 
-  defp exec_inst({frame, vm}, :i64_shr_u) do
+
+
+  defp exec_inst({frame, vm}, :i32_shr_u) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
-    j2 = Integer.mod(b, 64)
+
+      j2 = Integer.mod(32, b)
+
     {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, j2)))}
   end
 
-  defp exec_inst({frame, vm}, :i32_shr_u) do
-    {[a, b], stack} = Stack.pop_multiple(vm.stack)
-    j2 = b - (32 * Integer.floor_div(b, 32)) |> IO.inspect
-    Bitwise.band(bsr(a, j2), 0xFFFFFFFF) |> IO.inspect
+  defp exec_inst({frame, vm}, :i64_shr_u) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+    j2 = Integer.mod(b, 64)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, b)))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_shr_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+    j2 = Integer.mod(b, 32)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, j2)))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_shr_s) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+    j2 = Integer.mod(b, 64)
 
     {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, j2)))}
   end
@@ -1028,6 +936,112 @@ defmodule WaspVM.Executor do
     {a, stack} = Stack.pop(vm.stack)
 
     {frame, Map.put(vm, :stack, Stack.push(stack, count_bits(:t, a)))}
+  end
+
+  ### END Integer Structure
+
+  defp exec_inst({frame, vm}, :f32_eq) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a === b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_eq) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a === b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_ne) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a !== b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :f32_lt) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a !== b && a < b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_lt) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a !== b && a < b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :f32_le) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a !== b && a <= b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_le) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a !== b && a <= b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :f32_ge) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a !== b && a <= b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_ge) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a !== b && a <= b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :f32_gt) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a !== b && a > b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_gt) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a !== b && a > b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :f32_ne) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a !== b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_ne) do
+    {[a, b], stack} = Stack.pop_multiple(vm.stack)
+
+    val = if a !== b, do: 1, else: 0
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, val))}
   end
 
   ###

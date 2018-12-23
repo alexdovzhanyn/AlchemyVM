@@ -203,10 +203,6 @@ defmodule WaspVM.Decoder.InstructionParser do
 
   defp parse_block_type_instruction(opcode, bytecode) do
     {result_type, rest} = LEB128.decode_unsigned(bytecode)
-    IO.inspect result_type
-    IO.inspect rest
-    IO.inspect opcode
-
     if result_type == 0x40 do
       {{opcode, :no_res}, rest}
     else
