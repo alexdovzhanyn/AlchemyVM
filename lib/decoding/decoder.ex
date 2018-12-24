@@ -11,6 +11,7 @@ defmodule WaspVM.Decoder do
   alias WaspVM.Decoder.StartSectionParser
   alias WaspVM.Decoder.ElementSectionParser
   alias WaspVM.Decoder.CodeSectionParser
+  alias WaspVM.Decoder.CustomSectionParser
   require IEx
 
   @moduledoc false
@@ -55,7 +56,7 @@ defmodule WaspVM.Decoder do
     do_decode(module, rest)
   end
 
-  defp decode_section(sec_code, bin) when sec_code > 0 do
+  defp decode_section(sec_code, bin) when sec_code >= 0 do
     {size, rest} = LEB128.decode_unsigned(bin)
 
     <<section::bytes-size(size), rest::binary>> = rest
@@ -63,6 +64,7 @@ defmodule WaspVM.Decoder do
     {section, rest}
   end
 
+  defp parse_section(module, 0), do: CustomSectionParser.parse(module)
   defp parse_section(module, 1), do: TypeSectionParser.parse(module)
   defp parse_section(module, 2), do: ImportSectionParser.parse(module)
   defp parse_section(module, 3), do: FunctionSectionParser.parse(module)
