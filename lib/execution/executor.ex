@@ -143,7 +143,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(vm.stack, f64))}
   end
 
-  defp exec_inst({frame, vm}, {:i32_store, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:i32_store, _alignment, offset}) do
     {[value, address], stack} = Stack.pop_multiple(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -161,7 +161,7 @@ defmodule WaspVM.Executor do
     {frame, Map.merge(vm, %{store: store, stack: stack})}
   end
 
-  defp exec_inst({frame, vm}, {:i64_store, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:i64_store, _alignment, offset}) do
     {[value, address], stack} = Stack.pop_multiple(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -179,7 +179,7 @@ defmodule WaspVM.Executor do
     {frame, Map.merge(vm, %{store: store, stack: stack})}
   end
 
-  defp exec_inst({frame, vm}, {:f32_store, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:f32_store, _alignment, offset}) do
     {[value, address], stack} = Stack.pop_multiple(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -197,7 +197,7 @@ defmodule WaspVM.Executor do
     {frame, Map.merge(vm, %{store: store, stack: stack})}
   end
 
-  defp exec_inst({frame, vm}, {:f64_store, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:f64_store, _alignment, offset}) do
     {[value, address], stack} = Stack.pop_multiple(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -215,7 +215,7 @@ defmodule WaspVM.Executor do
     {frame, Map.merge(vm, %{store: store, stack: stack})}
   end
 
-  defp exec_inst({frame, vm}, {:i32_load, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:i32_load, _alignment, offset}) do
     {address, stack} = Stack.pop(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -229,7 +229,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, i32))}
   end
 
-  defp exec_inst({frame, vm}, {:i64_load, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:i64_load, _alignment, offset}) do
     {address, stack} = Stack.pop(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -243,7 +243,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, i64))}
   end
 
-  defp exec_inst({frame, vm}, {:f32_load, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:f32_load, _alignment, offset}) do
     {address, stack} = Stack.pop(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -257,7 +257,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, f32))}
   end
 
-  defp exec_inst({frame, vm}, {:f64_load, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:f64_load, _alignment, offset}) do
     {address, stack} = Stack.pop(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -1036,6 +1036,20 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, val))}
   end
 
+  defp exec_inst({frame, vm}, {:loop, _result_type}) do
+    labels = [{frame.next_instr, frame.next_instr} | frame.labels]
+    snapshots = [vm.stack | frame.snapshots]
+
+    {Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm}
+  end
+
+  defp exec_inst({frame, vm}, {:block, _result_type, end_idx}) do
+    labels = [{frame.next_instr, end_idx - 1} | frame.labels]
+    snapshots = [vm.stack | frame.snapshots]
+
+    {Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm}
+  end
+
   defp exec_inst({frame, vm}, :f64_ne) do
     {[a, b], stack} = Stack.pop_multiple(vm.stack)
 
@@ -1044,7 +1058,14 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, val))}
   end
 
-  ###
+  defp exec_inst({frame, vm}, {:if, _type, else_idx, end_idx}) do
+    {val, stack} = Stack.pop(vm.stack)
+    vm = Map.put(vm, :stack, stack)
+    labels = [{frame.next_instr, end_idx} | frame.labels]
+    snapshots = [vm.stack | frame.snapshots]
+
+    frame = Map.merge(frame, %{labels: labels, snapshots: snapshots})
+  end
 
 
   ### Memory Operations
@@ -1062,9 +1083,12 @@ defmodule WaspVM.Executor do
 
   ### End Memory Operations
 
+  defp exec_inst({frame, vm}, :end) do
+    [_ | labels] = frame.labels
+    [_ | snapshots] = frame.snapshots
 
-
-
+    {Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm}
+  end
 
   defp exec_inst({frame, vm}, op) do
     IO.inspect op
@@ -1072,9 +1096,28 @@ defmodule WaspVM.Executor do
   end
 
   defp break_to(frame, vm, label_idx) do
-    {_, next_instr} = Enum.at(frame.labels, label_idx)
+    {label_instr_idx, next_instr} = Enum.at(frame.labels, label_idx)
+    snapshot = Enum.at(frame.snapshots, label_idx)
+    instr = Enum.at(frame.instructions, label_instr_idx)
 
-    {Map.put(frame, :next_instr, next_instr), vm}
+    drop_changes =
+      fn type ->
+        if type != :no_res do
+          {res, _} = Stack.pop(vm.stack)
+          Stack.push(snapshot, res)
+        else
+          snapshot
+        end
+      end
+
+    stack =
+      case instr do
+        {:loop, _} -> snapshot
+        {:if, res_type, _, _} -> drop_changes.(res_type)
+        {:block, res_type, _} -> drop_changes.(res_type)
+      end
+
+    {Map.put(frame, :next_instr, next_instr), Map.put(vm, :stack, stack)}
   end
 
   # Reference https://lemire.me/blog/2017/05/29/unsigned-vs-signed-integer-arithmetic/

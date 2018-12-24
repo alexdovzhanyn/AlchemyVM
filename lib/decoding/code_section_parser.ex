@@ -89,8 +89,10 @@ defmodule WaspVM.Decoder.CodeSectionParser do
             i
           end
 
-        {:block, _} ->
-          find_matching(instructions, idx, :end)
+        {:block, v} ->
+          matched_end = find_matching(instructions, idx, :end)
+          List.replace_at(instructions, idx, {:block, v, matched_end})
+
         _ -> instructions
       end
 

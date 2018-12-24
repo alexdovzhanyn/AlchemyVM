@@ -20,7 +20,7 @@ defmodule StackTest do
     {popped, stack} = Stack.new
     |> Stack.push(1)
     |> Stack.push(2)
-    |> Stack.popt
+    |> Stack.pop()
 
     assert stack.elements == [1]
   end
