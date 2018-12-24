@@ -3,15 +3,11 @@ defmodule WaspVM.DecoderTest do
   doctest WaspVM
 
   test "Can decode basic .wasm" do
-    WaspVM.Decoder.decode_file("./addTwo_main.wasm") |> IO.inspect
-  end
-
-  test "Can decode basic #2 .wasm" do
-    WaspVM.Decoder.decode_file("./test/fixtures/wasm/basic_mem_add.wasm") |> IO.inspect
+    WaspVM.Decoder.decode_file("./test/fixtures/wasm/basic_mem_add.wasm")
   end
 
   test "Can decode large .wasm" do
-    WaspVM.Decoder.decode_file("./test/fixtures/wasm/blake2b.wasm") |> IO.inspect
+    WaspVM.Decoder.decode_file("./test/fixtures/wasm/blake2b.wasm")
   end
 
 

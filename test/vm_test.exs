@@ -2,8 +2,9 @@ defmodule WaspVM.VMTest do
   use ExUnit.Case, async: false
   doctest WaspVM
 
-  test "Can exeucte basic vm" do
-    WaspVM.start("./addTwo_main.wasm", [2]) == [4]
+  test "Can start the vm" do
+    res = WaspVM.start()
+    assert {:ok, _} = res
   end
 
 end

@@ -65,7 +65,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(vm.stack, f64))}
   end
 
-  defp exec_inst({frame, vm}, {:i32_store, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:i32_store, _alignment, offset}) do
     {[value, address], stack} = Stack.pop_multiple(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -83,7 +83,7 @@ defmodule WaspVM.Executor do
     {frame, Map.merge(vm, %{store: store, stack: stack})}
   end
 
-  defp exec_inst({frame, vm}, {:i64_store, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:i64_store, _alignment, offset}) do
     {[value, address], stack} = Stack.pop_multiple(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -101,7 +101,7 @@ defmodule WaspVM.Executor do
     {frame, Map.merge(vm, %{store: store, stack: stack})}
   end
 
-  defp exec_inst({frame, vm}, {:f32_store, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:f32_store, _alignment, offset}) do
     {[value, address], stack} = Stack.pop_multiple(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -119,7 +119,7 @@ defmodule WaspVM.Executor do
     {frame, Map.merge(vm, %{store: store, stack: stack})}
   end
 
-  defp exec_inst({frame, vm}, {:f64_store, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:f64_store, _alignment, offset}) do
     {[value, address], stack} = Stack.pop_multiple(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -137,7 +137,7 @@ defmodule WaspVM.Executor do
     {frame, Map.merge(vm, %{store: store, stack: stack})}
   end
 
-  defp exec_inst({frame, vm}, {:i32_load, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:i32_load, _alignment, offset}) do
     {address, stack} = Stack.pop(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -151,7 +151,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, i32))}
   end
 
-  defp exec_inst({frame, vm}, {:i64_load, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:i64_load, _alignment, offset}) do
     {address, stack} = Stack.pop(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -165,7 +165,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, i64))}
   end
 
-  defp exec_inst({frame, vm}, {:f32_load, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:f32_load, _alignment, offset}) do
     {address, stack} = Stack.pop(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -179,7 +179,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, f32))}
   end
 
-  defp exec_inst({frame, vm}, {:f64_load, alignment, offset}) do
+  defp exec_inst({frame, vm}, {:f64_load, _alignment, offset}) do
     {address, stack} = Stack.pop(vm.stack)
 
     # Will only work while each module can only have 1 mem
@@ -785,8 +785,8 @@ defmodule WaspVM.Executor do
 
   defp exec_inst({frame, vm}, :i32_shr_u) do
     {[a, b], stack} = Stack.pop_multiple(vm.stack)
-    j2 = b - (32 * Integer.floor_div(b, 32)) |> IO.inspect
-    Bitwise.band(bsr(a, j2), 0xFFFFFFFF) |> IO.inspect
+    j2 = b - (32 * Integer.floor_div(b, 32))
+    Bitwise.band(bsr(a, j2), 0xFFFFFFFF)
 
     {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, j2)))}
   end
