@@ -31,11 +31,9 @@ defmodule WaspVM.Decoder.InstructionParser do
   def parse_instruction(:i64_load16_u, bytecode), do: get_two_values(:i64_load16_u, bytecode)
   def parse_instruction(:i64_load32_s, bytecode), do: get_two_values(:i64_load32_s, bytecode)
   def parse_instruction(:i64_load32_u, bytecode), do: get_two_values(:i64_load32_u, bytecode)
-  def parse_instruction(:i32_store8, bytecode), do: get_two_values(:i32_store8, bytecode)
-  def parse_instruction(:i32_store16, bytecode), do: get_two_values(:i32_store16, bytecode)
-  def parse_instruction(:i64_store8, bytecode), do: get_two_values(:i64_store8, bytecode)
-  def parse_instruction(:i64_store16, bytecode), do: get_two_values(:i64_store16, bytecode)
-  def parse_instruction(:i64_store32, bytecode), do: get_two_values(:i64_store32, bytecode)
+
+
+
 
   def parse_instruction(:i32_wrap_i64, bytecode), do: {:i32_wrap_i64, bytecode}
   def parse_instruction(:i32_trunc_s_f32, bytecode), do: {:i32_trunc_s_f32, bytecode}
@@ -70,6 +68,11 @@ defmodule WaspVM.Decoder.InstructionParser do
 
 
   #################### COMPLETED WITH NOTES ###############################
+  def parse_instruction(:i64_store32, bytecode), do: get_two_values(:i64_store32, bytecode) # Done
+  def parse_instruction(:i64_store8, bytecode), do: get_two_values(:i64_store8, bytecode) # Done
+  def parse_instruction(:i64_store16, bytecode), do: get_two_values(:i64_store16, bytecode)  # Done
+  def parse_instruction(:i32_store16, bytecode), do: get_two_values(:i32_store16, bytecode) # Done
+  def parse_instruction(:i32_store8, bytecode), do: get_two_values(:i32_store8, bytecode) # Done
   def parse_instruction(:if, bytecode), do: parse_block_type_instruction(:if, bytecode) # Done
   def parse_instruction(:else, bytecode), do: {:else, bytecode} # Done
   def parse_instruction(:block, bytecode), do: parse_block_type_instruction(:block, bytecode) # Done

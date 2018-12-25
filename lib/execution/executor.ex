@@ -143,133 +143,6 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(vm.stack, f64))}
   end
 
-  defp exec_inst({frame, vm}, {:i32_store, _alignment, offset}) do
-    {[value, address], stack} = Stack.pop_multiple(vm.stack)
-
-    # Will only work while each module can only have 1 mem
-    mem_addr = hd(frame.module.memaddrs)
-
-    mem =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.put_at(address + offset, <<value::32>>)
-
-    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
-
-    store = Map.put(vm.store, :mems, store_mems)
-
-    {frame, Map.merge(vm, %{store: store, stack: stack})}
-  end
-
-  defp exec_inst({frame, vm}, {:i64_store, _alignment, offset}) do
-    {[value, address], stack} = Stack.pop_multiple(vm.stack)
-
-    # Will only work while each module can only have 1 mem
-    mem_addr = hd(frame.module.memaddrs)
-
-    mem =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.put_at(address + offset, <<value::64>>)
-
-    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
-
-    store = Map.put(vm.store, :mems, store_mems)
-
-    {frame, Map.merge(vm, %{store: store, stack: stack})}
-  end
-
-  defp exec_inst({frame, vm}, {:f32_store, _alignment, offset}) do
-    {[value, address], stack} = Stack.pop_multiple(vm.stack)
-
-    # Will only work while each module can only have 1 mem
-    mem_addr = hd(frame.module.memaddrs)
-
-    mem =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.put_at(address + offset, <<value::32>>)
-
-    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
-
-    store = Map.put(vm.store, :mems, store_mems)
-
-    {frame, Map.merge(vm, %{store: store, stack: stack})}
-  end
-
-  defp exec_inst({frame, vm}, {:f64_store, _alignment, offset}) do
-    {[value, address], stack} = Stack.pop_multiple(vm.stack)
-
-    # Will only work while each module can only have 1 mem
-    mem_addr = hd(frame.module.memaddrs)
-
-    mem =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.put_at(address + offset, <<value::64>>)
-
-    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
-
-    store = Map.put(vm.store, :mems, store_mems)
-
-    {frame, Map.merge(vm, %{store: store, stack: stack})}
-  end
-
-  defp exec_inst({frame, vm}, {:i32_load, _alignment, offset}) do
-    {address, stack} = Stack.pop(vm.stack)
-
-    # Will only work while each module can only have 1 mem
-    mem_addr = hd(frame.module.memaddrs)
-
-    <<i32::32>> =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.get_at(address + offset, 4)
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, i32))}
-  end
-
-  defp exec_inst({frame, vm}, {:i64_load, _alignment, offset}) do
-    {address, stack} = Stack.pop(vm.stack)
-
-    # Will only work while each module can only have 1 mem
-    mem_addr = hd(frame.module.memaddrs)
-
-    <<i64::64>> =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.get_at(address + offset, 8)
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, i64))}
-  end
-
-  defp exec_inst({frame, vm}, {:f32_load, _alignment, offset}) do
-    {address, stack} = Stack.pop(vm.stack)
-
-    # Will only work while each module can only have 1 mem
-    mem_addr = hd(frame.module.memaddrs)
-
-    <<f32::32-float>> =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.get_at(address + offset, 4)
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, f32))}
-  end
-
-  defp exec_inst({frame, vm}, {:f64_load, _alignment, offset}) do
-    {address, stack} = Stack.pop(vm.stack)
-
-    # Will only work while each module can only have 1 mem
-    mem_addr = hd(frame.module.memaddrs)
-
-    <<f64::64-float>> =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.get_at(address + offset, 8)
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, f64))}
-  end
 
   defp exec_inst({frame, vm}, {:get_local, idx}) do
     local = Enum.at(frame.locals, idx)
@@ -1093,6 +966,243 @@ defmodule WaspVM.Executor do
     {frame, Map.merge(vm, %{memory: Memory.grow(vm.memory, pages), stack: Stack.push(stack, length(vm.memory))})}
   end
 
+  defp exec_inst({frame, vm}, {:i32_store, _alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    mem =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(address + offset, <<value::32>>)
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {frame, Map.merge(vm, %{store: store, stack: stack})}
+  end
+
+  defp exec_inst({frame, vm}, {:i32_store8, _alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    mem_addr = hd(frame.module.memaddrs)
+
+    mem =
+      vm.store.mems
+      |> IO.inspect
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(address + offset, <<wrap_to_value(:i8, value)::8>>)
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {frame, Map.merge(vm, %{store: store, stack: stack})}
+  end
+
+  defp exec_inst({frame, vm}, {:i32_store16, _alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    mem_addr = hd(frame.module.memaddrs)
+
+    value =
+      <<wrap_to_value(:i16, value)::16>>
+      |> Binary.to_list
+      |> Enum.reverse()
+      |> Binary.from_list
+
+
+    mem =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(address + offset, value)
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {frame, Map.merge(vm, %{store: store, stack: stack})}
+  end
+
+  defp exec_inst({frame, vm}, {:i64_store8, _alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    mem_addr = hd(frame.module.memaddrs)
+
+    value = <<wrap_to_value(:i8, value)::8>>
+    mem =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(address + offset, value)
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {frame, Map.merge(vm, %{store: store, stack: stack})}
+  end
+
+  defp exec_inst({frame, vm}, {:i64_store16, _alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    mem_addr = hd(frame.module.memaddrs)
+
+    value =
+      <<wrap_to_value(:i16, value)::16>>
+      |> Binary.to_list
+      |> Enum.reverse()
+      |> Binary.from_list
+
+
+    mem =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(address + offset, value)
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {frame, Map.merge(vm, %{store: store, stack: stack})}
+  end
+
+  defp exec_inst({frame, vm}, {:i64_store32, _alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    mem_addr = hd(frame.module.memaddrs)
+
+    value =
+      <<wrap_to_value(:i32, value)::32>>
+      |> Binary.to_list
+      |> Enum.reverse()
+      |> Binary.from_list
+
+
+    mem =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(address + offset, value)
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {frame, Map.merge(vm, %{store: store, stack: stack})}
+  end
+
+  defp exec_inst({frame, vm}, {:i64_store, _alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    mem =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(address + offset, <<value::64>>)
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {frame, Map.merge(vm, %{store: store, stack: stack})}
+  end
+
+  defp exec_inst({frame, vm}, {:f32_store, _alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    mem =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(address + offset, <<value::32>>)
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {frame, Map.merge(vm, %{store: store, stack: stack})}
+  end
+
+  defp exec_inst({frame, vm}, {:f64_store, _alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    mem =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(address + offset, <<value::64>>)
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {frame, Map.merge(vm, %{store: store, stack: stack})}
+  end
+
+  defp exec_inst({frame, vm}, {:i32_load, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    <<i32::32>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 4)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, i32))}
+  end
+
+  defp exec_inst({frame, vm}, {:i64_load, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    <<i64::64>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 8)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, i64))}
+  end
+
+  defp exec_inst({frame, vm}, {:f32_load, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    <<f32::32-float>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 4)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, f32))}
+  end
+
+  defp exec_inst({frame, vm}, {:f64_load, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    <<f64::64-float>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 8)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, f64))}
+  end
+
+
   ### End Memory Operations
 
   defp exec_inst({frame, vm}, :end) do
@@ -1206,6 +1316,10 @@ defmodule WaspVM.Executor do
     |> Enum.reverse
     |> check_value
   end
+
+  defp wrap_to_value(:i8, integer), do: integer &&& 0xFF
+  defp wrap_to_value(:i16, integer), do: integer &&& 0xFFFF
+  defp wrap_to_value(:i32, integer), do: integer &&& 0xFFFFFFFF
 
 
 end

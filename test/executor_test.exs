@@ -509,6 +509,95 @@ defmodule WaspVM.ExecutorTest do
 
     ### END PARAMTERIC TEST
 
+    ### Begin Memory Tests
+    test "32 Store 8 works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/memory.wasm")
+      {status, answer} = WaspVM.execute(pid, "i32_store8", [])
+
+      answer =
+        answer
+        |> :binary.encode_unsigned()
+        |> Binary.to_list()
+        |> Enum.reverse
+        |> Binary.from_list
+        |> :binary.decode_unsigned()
+
+      assert answer == 4278058235
+    end
+
+    test "64 Store 8 works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/memory.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_store8", [])
+
+      answer =
+        answer
+        |> :binary.encode_unsigned()
+        |> Binary.to_list()
+        |> Enum.reverse
+        |> Binary.from_list
+        |> :binary.decode_unsigned()
+
+      assert answer == 4278058235
+    end
+
+    test "32 Store 16 works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/memory.wasm")
+      {status, answer} = WaspVM.execute(pid, "i32_store16", [])
+
+      answer =
+        answer
+        |> :binary.encode_unsigned()
+        |> Binary.to_list()
+        |> Enum.reverse
+        |> Binary.from_list
+        |> :binary.decode_unsigned()
+
+      assert answer == 3435907785
+    end
+
+    test "64 Store 16 works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/memory.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_store16", [])
+
+      answer =
+        answer
+        |> :binary.encode_unsigned()
+        |> Binary.to_list()
+        |> Enum.reverse
+        |> Binary.from_list
+        |> :binary.decode_unsigned()
+
+      assert answer == 3435907785
+    end
+
+    test "64 Store 32 works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/memory.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_store32", [])
+
+      answer =
+        answer
+        |> :binary.encode_unsigned()
+        |> Binary.to_list()
+        |> Enum.reverse
+        |> Binary.from_list
+        |> :binary.decode_unsigned()
+
+      assert answer == 4294843840
+    end
+
+
+
+    test "32 Store works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/memory.wasm")
+      {status, answer} = WaspVM.execute(pid, "i32_store", [])
+      assert answer == 4294843840
+    end
 
 
 end
