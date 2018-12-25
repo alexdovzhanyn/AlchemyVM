@@ -34,17 +34,18 @@ defmodule WaspVM.Executor do
     end
   end
 
-  def execute(%{next_instr: n, instructions: i}, vm) when n >= length(i), do: vm
-
   def execute(frame, vm) do
-    {frame, vm} =
-      frame.instructions
-      |> Enum.at(frame.next_instr)
-      |> instruction({frame, vm})
+    if frame.next_instr >= length(Map.keys(frame.instructions)) do
+      vm
+    else
+      next = frame.next_instr
+      %{^next => instr} = frame.instructions
+      {frame, vm} = instruction(instr, {frame, vm})
 
-    frame = Map.put(frame, :next_instr, frame.next_instr + 1)
+      frame = Map.put(frame, :next_instr, frame.next_instr + 1)
 
-    execute(frame, vm)
+      execute(frame, vm)
+    end
   end
 
   def instruction(opcode, ctx) when is_atom(opcode), do: exec_inst(ctx, opcode)
@@ -110,7 +111,7 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, :return) do
-    {Map.put(frame, :next_instr, length(frame.instructions)), vm}
+    {Map.put(frame, :next_instr, length(Map.keys(frame.instructions))), vm}
   end
 
   defp exec_inst({frame, vm}, :unreachable), do: {frame, vm}
@@ -1098,7 +1099,7 @@ defmodule WaspVM.Executor do
   defp break_to(frame, vm, label_idx) do
     {label_instr_idx, next_instr} = Enum.at(frame.labels, label_idx)
     snapshot = Enum.at(frame.snapshots, label_idx)
-    instr = Enum.at(frame.instructions, label_instr_idx)
+    %{^label_instr_idx => instr} = frame.instructions
 
     drop_changes =
       fn type ->
