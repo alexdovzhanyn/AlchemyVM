@@ -378,6 +378,7 @@ defmodule WaspVM.Executor do
     else
       rem = a - (b*trunc(a/b))
       result = Integer.floor_div((a - rem), b)
+      
       {frame, Map.put(vm, :stack, Stack.push(stack, result))}
     end
   end
@@ -468,7 +469,7 @@ defmodule WaspVM.Executor do
         |> Kernel.*(b)
 
         res = a - c
-      {frame, Map.put(vm, :stack, Stack.push(stack,res))}
+      {frame, Map.put(vm, :stack, Stack.push(stack, res))}
     end
   end
 
@@ -586,16 +587,16 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, :f32_neg) do
-    {a, stack} = Stack.pop(vm.stack)
+    {[a], stack} = Stack.pop(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a*-1)))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a * -1)))}
   end
 
   defp exec_inst({frame, vm}, :f64_neg) do
     {a, stack} = Stack.pop(vm.stack)
 
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a*-1)))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a * -1)))}
   end
 
   defp exec_inst({frame, vm}, :f32_ceil) do
@@ -742,8 +743,7 @@ defmodule WaspVM.Executor do
 
   defp exec_inst({frame, vm}, :i32_shr_u) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
-
-      j2 = Integer.mod(32, b)
+    j2 = Integer.mod(b, 32)
 
     {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, j2)))}
   end
