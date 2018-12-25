@@ -600,15 +600,15 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, :f32_ceil) do
-    {[a], stack} = Stack.pop_multiple(vm.stack)
+    {a, stack} = Stack.pop(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, Float.ceil(a)))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(Float.ceil(a))))}
   end
 
   defp exec_inst({frame, vm}, :f64_ceil) do
-    {[a], stack} = Stack.pop_multiple(vm.stack)
+    {a, stack} = Stack.pop(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, Float.ceil(a)))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(Float.ceil(a))))}
   end
 
   defp exec_inst({frame, vm}, :f32_copysign) do
@@ -631,21 +631,21 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, :f64_abs) do
-    {[a], stack} = Stack.pop_multiple(vm.stack)
+    {a, stack} = Stack.pop(vm.stack)
 
     {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(abs(a))))}
   end
 
   defp exec_inst({frame, vm}, :f32_sqrt) do
-    {[a], stack} = Stack.pop(vm.stack)
+    {a, stack} = Stack.pop(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, :math.sqrt(a)))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(:math.sqrt(a))))}
   end
 
   defp exec_inst({frame, vm}, :f64_sqrt) do
-    {[a], stack} = Stack.pop(vm.stack)
+    {a, stack} = Stack.pop(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, :math.sqrt(a)))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(:math.sqrt(a))))}
   end
 
   defp exec_inst({frame, vm}, :f32_div) do
