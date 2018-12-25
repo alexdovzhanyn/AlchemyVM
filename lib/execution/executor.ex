@@ -1202,8 +1202,41 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, f64))}
   end
 
-
   ### End Memory Operations
+
+  ### Begin Wrapping & Trunc Operations
+
+  defp exec_inst({frame, vm}, :i32_wrap_i64) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap(:i64, :i32, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_trunc_u_f32) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_trunc(:f32, :i32, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_trunc_s_f32) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_trunc(:f32, :i32, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_trunc_u_f64) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_trunc(:f32, :i32, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :i32_trunc_s_f64) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_trunc(:f32, :i32, a)))}
+  end
+
+
 
   defp exec_inst({frame, vm}, :end) do
     [_ | labels] = frame.labels
@@ -1320,6 +1353,19 @@ defmodule WaspVM.Executor do
   defp wrap_to_value(:i8, integer), do: integer &&& 0xFF
   defp wrap_to_value(:i16, integer), do: integer &&& 0xFFFF
   defp wrap_to_value(:i32, integer), do: integer &&& 0xFFFFFFFF
+
+  defp bin_wrap(:i64, :i32, integer) do
+    integer =
+      <<integer::64>>
+      |> Binary.to_list()
+      |> Enum.reverse
+      |> Binary.from_list
+      |> :binary.decode_unsigned()
+
+    value = integer && 0xFFFFFFFF
+  end
+
+  defp bin_trunc(:f32, :i32, integer), do: round(integer)
 
 
 end

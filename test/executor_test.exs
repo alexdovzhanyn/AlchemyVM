@@ -590,14 +590,56 @@ defmodule WaspVM.ExecutorTest do
       assert answer == 4294843840
     end
 
-
-
     test "32 Store works correctly" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/memory.wasm")
       {status, answer} = WaspVM.execute(pid, "i32_store", [])
       assert answer == 4294843840
     end
+
+    ### End Memory Tests
+
+    ### Begin Wrapping & Trunc Tests
+    test "32 wrap 64 works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap.wasm")
+      {status, answer} = WaspVM.execute(pid, "i32_wrap_i64", [])
+      assert answer == 4294967295
+    end
+
+    test "f32 trunc i32 U works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap.wasm")
+      {status, answer} = WaspVM.execute(pid, "i32_trunc_u_f32", [])
+      assert answer == 3000000000
+    end
+
+    test "f32 trunc i32 S works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap.wasm")
+      {status, answer} = WaspVM.execute(pid, "i32_trunc_s_f32", [])
+
+      answer = Bitwise.band(answer, 0xFFFFFFFF)
+      assert answer == 4294967196
+    end
+
+    test "f64 trunc i32 U works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap.wasm")
+      {status, answer} = WaspVM.execute(pid, "i32_trunc_u_f64", [])
+      assert answer == 3000000000
+    end
+
+    test "f64 trunc i32 S works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap.wasm")
+      {status, answer} = WaspVM.execute(pid, "i32_trunc_s_f64", [])
+
+      answer = Bitwise.band(answer, 0xFFFFFFFF)
+      assert answer == 4294967196
+    end
+
+
 
 
 end
