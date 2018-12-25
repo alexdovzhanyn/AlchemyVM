@@ -62,7 +62,7 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm}, :select) do
     {[c, b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    val = if c !== 0, do: b, else: a
+    val = if c === 1, do: a, else: b
 
     {frame, Map.put(vm, :stack, Stack.push(vm.stack, val))}
   end
@@ -319,7 +319,7 @@ defmodule WaspVM.Executor do
 
   defp exec_inst({frame, vm}, :i32_sub) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
-    IO.inspect b
+
     {frame, Map.put(vm, :stack, Stack.push(stack, a - b))}
   end
 
@@ -392,8 +392,6 @@ defmodule WaspVM.Executor do
       j2 = sign_value(b, 32)
 
       rem = j1 - (j2*trunc(j1/j2))
-      n = :math.pow(2, 32)
-      res = n - rem
 
       {frame, Map.put(vm, :stack, Stack.push(stack, rem))}
     end
@@ -446,7 +444,14 @@ defmodule WaspVM.Executor do
     if b == 0 do
       {:error, :undefined}
     else
-      {frame, Map.put(vm, :stack, Stack.push(stack, a - (b*trunc(a/b))))}
+      c =
+        a
+        |> Kernel./(b)
+        |> trunc()
+        |> Kernel.*(b)
+
+        res = a - c
+      {frame, Map.put(vm, :stack, Stack.push(stack, res))}
     end
   end
 
@@ -456,7 +461,14 @@ defmodule WaspVM.Executor do
     if b == 0 do
       {:error, :undefined}
     else
-      {frame, Map.put(vm, :stack, Stack.push(stack, a - (b*trunc(a/b))))}
+      c =
+        a
+        |> Kernel./(b)
+        |> trunc()
+        |> Kernel.*(b)
+
+        res = a - c
+      {frame, Map.put(vm, :stack, Stack.push(stack,res))}
     end
   end
 
@@ -638,7 +650,7 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm}, :f32_div) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, WaspVM.Executor.float_point_op(a / b)))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a / b)))}
   end
 
   ### END FLOAT NUMERICS
@@ -1126,7 +1138,7 @@ defmodule WaspVM.Executor do
       a
     else
       if a_truth == true && b_truth == false || a_truth == false && b_truth == true do
-        b*-1 |> IO.inspect
+        b * -1
       end
     end
   end
