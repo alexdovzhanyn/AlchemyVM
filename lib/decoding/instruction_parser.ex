@@ -206,9 +206,7 @@ defmodule WaspVM.Decoder.InstructionParser do
     if result_type == 0x40 do
       {{opcode, :no_res}, rest}
     else
-      {opcode, rest} = LEB128.decode_unsigned(rest)
-
-      value_type = OpCodes.opcode_to_type(opcode)
+      value_type = OpCodes.opcode_to_type(<<result_type>>)
 
       {{opcode, value_type}, rest}
     end
