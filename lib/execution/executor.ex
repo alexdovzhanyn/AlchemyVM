@@ -378,7 +378,7 @@ defmodule WaspVM.Executor do
     else
       rem = a - (b*trunc(a/b))
       result = Integer.floor_div((a - rem), b)
-      
+
       {frame, Map.put(vm, :stack, Stack.push(stack, result))}
     end
   end
@@ -587,7 +587,7 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, :f32_neg) do
-    {[a], stack} = Stack.pop(vm.stack)
+    {a, stack} = Stack.pop(vm.stack)
 
     {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a * -1)))}
   end
