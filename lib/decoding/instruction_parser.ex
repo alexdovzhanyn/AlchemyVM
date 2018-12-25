@@ -21,13 +21,7 @@ defmodule WaspVM.Decoder.InstructionParser do
   end
 
 #################### NOT COMPLETED ###############################
-  def parse_instruction(:if, bytecode), do: parse_block_type_instruction(:if, bytecode)
-  def parse_instruction(:else, bytecode), do: {:else, bytecode}
-  def parse_instruction(:block, bytecode), do: parse_block_type_instruction(:block, bytecode)
-  def parse_instruction(:loop, bytecode), do: parse_block_type_instruction(:loop, bytecode)
-  def parse_instruction(:call, bytecode), do: get_single_value(:call, bytecode)
-  def parse_instruction(:br, bytecode), do: get_single_value(:br, bytecode)
-  def parse_instruction(:br_if, bytecode), do: get_single_value(:br_if, bytecode)
+
   def parse_instruction(:i32_load8_s, bytecode), do: get_two_values(:i32_load8_s, bytecode)
   def parse_instruction(:i32_load8_u, bytecode), do: get_two_values(:i32_load8_u, bytecode)
   def parse_instruction(:i32_load16_u, bytecode), do: get_two_values(:i32_load16_u, bytecode)
@@ -43,25 +37,6 @@ defmodule WaspVM.Decoder.InstructionParser do
   def parse_instruction(:i64_store16, bytecode), do: get_two_values(:i64_store16, bytecode)
   def parse_instruction(:i64_store32, bytecode), do: get_two_values(:i64_store32, bytecode)
 
-
-  def parse_instruction(:i32_rotl, bytecode), do: {:i32_rotl, bytecode}
-  def parse_instruction(:i32_rotr, bytecode), do: {:i32_rotr, bytecode}
-  def parse_instruction(:i32_lt_u, bytecode), do: {:i32_lt_u, bytecode}
-  def parse_instruction(:i32_gt_u, bytecode), do: {:i32_gt_u, bytecode}
-  def parse_instruction(:i32_le_u, bytecode), do: {:i32_le_u, bytecode}
-  def parse_instruction(:i32_ge_u, bytecode), do: {:i32_ge_u, bytecode}
-  def parse_instruction(:i64_lt_u, bytecode), do: {:i64_lt_u, bytecode}
-  def parse_instruction(:i64_gt_u, bytecode), do: {:i64_gt_u, bytecode}
-  def parse_instruction(:i64_le_u, bytecode), do: {:i64_le_u, bytecode}
-  def parse_instruction(:i64_ge_u, bytecode), do: {:i64_ge_u, bytecode}
-  def parse_instruction(:i64_clz, bytecode), do: {:i64_clz, bytecode}
-  def parse_instruction(:i64_ctz, bytecode), do: {:i64_ctz, bytecode}
-
-
-  def parse_instruction(:i64_rotl, bytecode), do: {:i64_rotl, bytecode}
-  def parse_instruction(:i64_rotr, bytecode), do: {:i64_rotr, bytecode}
-  def parse_instruction(:f32_copysign, bytecode), do: {:f32_copysign, bytecode}
-  def parse_instruction(:f64_copysign, bytecode), do: {:f64_copysign, bytecode}
   def parse_instruction(:i32_wrap_i64, bytecode), do: {:i32_wrap_i64, bytecode}
   def parse_instruction(:i32_trunc_s_f32, bytecode), do: {:i32_trunc_s_f32, bytecode}
   def parse_instruction(:i32_trunc_u_f32, bytecode), do: {:i32_trunc_u_f32, bytecode}
@@ -87,14 +62,41 @@ defmodule WaspVM.Decoder.InstructionParser do
   def parse_instruction(:i64_reinterpret_f64, bytecode), do: {:i64_reinterpret_f64, bytecode}
   def parse_instruction(:f32_reinterpret_i32, bytecode), do: {:f32_reinterpret_i32, bytecode}
   def parse_instruction(:f64_reinterpret_i64, bytecode), do: {:f64_reinterpret_i64, bytecode}
-  def parse_instruction(:drop, bytecode), do: {:drop, bytecode}
-  def parse_instruction(:select, bytecode), do: {:select, bytecode}
+
+
   def parse_instruction(:return, bytecode), do: {:return, bytecode}
   def parse_instruction(:memory_size, bytecode), do: {:memory_size, bytecode}
   def parse_instruction(:memory_grow, bytecode), do: {:memory_grow, bytecode}
 
 
   #################### COMPLETED WITH NOTES ###############################
+  def parse_instruction(:if, bytecode), do: parse_block_type_instruction(:if, bytecode) # Done
+  def parse_instruction(:else, bytecode), do: {:else, bytecode} # Done
+  def parse_instruction(:block, bytecode), do: parse_block_type_instruction(:block, bytecode) # Done
+  def parse_instruction(:loop, bytecode), do: parse_block_type_instruction(:loop, bytecode) # Done
+  def parse_instruction(:br, bytecode), do: get_single_value(:br, bytecode) # Done
+  def parse_instruction(:br_if, bytecode), do: get_single_value(:br_if, bytecode) # Done
+  def parse_instruction(:call, bytecode), do: get_single_value(:call, bytecode) # Done
+  def parse_instruction(:select, bytecode), do: {:select, bytecode} # Done
+  def parse_instruction(:drop, bytecode), do: {:drop, bytecode} # Done
+  def parse_instruction(:i64_clz, bytecode), do: {:i64_clz, bytecode} # Done
+  def parse_instruction(:i64_ctz, bytecode), do: {:i64_ctz, bytecode} # Done
+  def parse_instruction(:i32_clz, bytecode), do: {:i32_clz, bytecode} # Done
+  def parse_instruction(:i32_ctz, bytecode), do: {:i32_ctz, bytecode} # Done
+  def parse_instruction(:i32_ge_u, bytecode), do: {:i32_ge_u, bytecode} # Done
+  def parse_instruction(:i64_ge_u, bytecode), do: {:i64_ge_u, bytecode} # Done
+  def parse_instruction(:i32_le_u, bytecode), do: {:i32_le_u, bytecode} # Done
+  def parse_instruction(:i64_le_u, bytecode), do: {:i64_le_u, bytecode} # Done
+  def parse_instruction(:i32_gt_u, bytecode), do: {:i32_gt_u, bytecode} # Done
+  def parse_instruction(:i64_gt_u, bytecode), do: {:i64_gt_u, bytecode} # Done
+  def parse_instruction(:f32_copysign, bytecode), do: {:f32_copysign, bytecode} # Done
+  def parse_instruction(:f64_copysign, bytecode), do: {:f64_copysign, bytecode} # Done
+  def parse_instruction(:i32_lt_u, bytecode), do: {:i32_lt_u, bytecode} # Done
+  def parse_instruction(:i64_lt_u, bytecode), do: {:i64_lt_u, bytecode} # Done
+  def parse_instruction(:i32_rotl, bytecode), do: {:i32_rotl, bytecode} # Done
+  def parse_instruction(:i32_rotr, bytecode), do: {:i32_rotr, bytecode} # Done
+  def parse_instruction(:i64_rotl, bytecode), do: {:i64_rotl, bytecode} # Done
+  def parse_instruction(:i64_rotr, bytecode), do: {:i64_rotr, bytecode} # Done
   def parse_instruction(:i32_shl, bytecode), do: {:i32_shl, bytecode} # Done
   def parse_instruction(:i32_shr_u, bytecode), do: {:i32_shr_u, bytecode} # Done
   def parse_instruction(:i64_shl, bytecode), do: {:i64_shl, bytecode} # Done
@@ -201,7 +203,6 @@ defmodule WaspVM.Decoder.InstructionParser do
 
   defp parse_block_type_instruction(opcode, bytecode) do
     {result_type, rest} = LEB128.decode_unsigned(bytecode)
-
     if result_type == 0x40 do
       {{opcode, :no_res}, rest}
     else

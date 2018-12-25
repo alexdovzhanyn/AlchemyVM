@@ -35,7 +35,7 @@ defmodule WaspVM.Stack do
   @spec pop_multiple(Stack, integer) :: {any, Stack}
   def pop_multiple(%Stack{elements: elem}, count \\ 2) do
     {popped, rest} = Enum.split(elem, count)
-
+    
     {popped, %Stack{elements: rest}}
   end
 
