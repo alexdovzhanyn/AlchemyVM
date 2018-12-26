@@ -617,15 +617,8 @@ defmodule WaspVM.Executor do
 
   defp exec_inst({frame, vm}, :i32_shr_u) do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
-    j2 = Integer.mod(b, 32)
 
-    res =
-      round(bsr(a, b) + :math.pow(2, 32))
-      |> :binary.encode_unsigned()
-
-
-
-    {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, b)))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, log_shr(a, b)))}
   end
 
   defp exec_inst({frame, vm}, :i64_shr_u) do
@@ -973,6 +966,56 @@ defmodule WaspVM.Executor do
     {frame, Map.merge(vm, %{memory: Memory.grow(vm.memory, pages), stack: Stack.push(stack, length(vm.memory))})}
   end
 
+  defp exec_inst({frame, vm}, {:i32_load8_s, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    <<i8::8>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 1)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap(:i32, :i8, i8)))}
+  end
+
+  defp exec_inst({frame, vm}, {:i32_load16_s, _alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    mem =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(address + offset, band(value, 0xFFFFFFFF))
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {frame, Map.merge(vm, %{store: store, stack: stack})}
+  end
+
+  defp exec_inst({frame, vm}, {:i32_load8_u, _alignment, offset}) do
+    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    mem =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(address + offset, band(value, 0xFFFFFFFF))
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {frame, Map.merge(vm, %{store: store, stack: stack})}
+  end
+
   defp exec_inst({frame, vm}, {:i32_store, _alignment, offset}) do
     {[value, address], stack} = Stack.pop_multiple(vm.stack)
 
@@ -1315,6 +1358,33 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a * 1.000000)))}
   end
 
+  defp exec_inst({frame, vm}, :i64_extend_u_i32) do
+    {a, stack} = Stack.pop(vm.stack)
+    a = round(:math.pow(2, 32) + a)
+    {frame, Map.put(vm, :stack, Stack.push(stack, a))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_extend_s_i32) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, band(a, 0xFFFFFFFFFFFFFFFF)))}
+  end
+
+  defp exec_inst({frame, vm}, :f32_demote_f64) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_demote(a * 1.0000000)))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_promote_f32) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_promote(a * 1.0000000)))}
+  end
+
+
+  ### End Trunc, Wrap & Convert
+
 
   defp exec_inst({frame, vm}, :end) do
     [_ | labels] = frame.labels
@@ -1388,6 +1458,24 @@ defmodule WaspVM.Executor do
       |> D.new()
   end
 
+  def float_demote(number) do
+    D.set_context(%D.Context{D.get_context | precision: 6})
+
+    res =
+      number * 10
+      |> :erlang.float_to_binary([decimals: 6])
+      |> D.new()
+  end
+
+  def float_promote(number) do
+    D.set_context(%D.Context{D.get_context | precision: 6})
+
+    res =
+      number
+      |> :erlang.float_to_binary([decimals: 6])
+      |> D.new()
+  end
+
   defp copysign(a, b) do
     a_truth =
       to_string(a)
@@ -1444,9 +1532,40 @@ defmodule WaspVM.Executor do
     value = integer && 0xFFFFFFFF
   end
 
+  defp bin_wrap(:i32, :i8, integer) do
+    integer =
+      <<integer::64>>
+      |> Binary.to_list()
+      |> Enum.reverse
+      |> Binary.from_list
+      |> :binary.decode_unsigned()
+
+    value = integer && 0xFFFFFFFF
+  end
+
   defp bin_trunc(:f32, :i32, float), do: round(float)
   defp bin_trunc(:f32, :i64, float), do: round(float)
   defp bin_trunc(:f64, :i64, float), do: round(float)
+  defp negate(int), do: &(-&1)
 
+  defp log_shr(integer, shift) do
+    bin =
+      integer
+      |> Integer.to_string(2)
+      |> String.codepoints
+      |> Enum.reverse
+      |> Enum.drop((shift))
+      |> Enum.map(fn str -> String.to_integer(str) end)
+
+      bin_size = Enum.count(bin)
+      target = 32 - bin_size - shift
+
+      zero_leading_map =
+        1..target
+        |> Enum.map(fn x -> 1 end)
+
+        zero_leading_map ++ bin
+        |> Integer.undigits(2)
+  end
 
 end

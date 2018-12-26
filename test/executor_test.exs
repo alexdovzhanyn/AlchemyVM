@@ -200,13 +200,9 @@ defmodule WaspVM.ExecutorTest do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
 
-      {:ok, result} = WaspVM.execute(pid, "i32__shr_u", [3, -100])
+      {:ok, result} = WaspVM.execute(pid, "i32__shr_u", [3, 100])
 
-      # there answer <<31, 255, 255, 243>>
-      # were 224 short
-      answer = :math.pow(2, 32) + result
-
-      #assert answer == 536870899
+      assert result == 536870899
     end
 
 #NW
@@ -600,6 +596,13 @@ defmodule WaspVM.ExecutorTest do
       assert answer == 4294843840
     end
 
+    test "32 load8_s works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/load.wasm")
+      {status, answer} = WaspVM.execute(pid, "i32_load8_s", [])
+      assert answer == 4294967295
+    end
+
     ### End Memory Tests
 
     ### Begin Wrapping & Trunc Tests
@@ -736,6 +739,38 @@ defmodule WaspVM.ExecutorTest do
       {status, answer} = WaspVM.execute(pid, "f32_convert_u_i32", [])
 
       assert answer == WaspVM.Executor.float_point_op(4294967295 * 1.000000)
+    end
+
+    test "i64 extend i32 u works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap_fixed.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_extend_u_i32", [])
+
+      assert answer == 4294967295
+    end
+
+    test "i64 extend i32 s works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap_fixed.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_extend_s_i32", [])
+
+      assert answer == 18446744073709551615
+    end
+
+    test "f32 demote f64 works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap_fixed.wasm")
+      {status, answer} = WaspVM.execute(pid, "f32_demote_f64", [])
+
+      assert answer == WaspVM.Executor.float_point_op(123456789 * 1.0)
+    end
+
+    test "f64 promote f32 works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap_fixed.wasm")
+      {status, answer} = WaspVM.execute(pid, "f64_demote_f32", [])
+
+      assert answer == WaspVM.Executor.float_point_op(12345679 * 1.0)
     end
 
     ### End Wrapping & Trunc Tests
