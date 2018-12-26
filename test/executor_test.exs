@@ -201,8 +201,11 @@ defmodule WaspVM.ExecutorTest do
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
 
       {:ok, result} = WaspVM.execute(pid, "i32__shr_u", [3, -100])
+
       # there answer <<31, 255, 255, 243>>
+      # were 224 short
       answer = :math.pow(2, 32) + result
+
       #assert answer == 536870899
     end
 
@@ -637,6 +640,119 @@ defmodule WaspVM.ExecutorTest do
 
       answer = Bitwise.band(answer, 0xFFFFFFFF)
       assert answer == 4294967196
+    end
+
+    test "f32 trunc i64 U works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_trunc_u_f32", [])
+      assert answer == 1
+    end
+
+    test "f32 trunc i64 S works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_trunc_s_f32", [])
+
+      answer = Bitwise.band(answer, 0xFFFFFFFF)
+      assert answer == 1
+    end
+
+    test "f64 trunc i64 U works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_trunc_u_f64", [])
+      assert answer == 1
+    end
+
+    test "f64 trunc i64 S works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_trunc_s_f64", [])
+
+      answer = Bitwise.band(answer, 0xFFFFFFFF)
+      assert answer == 1
+    end
+
+    test "f32 i32 S Convert works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap_fixed.wasm")
+      {status, answer} = WaspVM.execute(pid, "f32_convert_s_i32", [])
+
+      assert answer == WaspVM.Executor.float_point_op(-1 * 1.000000)
+    end
+
+    test "f32 i32 U Convert works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap_fixed.wasm")
+      {status, answer} = WaspVM.execute(pid, "f32_convert_u_i32", [])
+
+      assert answer == WaspVM.Executor.float_point_op(4294967295 * 1.000000)
+    end
+
+    test "f32 i64 S Convert works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap_fixed.wasm")
+      {status, answer} = WaspVM.execute(pid, "f32_convert_s_i64", [])
+
+      assert answer == WaspVM.Executor.float_point_op(0 * 1.000000)
+    end
+
+    test "f32 i64 U Convert works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap_fixed.wasm")
+      {status, answer} = WaspVM.execute(pid, "f32_convert_u_i64", [])
+
+      assert answer == WaspVM.Executor.float_point_op(0 * 1.000000)
+    end
+
+    test "f64 i64 S Convert works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap_fixed.wasm")
+      {status, answer} = WaspVM.execute(pid, "f32_convert_s_i64", [])
+
+      assert answer == WaspVM.Executor.float_point_op(0 * 1.000000)
+    end
+
+    test "f64 i64 U Convert works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap_fixed.wasm")
+      {status, answer} = WaspVM.execute(pid, "f32_convert_u_i64", [])
+
+      assert answer == WaspVM.Executor.float_point_op(0 * 1.000000)
+    end
+
+    test "f64 i32 S Convert works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap_fixed.wasm")
+      {status, answer} = WaspVM.execute(pid, "f32_convert_s_i32", [])
+
+      assert answer == WaspVM.Executor.float_point_op(-1 * 1.000000)
+    end
+
+    test "f64 i32 U Convert works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/wrap_fixed.wasm")
+      {status, answer} = WaspVM.execute(pid, "f32_convert_u_i32", [])
+
+      assert answer == WaspVM.Executor.float_point_op(4294967295 * 1.000000)
+    end
+
+    ### End Wrapping & Trunc Tests
+
+    ### Begin Compare tests
+    test "i64 eq true works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/compare.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_eq_true", [])
+      assert answer == 1
+    end
+
+    test "i64 eq false works" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/compare.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_eq_false", [])
+      assert answer == 0
     end
 
 

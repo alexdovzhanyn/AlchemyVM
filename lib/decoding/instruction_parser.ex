@@ -34,25 +34,13 @@ defmodule WaspVM.Decoder.InstructionParser do
 
   def parse_instruction(:i64_extend_s_i32, bytecode), do: {:i64_extend_s_i32, bytecode}
   def parse_instruction(:i64_extend_u_i32, bytecode), do: {:i64_extend_u_i32, bytecode}
-  def parse_instruction(:i64_trunc_s_f32, bytecode), do: {:i64_trunc_s_f32, bytecode}
-  def parse_instruction(:i64_trunc_u_f32, bytecode), do: {:i64_trunc_u_f32, bytecode}
-  def parse_instruction(:i64_trunc_s_f64, bytecode), do: {:i64_trunc_s_f64, bytecode}
-  def parse_instruction(:i64_trunc_u_f64, bytecode), do: {:i64_trunc_u_f64, bytecode}
-  def parse_instruction(:f32_convert_s_i32, bytecode), do: {:f32_convert_s_i32, bytecode}
-  def parse_instruction(:f32_convert_u_i32, bytecode), do: {:f32_convert_u_i32, bytecode}
-  def parse_instruction(:f32_convert_s_i64, bytecode), do: {:f32_convert_s_i64, bytecode}
-  def parse_instruction(:f32_convert_u_i64, bytecode), do: {:f32_convert_u_i64, bytecode}
+
   def parse_instruction(:f32_demote_f64, bytecode), do: {:f32_demote_f64, bytecode}
-  def parse_instruction(:f64_convert_s_i32, bytecode), do: {:f64_convert_s_i32, bytecode}
-  def parse_instruction(:f64_convert_u_i32, bytecode), do: {:f64_convert_u_i32, bytecode}
-  def parse_instruction(:f64_convert_s_i64, bytecode), do: {:f64_convert_s_i64, bytecode}
-  def parse_instruction(:f64_convert_u_i64, bytecode), do: {:f64_convert_u_i64, bytecode}
   def parse_instruction(:f64_promote_f32, bytecode), do: {:f64_promote_f32, bytecode}
   def parse_instruction(:i32_reinterpret_f32, bytecode), do: {:i32_reinterpret_f32, bytecode}
   def parse_instruction(:i64_reinterpret_f64, bytecode), do: {:i64_reinterpret_f64, bytecode}
   def parse_instruction(:f32_reinterpret_i32, bytecode), do: {:f32_reinterpret_i32, bytecode}
   def parse_instruction(:f64_reinterpret_i64, bytecode), do: {:f64_reinterpret_i64, bytecode}
-
 
   def parse_instruction(:return, bytecode), do: {:return, bytecode}
   def parse_instruction(:memory_size, bytecode), do: {:memory_size, bytecode}
@@ -60,6 +48,18 @@ defmodule WaspVM.Decoder.InstructionParser do
 
 
   #################### COMPLETED WITH NOTES ###############################
+  def parse_instruction(:f64_convert_s_i32, bytecode), do: {:f64_convert_s_i32, bytecode} # Done
+  def parse_instruction(:f64_convert_u_i32, bytecode), do: {:f64_convert_u_i32, bytecode} # Done
+  def parse_instruction(:f64_convert_s_i64, bytecode), do: {:f64_convert_s_i64, bytecode} # Done
+  def parse_instruction(:f64_convert_u_i64, bytecode), do: {:f64_convert_u_i64, bytecode} # Done
+  def parse_instruction(:f32_convert_s_i64, bytecode), do: {:f32_convert_s_i64, bytecode} # Done
+  def parse_instruction(:f32_convert_u_i64, bytecode), do: {:f32_convert_u_i64, bytecode} # Done
+  def parse_instruction(:f32_convert_s_i32, bytecode), do: {:f32_convert_s_i32, bytecode} # Done
+  def parse_instruction(:f32_convert_u_i32, bytecode), do: {:f32_convert_u_i32, bytecode} # Done
+  def parse_instruction(:i64_trunc_u_f32, bytecode), do: {:i64_trunc_u_f32, bytecode} # Done
+  def parse_instruction(:i64_trunc_s_f32, bytecode), do: {:i64_trunc_s_f32, bytecode} # Done
+  def parse_instruction(:i64_trunc_u_f64, bytecode), do: {:i64_trunc_u_f64, bytecode} # Done
+  def parse_instruction(:i64_trunc_s_f64, bytecode), do: {:i64_trunc_s_f64, bytecode} # Done
   def parse_instruction(:i32_trunc_s_f64, bytecode), do: {:i32_trunc_s_f64, bytecode} # Done
   def parse_instruction(:i32_trunc_u_f64, bytecode), do: {:i32_trunc_u_f64, bytecode} # Done
   def parse_instruction(:i32_trunc_s_f32, bytecode), do: {:i32_trunc_s_f32, bytecode} # Done

@@ -140,6 +140,7 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, {:f64_const, f64}) do
+
     {frame, Map.put(vm, :stack, Stack.push(vm.stack, f64))}
   end
 
@@ -436,8 +437,8 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm}, :f32_trunc) do
-    {[a], stack} = Stack.pop_multiple(vm.stack)
-
+    {a, stack} = Stack.pop(vm.stack)
+    IO.inspect a
     {frame, Map.put(vm, :stack, Stack.push(stack, Kernel.trunc(a)))}
   end
 
@@ -618,7 +619,13 @@ defmodule WaspVM.Executor do
     {[b, a], stack} = Stack.pop_multiple(vm.stack)
     j2 = Integer.mod(b, 32)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, j2)))}
+    res =
+      round(bsr(a, b) + :math.pow(2, 32))
+      |> :binary.encode_unsigned()
+
+
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bsr(a, b)))}
   end
 
   defp exec_inst({frame, vm}, :i64_shr_u) do
@@ -1236,6 +1243,77 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, bin_trunc(:f32, :i32, a)))}
   end
 
+  defp exec_inst({frame, vm}, :i64_trunc_u_f32) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_trunc(:f32, :i64, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_trunc_s_f32) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_trunc(:f32, :i64, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_trunc_u_f64) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_trunc(:f64, :i64, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_trunc_s_f64) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_trunc(:f64, :i64, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :f32_convert_s_i32) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a * 1.000000)))}
+  end
+
+  defp exec_inst({frame, vm}, :f32_convert_u_i32) do
+    {a, stack} = Stack.pop(vm.stack)
+    a = band(a, 0xFFFFFFFF)
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a * 1.000000)))}
+  end
+
+  defp exec_inst({frame, vm}, :f32_convert_s_i64) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a * 1.000000)))}
+  end
+
+  defp exec_inst({frame, vm}, :f32_convert_u_i64) do
+    {a, stack} = Stack.pop(vm.stack)
+    a = band(a, 0xFFFFFFFFFFFFFF)
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a * 1.000000)))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_convert_s_i64) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a * 1.000000)))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_convert_u_i64) do
+    {a, stack} = Stack.pop(vm.stack)
+    a = band(a, 0xFFFFFFFFFFFFFF)
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a * 1.000000)))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_convert_s_i32) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a * 1.000000)))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_convert_u_i32) do
+    {a, stack} = Stack.pop(vm.stack)
+    a = band(a, 0xFFFFFFFF)
+    {frame, Map.put(vm, :stack, Stack.push(stack, float_point_op(a * 1.000000)))}
+  end
 
 
   defp exec_inst({frame, vm}, :end) do
@@ -1300,6 +1378,7 @@ defmodule WaspVM.Executor do
 
   defp rotl(number, shift), do: (number <<< shift) ||| (number >>> (0x1F &&& (32 + ~~~(shift + 1)))) &&& ~~~(0xFFFFFFFF <<< shift)
   defp rotr(number, shift), do: (number >>> shift) ||| (number <<< (0x1F &&& (32 + ~~~(-shift + 1)))) &&& ~~~(0xFFFFFFFF <<< -shift)
+
   def float_point_op(number) do
     D.set_context(%D.Context{D.get_context | precision: 6})
 
@@ -1365,7 +1444,9 @@ defmodule WaspVM.Executor do
     value = integer && 0xFFFFFFFF
   end
 
-  defp bin_trunc(:f32, :i32, integer), do: round(integer)
+  defp bin_trunc(:f32, :i32, float), do: round(float)
+  defp bin_trunc(:f32, :i64, float), do: round(float)
+  defp bin_trunc(:f64, :i64, float), do: round(float)
 
 
 end
