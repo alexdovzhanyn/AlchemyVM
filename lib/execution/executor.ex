@@ -11,7 +11,7 @@ defmodule WaspVM.Executor do
   # Reference for tests being used: https://github.com/WebAssembly/wabt/tree/master/test
 
   def create_frame_and_execute(vm, addr, stack \\ []) do
-    {{inputs, _outputs}, module_ref, instr, locals} = Enum.at(vm.store.funcs, addr)
+    {{inputs, _outputs}, module_ref, instr, locals} = elem(vm.store.funcs, addr)
 
     {args, stack} = Enum.split(stack, tuple_size(inputs))
 
@@ -20,16 +20,10 @@ defmodule WaspVM.Executor do
     else
       module = Enum.find(vm.modules, & &1.ref == module_ref)
 
-      locals =
-        args ++ locals
-        |> Enum.with_index()
-        |> Enum.map(fn {v, k} -> {k, v} end)
-        |> Map.new()
-
       frame = %Frame{
         module: module,
         instructions: instr,
-        locals: locals
+        locals: List.to_tuple(args ++ locals)
       }
 
       total_instr = map_size(instr)
@@ -38,8 +32,7 @@ defmodule WaspVM.Executor do
     end
   end
 
-  def execute(_frame, vm, stack, total_instr, next_instr) when next_instr >= total_instr, do: {vm, stack}
-  def execute(_frame, vm, stack, total_instr, :end), do: {vm, stack}
+  def execute(_frame, vm, stack, total_instr, next_instr) when next_instr >= total_instr or next_instr < 0, do: {vm, stack}
   def execute(frame, vm, stack, total_instr, next_instr \\ 0) do
     %{^next_instr => instr} = frame.instructions
 
@@ -123,6 +116,7 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, [_ | stack], :i64_eqz), do: {ctx, [0 | stack]}
   defp exec_inst({%{labels: []} = frame, vm, n}, stack, :end), do: {{frame, vm, n}, stack}
   defp exec_inst({frame, vm, n}, stack, {:else, end_idx}), do: {{frame, vm, end_idx}, stack}
+  defp exec_inst({frame, vm, n}, stack, :return), do: {{frame, vm, -10}, stack}
   defp exec_inst(ctx, stack, :unreachable), do: {ctx, stack}
   defp exec_inst(ctx, stack, :nop), do: {ctx, stack}
 
@@ -147,12 +141,10 @@ defmodule WaspVM.Executor do
     end
   end
 
-  defp exec_inst({frame, vm, n}, stack, :return) do
-    {{frame, vm, :end}, stack}
-  end
-
   defp exec_inst({frame, vm, n}, stack, {:call, funcidx}) do
-    func_addr = Enum.at(frame.module.funcaddrs, funcidx)
+    # func_addr = Enum.at(frame.module.funcaddrs, funcidx)
+
+    %{^funcidx => func_addr} = frame.module.funcaddrs
 
     # TODO: Maybe this shouldn't pass the existing stack in?
     {vm, stack} = create_frame_and_execute(vm, func_addr, stack)
@@ -275,9 +267,7 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm, n} = ctx, stack, {:get_local, idx}) do
-    %{^idx => local} = frame.locals
-
-    {ctx, [local | stack]}
+    {ctx, [elem(frame.locals, idx) | stack]}
   end
 
   # Needs revisit
@@ -295,13 +285,13 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm, n}, [value | stack], {:set_local, idx}) do
-    locals = Map.put(frame.locals, idx, value)
+    locals = put_elem(frame.locals, idx, value)
 
     {{Map.put(frame, :locals, locals), vm, n}, stack}
   end
 
   defp exec_inst({frame, vm, n}, [value | _] = stack, {:tee_local, idx}) do
-    locals = Map.put(frame.locals, idx, value)
+    locals = put_elem(frame.locals, idx, value)
 
     {{Map.put(frame, :locals, locals), vm, n}, stack}
   end
@@ -314,10 +304,10 @@ defmodule WaspVM.Executor do
     if j2 == 0 do
       {:error, :undefined}
     else
-      if j1/j2 == :math.pow(2, 31) do
+      if j1 / j2 == 2147483648 do
         {:error, :undefined}
       else
-        res = trunc(j1/j2)
+        res = trunc(j1 / j2)
         ans = sign_value(res, 32)
 
         {ctx, [ans | stack]}
@@ -332,10 +322,10 @@ defmodule WaspVM.Executor do
     if j2 == 0 do
       {:error, :undefined}
     else
-      if j1/j2 == :math.pow(2, 63) do
+      if j1 / j2 == 9.223372036854776e18 do
         {:error, :undefined}
       else
-        res = trunc(j1/j2)
+        res = trunc(j1 / j2)
         ans = sign_value(res, 64)
 
         {ctx, [ans | stack]}
@@ -366,8 +356,7 @@ defmodule WaspVM.Executor do
     j2 = sign_value(b, 64)
 
     rem = j1 - (j2 * trunc(j1 / j2))
-    n = :math.pow(2, 64)
-    res = n - rem
+    res = 1.8446744073709552e19 - rem
 
     {ctx, [res | stack]}
   end
@@ -720,11 +709,11 @@ defmodule WaspVM.Executor do
 
   # Reference https://lemire.me/blog/2017/05/29/unsigned-vs-signed-integer-arithmetic/
 
-  defp sign_value(integer, n), do: sign_value(integer, n, :math.pow(2, 31), :math.pow(2, 32))
+  defp sign_value(integer, n), do: sign_value(integer, n, 2147483648, 4294967296) # 2^31...2^32
   defp sign_value(integer, n, lower, upper) when integer >= 0 and integer < lower, do: integer
   defp sign_value(integer, n, lower, upper) when integer < 0 and integer > -lower, do: integer
-  defp sign_value(integer, n, lower, upper) when integer > lower and integer < upper, do: :math.pow(2, 32) + integer
-  defp sign_value(integer, n, lower, upper) when integer > -lower and integer < -upper, do: :math.pow(2, 32) + integer
+  defp sign_value(integer, n, lower, upper) when integer > lower and integer < upper, do: upper + integer
+  defp sign_value(integer, n, lower, upper) when integer > -lower and integer < -upper, do: upper + integer
 
   defp popcnt(integer, 32) do
     <<integer::32>>
