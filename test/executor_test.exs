@@ -285,6 +285,13 @@ defmodule WaspVM.ExecutorTest do
       assert WaspVM.execute(pid, "f64__mul", [4.0, 2.0]) == {:ok, WaspVM.Executor.float_point_op(8.0)}
     end
 
+    test "32 bit Floats Ceil Works Correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+
+      assert WaspVM.execute(pid, "f32__ceil", [-1.75]) == {:ok, WaspVM.Executor.float_point_op(-1.000000)}
+    end
+
     test "32 bit Floats Min Works Correctly" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")

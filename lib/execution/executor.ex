@@ -57,9 +57,7 @@ defmodule WaspVM.Executor do
   ### Begin PArametric Instructions
 
   defp exec_inst(ctx, [a | stack], :drop), do: {ctx, stack}
-
-  defp exec_inst(ctx, [c, b, a | stack], :select) do
-    val = if c !== 0, do: b, else: a
+    val = if c === 1, do: a, else: b
 
     {ctx, [val | stack]}
   end
@@ -310,7 +308,7 @@ defmodule WaspVM.Executor do
     if b == 0 do
       {:error, :undefined}
     else
-      rem = a - (b*trunc(a/b))
+      rem = a - (b * trunc(a / b))
       result = Integer.floor_div((a - rem), b)
       {ctx, [result | stack]}
     end
@@ -324,8 +322,6 @@ defmodule WaspVM.Executor do
       j2 = sign_value(b, 32)
 
       rem = j1 - (j2*trunc(j1/j2))
-      n = :math.pow(2, 32)
-      res = n - rem
 
       {ctx, [rem | stack]}
     end
@@ -368,7 +364,14 @@ defmodule WaspVM.Executor do
     if b == 0 do
       {:error, :undefined}
     else
-      res = a - (b*trunc(a/b))
+      c =
+        a
+        |> Kernel./(b)
+        |> trunc()
+        |> Kernel.*(b)
+
+      res = a - c
+
       {ctx, [res | stack]}
     end
   end
@@ -377,7 +380,14 @@ defmodule WaspVM.Executor do
     if b == 0 do
       {:error, :undefined}
     else
-      res = a - (b*trunc(a/b))
+      c =
+        a
+        |> Kernel./(b)
+        |> trunc()
+        |> Kernel.*(b)
+
+      res = a - c
+
       {ctx, [res | stack]}
     end
   end
@@ -496,11 +506,11 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst(ctx, [a | stack], :f32_sqrt) do
-    {ctx, [:math.sqrt(a) | stack]}
+    {ctx, [float_point_op(:math.sqrt(a)) | stack]}
   end
 
   defp exec_inst(ctx, [a | stack], :f64_sqrt) do
-    {ctx, [:math.sqrt(a) | stack]}
+    {ctx, [float_point_op(:math.sqrt(a)) | stack]}
   end
 
   defp exec_inst(ctx, [b, a | stack], :f32_div) do
@@ -563,7 +573,7 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst(ctx, [b, a | stack], :i32_shr_u) do
-    j2 = Integer.mod(32, b)
+    j2 = Integer.mod(b, 32)
 
     {ctx, [bsr(a, j2) | stack]}
   end
@@ -917,7 +927,7 @@ defmodule WaspVM.Executor do
       a
     else
       if a_truth == true && b_truth == false || a_truth == false && b_truth == true do
-        b*-1
+        b * -1
       end
     end
   end
