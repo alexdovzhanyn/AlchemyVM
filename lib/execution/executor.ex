@@ -20,10 +20,8 @@ defmodule WaspVM.Executor do
     else
       module = Enum.find(vm.modules, & &1.ref == module_ref)
 
-      l = args ++ Enum.flat_map(locals, fn l -> List.duplicate(0, l.count) end)
-
       locals =
-        l
+        args ++ locals
         |> Enum.with_index()
         |> Enum.map(fn {v, k} -> {k, v} end)
         |> Map.new()
@@ -53,30 +51,92 @@ defmodule WaspVM.Executor do
   def instruction(opcode, f, v, s, n) when is_atom(opcode), do: exec_inst({f, v, n}, s, opcode)
   def instruction(opcode, f, v, s, n) when is_tuple(opcode), do: exec_inst({f, v, n}, s, opcode)
 
+  defp exec_inst(ctx, [_ | stack], :drop), do: {ctx, stack}
+  defp exec_inst(ctx, stack, {:br, label_idx}), do: break_to(ctx, stack, label_idx)
+  defp exec_inst(ctx, [val | stack], {:br_if, label_idx}) when val != 1, do: {ctx, stack}
+  defp exec_inst(ctx, [_ | stack], {:br_if, label_idx}), do: break_to(ctx, stack, label_idx)
+  defp exec_inst(ctx, stack, {:i32_const, i32}), do: {ctx, [i32 | stack]}
+  defp exec_inst(ctx, stack, {:i64_const, i64}), do: {ctx, [i64 | stack]}
+  defp exec_inst(ctx, stack, {:f32_const, f32}), do: {ctx, [f32 | stack]}
+  defp exec_inst(ctx, stack, {:f64_const, f64}), do: {ctx, [f64 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i32_add), do: {ctx, [a + b | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i32_sub), do: {ctx, [a - b | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i32_mul), do: {ctx, [a * b | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i64_add), do: {ctx, [a + b | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i64_sub), do: {ctx, [a - b | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i64_mul), do: {ctx, [a * b | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i64_le_s) when a <= b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i64_ge_s) when a >= b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i32_lt_u) when a < b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i64_lt_u) when a < b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i32_gt_u) when a > b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i64_gt_u) when a > b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i32_le_u) when a <= b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i64_le_u) when a <= b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i32_ge_u) when a >= b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i64_ge_u) when a >= b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i32_eq) when a === b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i64_eq) when a === b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i64_ne) when a !== b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :f32_eq) when a === b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :f64_eq) when a === b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i32_ne) when a !== b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :f32_lt) when a < b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :f64_lt) when a < b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :f32_le) when a <= b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :f64_le) when a <= b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :f32_ge) when a <= b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :f64_ge) when a <= b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :f32_gt) when a > b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :f64_gt) when a > b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :f32_ne) when a !== b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :f64_ne) when a !== b, do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i32_eq), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i64_eq), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i64_ne), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i64_le_s), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i64_ge_s), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i32_lt_u), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i64_lt_u), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i32_gt_u), do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i64_gt_u), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i32_le_u), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i64_le_u), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i32_ge_u), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i64_ge_u), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :f32_eq), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :f64_eq), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i32_ne), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :f32_lt), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :f64_lt), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :f32_le) , do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :f64_le), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :f32_ge), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :f64_ge), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :f32_gt), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :f64_gt), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :f32_ne), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :f64_ne), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [0 | stack], :i32_eqz), do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [_ | stack], :i32_eqz), do: {ctx, [0 | stack]}
+  defp exec_inst(ctx, [0 | stack], :i64_eqz), do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [_ | stack], :i64_eqz), do: {ctx, [0 | stack]}
+  defp exec_inst({%{labels: []} = frame, vm, n}, stack, :end), do: {{frame, vm, n}, stack}
+  defp exec_inst({frame, vm, n}, stack, {:else, end_idx}), do: {{frame, vm, end_idx}, stack}
+  defp exec_inst(ctx, stack, :unreachable), do: {ctx, stack}
+  defp exec_inst(ctx, stack, :nop), do: {ctx, stack}
 
-  ### Begin PArametric Instructions
-
-  defp exec_inst(ctx, [a | stack], :drop), do: {ctx, stack}
+  defp exec_inst(ctx, [c, b, a | stack], :select) do
     val = if c === 1, do: a, else: b
 
     {ctx, [val | stack]}
   end
-
-  defp exec_inst(ctx, stack, {:br, label_idx}), do: break_to(ctx, stack, label_idx)
-  defp exec_inst(ctx, [val | stack], {:br_if, label_idx}) when val != 1, do: {ctx, stack}
-  defp exec_inst(ctx, [val | stack], {:br_if, label_idx}), do: break_to(ctx, stack, label_idx)
 
   defp exec_inst(ctx, [val | stack], {:if, _, _, _}) when val == 1, do: {ctx, stack}
   defp exec_inst({frame, vm, n}, [val | stack], {:if, _type, else_idx, end_idx}) do
     next_instr = if else_idx != :none, do: else_idx, else: end_idx
     {{frame, vm, next_instr}, stack}
   end
-
-  defp exec_inst({frame, vm, n}, stack, {:else, end_idx}) do
-    {{frame, vm, end_idx}, stack}
-  end
-
-  defp exec_inst({%{labels: []} = frame, vm, n}, stack, :end), do: {{frame, vm, n}, stack}
 
   defp exec_inst({frame, vm, n}, stack, :end) do
     [corresponding_label | labels] = frame.labels
@@ -91,9 +151,6 @@ defmodule WaspVM.Executor do
     {{frame, vm, length(Map.keys(frame.instructions))}, stack}
   end
 
-  defp exec_inst(ctx, stack, :unreachable), do: {ctx, stack}
-  defp exec_inst(ctx, stack, :nop), do: {ctx, stack}
-
   defp exec_inst({frame, vm, n}, stack, {:call, funcidx}) do
     func_addr = Enum.at(frame.module.funcaddrs, funcidx)
 
@@ -104,12 +161,6 @@ defmodule WaspVM.Executor do
   end
 
   ### END PARAMETRIC INSTRUCTIONS
-
-
-  defp exec_inst(ctx, stack, {:i32_const, i32}), do: {ctx, [i32 | stack]}
-  defp exec_inst(ctx, stack, {:i64_const, i64}), do: {ctx, [i64 | stack]}
-  defp exec_inst(ctx, stack, {:f32_const, f32}), do: {ctx, [f32 | stack]}
-  defp exec_inst(ctx, stack, {:f64_const, f64}), do: {ctx, [f64 | stack]}
 
   defp exec_inst({frame, vm, n}, [value, address | stack], {:i32_store, _alignment, offset}) do
     # Will only work while each module can only have 1 mem
@@ -256,18 +307,6 @@ defmodule WaspVM.Executor do
   end
 
   ### Begin Simple Integer Numerics
-  defp exec_inst(ctx, [b, a | stack], :i32_add) do
-    {ctx, [a + b | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i32_sub) do
-    {ctx, [a - b | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i32_mul) do
-    {ctx, [a * b | stack]}
-  end
-
   defp exec_inst(ctx, [b, a | stack], :i32_div_s) do
     j1 = sign_value(a, 32)
     j2 = sign_value(b, 32)
@@ -304,52 +343,40 @@ defmodule WaspVM.Executor do
     end
   end
 
+  defp exec_inst(ctx, [b | _], :i32_div_u) when b == 0, do: {:error, :undefined}
   defp exec_inst(ctx, [b, a | stack], :i32_div_u) do
-    if b == 0 do
-      {:error, :undefined}
-    else
-      rem = a - (b * trunc(a / b))
-      result = Integer.floor_div((a - rem), b)
-      {ctx, [result | stack]}
-    end
+    rem = a - (b * trunc(a / b))
+    result = Integer.floor_div((a - rem), b)
+    {ctx, [result | stack]}
   end
 
+  defp exec_inst(ctx, [b | _], :i32_rem_s) when b == 0, do: {:error, :undefined}
   defp exec_inst(ctx, [b, a | stack], :i32_rem_s) do
-    if b == 0 do
-      {:error, :undefined}
-    else
-      j1 = sign_value(a, 32)
-      j2 = sign_value(b, 32)
+    j1 = sign_value(a, 32)
+    j2 = sign_value(b, 32)
 
-      rem = j1 - (j2*trunc(j1/j2))
+    rem = j1 - (j2 * trunc(j1 / j2))
 
-      {ctx, [rem | stack]}
-    end
+    {ctx, [rem | stack]}
   end
 
+  defp exec_inst(ctx, [b | _], :i64_rem_s) when b == 0, do: {:error, :undefined}
   defp exec_inst(ctx, [b, a | stack], :i64_rem_s) do
-    if b == 0 do
-      {:error, :undefined}
-    else
-      j1 = sign_value(a, 64)
-      j2 = sign_value(b, 64)
+    j1 = sign_value(a, 64)
+    j2 = sign_value(b, 64)
 
-      rem = j1 - (j2*trunc(j1/j2))
-      n = :math.pow(2, 64)
-      res = n - rem
+    rem = j1 - (j2 * trunc(j1 / j2))
+    n = :math.pow(2, 64)
+    res = n - rem
 
-      {ctx, [res | stack]}
-    end
+    {ctx, [res | stack]}
   end
 
+  defp exec_inst(ctx, [b | _], :i64_div_u) when b == 0, do: {:error, :undefined}
   defp exec_inst(ctx, [b, a | stack], :i64_div_u) do
-    if b == 0 do
-      {:error, :undefined}
-    else
-      rem = a - (b*trunc(a/b))
-      result = Integer.floor_div((a - rem), b)
-      {ctx, [result | stack]}
-    end
+    rem = a - (b * trunc(a / b))
+    result = Integer.floor_div((a - rem), b)
+    {ctx, [result | stack]}
   end
 
   defp exec_inst(ctx, [a | stack], :i32_popcnt) do
@@ -360,48 +387,30 @@ defmodule WaspVM.Executor do
     {ctx, [popcnt(a, 64) | stack]}
   end
 
+  defp exec_inst(ctx, [b | _], :i32_rem_u) when b == 0, do: {:error, :undefined}
   defp exec_inst(ctx, [b, a | stack], :i32_rem_u) do
-    if b == 0 do
-      {:error, :undefined}
-    else
-      c =
-        a
-        |> Kernel./(b)
-        |> trunc()
-        |> Kernel.*(b)
+    c =
+      a
+      |> Kernel./(b)
+      |> trunc()
+      |> Kernel.*(b)
 
-      res = a - c
+    res = a - c
 
-      {ctx, [res | stack]}
-    end
+    {ctx, [res | stack]}
   end
 
+  defp exec_inst(ctx, [b | _], :i64_rem_u) when b == 0, do: {:error, :undefined}
   defp exec_inst(ctx, [b, a | stack], :i64_rem_u) do
-    if b == 0 do
-      {:error, :undefined}
-    else
-      c =
-        a
-        |> Kernel./(b)
-        |> trunc()
-        |> Kernel.*(b)
+    c =
+      a
+      |> Kernel./(b)
+      |> trunc()
+      |> Kernel.*(b)
 
-      res = a - c
+    res = a - c
 
-      {ctx, [res | stack]}
-    end
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i64_add) do
-    {ctx, [a + b | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i64_sub) do
-    {ctx, [a - b | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i64_mul) do
-    {ctx, [a * b | stack]}
+    {ctx, [res | stack]}
   end
 
   ### END INTEGER NUMERICS
@@ -434,19 +443,19 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst(ctx, [b, a | stack], :f32_min) do
-    {ctx, [float_point_op(Enum.min([a, b])) | stack]}
+    {ctx, [float_point_op(min(a, b)) | stack]}
   end
 
   defp exec_inst(ctx, [b, a | stack], :f32_max) do
-    {ctx, [float_point_op(Enum.max([a, b])) | stack]}
+    {ctx, [float_point_op(max(a, b)) | stack]}
   end
 
   defp exec_inst(ctx, [b, a | stack], :f64_min) do
-    {ctx, [float_point_op(Enum.min([a, b])) | stack]}
+    {ctx, [float_point_op(min(a, b)) | stack]}
   end
 
   defp exec_inst(ctx, [b, a | stack], :f64_max) do
-    {ctx, [float_point_op(Enum.max([a, b])) | stack]}
+    {ctx, [float_point_op(max(a, b)) | stack]}
   end
 
   defp exec_inst(ctx, [a | stack], :f32_nearest) do
@@ -540,18 +549,6 @@ defmodule WaspVM.Executor do
     {ctx, [bxor(a, b) | stack]}
   end
 
-  defp exec_inst(ctx, [b, a | stack], :i32_eq) do
-    val = if a === b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [a | stack], :i32_eqz) do
-    val = if a === 0, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
   defp exec_inst(ctx, [b, a | stack], :i64_and) do
     {ctx, [band(a, b) | stack]}
   end
@@ -596,36 +593,6 @@ defmodule WaspVM.Executor do
     {ctx, [bsr(a, j2) | stack]}
   end
 
-  defp exec_inst(ctx, [b, a | stack], :i64_eq) do
-    val = if a === b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i64_ne) do
-    val = if a !== b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i64_le_s) do
-    val = if a <= b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i64_ge_s) do
-    val = if a >= b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [a | stack], :i64_eqz) do
-    val = if a === 0, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
   ### Complex Integer Operations Tests Done
   defp exec_inst(ctx, [b, a | stack], :i32_le_s) do
     val = if sign_value(a, 32) <= sign_value(b, 32), do: 1, else: 0
@@ -635,18 +602,6 @@ defmodule WaspVM.Executor do
 
   defp exec_inst(ctx, [b, a | stack], :i32_ge_s) do
     val = if sign_value(a, 32) >= sign_value(b, 32), do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i32_lt_u) do
-    val = if a < b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i64_lt_u) do
-    val = if a < b, do: 1, else: 0
 
     {ctx, [val | stack]}
   end
@@ -663,18 +618,6 @@ defmodule WaspVM.Executor do
     {ctx, [val | stack]}
   end
 
-  defp exec_inst(ctx, [b, a | stack], :i32_gt_u) do
-    val = if a > b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i64_gt_u) do
-    val = if a > b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
   defp exec_inst(ctx, [b, a | stack], :i32_gt_s) do
     val = if sign_value(a, 32) > sign_value(b, 32), do: 1, else: 0
 
@@ -683,30 +626,6 @@ defmodule WaspVM.Executor do
 
   defp exec_inst(ctx, [b, a | stack], :i64_gt_s) do
     val = if sign_value(a, 64) > sign_value(b, 64), do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i32_le_u) do
-    val = if a <= b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i64_le_u) do
-    val = if a <= b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i32_ge_u) do
-    val = if a >= b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i64_ge_u) do
-    val = if a >= b, do: 1, else: 0
 
     {ctx, [val | stack]}
   end
@@ -729,78 +648,6 @@ defmodule WaspVM.Executor do
 
   ### END Integer Structure
 
-  defp exec_inst(ctx, [b, a | stack], :f32_eq) do
-    val = if a === b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :f64_eq) do
-    val = if a === b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :i32_ne) do
-    val = if a !== b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :f32_lt) do
-    val = if a < b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :f64_lt) do
-    val = if a < b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :f32_le) do
-    val = if a <= b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :f64_le) do
-    val = if a <= b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :f32_ge) do
-    val = if a <= b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :f64_ge) do
-    val = if a <= b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :f32_gt) do
-    val = if a > b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :f64_gt) do
-    val = if a > b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
-  defp exec_inst(ctx, [b, a | stack], :f32_ne) do
-    val = if a !== b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
   defp exec_inst({frame, vm, n}, stack, {:loop, _result_type}) do
     labels = [{n, n} | frame.labels]
     snapshots = [stack | frame.snapshots]
@@ -815,19 +662,12 @@ defmodule WaspVM.Executor do
     {{Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm, n}, stack}
   end
 
-  defp exec_inst(ctx, [b, a | stack], :f64_ne) do
-    val = if a !== b, do: 1, else: 0
-
-    {ctx, [val | stack]}
-  end
-
   defp exec_inst({frame, vm, n}, [val | stack], {:if, _type, else_idx, end_idx}) do
     labels = [{n, end_idx} | frame.labels]
     snapshots = [stack | frame.snapshots]
 
     {{Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm, n}, stack}
   end
-
 
   ### Memory Operations
   defp exec_inst({frame, vm, n} = ctx, stack, :current_memory) do
@@ -886,7 +726,6 @@ defmodule WaspVM.Executor do
   defp sign_value(integer, n, lower, upper) when integer > lower and integer < upper, do: :math.pow(2, 32) + integer
   defp sign_value(integer, n, lower, upper) when integer > -lower and integer < -upper, do: :math.pow(2, 32) + integer
 
-
   defp popcnt(integer, 32) do
     <<integer::32>>
     |> Binary.to_list()
@@ -923,21 +762,20 @@ defmodule WaspVM.Executor do
       |> String.codepoints
       |> Enum.any?(&(&1 == "-"))
 
-    if a_truth == true && b_truth == true || a_truth == false && b_truth == false  do
+    if a_truth && b_truth || !a_truth && !b_truth  do
       a
     else
-      if a_truth == true && b_truth == false || a_truth == false && b_truth == true do
+      if a_truth && !b_truth || !a_truth && b_truth do
         b * -1
       end
     end
   end
 
-
-  defp check_value([0, b, c, d]) when b and c and d !== 0, do: 1
-  defp check_value([0, 0, c, d]) when c and d != 0, do: 2
-  defp check_value([0, 0, 0, d]) when d !== 0, do: 3
   defp check_value([0, 0, 0, 0]), do: 4
-  defp check_value([a, b, c, d]), do: 0
+  defp check_value([0, 0, 0, _]), do: 3
+  defp check_value([0, 0, _, _]), do: 2
+  defp check_value([0, _, _, _]), do: 1
+  defp check_value(_), do: 0
 
   defp count_bits(:l, number) do
     <<number::32>>
@@ -945,13 +783,10 @@ defmodule WaspVM.Executor do
     |> check_value
   end
 
-
   defp count_bits(:t, number) do
     <<number::32>>
     |> Binary.to_list
     |> Enum.reverse
     |> check_value
   end
-
-
 end

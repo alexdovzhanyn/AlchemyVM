@@ -92,8 +92,9 @@ defmodule WaspVM.ModuleInstance do
       |> Enum.map(fn {func, idx} ->
         typeidx = Enum.at(module.function_types, idx)
         type = Enum.at(module.types, typeidx)
+        locals = Enum.flat_map(func.locals, & List.duplicate(0, &1.count))
 
-        {type, ref, func.body, func.locals}
+        {type, ref, func.body, locals}
       end)
 
     host_funcs ++ funcs
