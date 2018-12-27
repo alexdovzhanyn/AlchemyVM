@@ -1,14 +1,13 @@
 defmodule WaspVM do
   use GenServer
   alias WaspVM.Decoder
-  alias WaspVM.Stack
   alias WaspVM.ModuleInstance
   alias WaspVM.Store
   alias WaspVM.Executor
   require IEx
 
-  @enforce_keys [:modules, :stack, :store]
-  defstruct [:modules, :stack, :store]
+  @enforce_keys [:modules, :store]
+  defstruct [:modules, :store]
 
   @moduledoc """
     Execute WebAssembly code
@@ -27,7 +26,6 @@ defmodule WaspVM do
       :ok,
       %WaspVM{
         modules: [],
-        stack: Stack.new(),
         store: %Store{}
       }
     }
@@ -101,16 +99,13 @@ defmodule WaspVM do
 
   @spec execute_func(WaspVM, integer, list) :: tuple
   defp execute_func(vm, addr, args) do
-    stack = Enum.reduce(args, vm.stack, fn arg, s -> Stack.push(s, arg) end)
+    stack = Enum.reduce(args, [], & [&1 | &2])
 
-    vm =
-      vm
-      |> Map.put(:stack, stack)
-      |> Executor.create_frame_and_execute(addr)
+    {vm, stack} = Executor.create_frame_and_execute(vm, addr, stack)
 
     case vm do
       tuple when is_tuple(tuple) -> tuple
-      _ -> {{:ok, hd(vm.stack.elements)}, vm}
+      _ -> {{:ok, hd(stack)}, vm}
     end
   end
 end
