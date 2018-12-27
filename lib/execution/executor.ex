@@ -32,20 +32,20 @@ defmodule WaspVM.Executor do
         locals: locals
       }
 
-      execute(frame, vm, stack)
+      total_instr = map_size(instr)
+
+      execute(frame, vm, stack, total_instr)
     end
   end
 
-  def execute(frame, vm, stack, next_instr \\ 0) do
-    if next_instr >= length(Map.keys(frame.instructions)) do
-      {vm, stack}
-    else
-      %{^next_instr => instr} = frame.instructions
+  def execute(_frame, vm, stack, total_instr, next_instr) when next_instr >= total_instr, do: {vm, stack}
+  def execute(_frame, vm, stack, total_instr, :end), do: {vm, stack}
+  def execute(frame, vm, stack, total_instr, next_instr \\ 0) do
+    %{^next_instr => instr} = frame.instructions
 
-      {{frame, vm, next_instr}, stack} = instruction(instr, frame, vm, stack, next_instr)
+    {{frame, vm, next_instr}, stack} = instruction(instr, frame, vm, stack, next_instr)
 
-      execute(frame, vm, stack, next_instr + 1)
-    end
+    execute(frame, vm, stack, total_instr, next_instr + 1)
   end
 
   def instruction(opcode, f, v, s, n) when is_atom(opcode), do: exec_inst({f, v, n}, s, opcode)
@@ -148,7 +148,7 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm, n}, stack, :return) do
-    {{frame, vm, length(Map.keys(frame.instructions))}, stack}
+    {{frame, vm, :end}, stack}
   end
 
   defp exec_inst({frame, vm, n}, stack, {:call, funcidx}) do
