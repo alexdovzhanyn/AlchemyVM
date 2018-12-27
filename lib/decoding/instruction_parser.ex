@@ -21,18 +21,6 @@ defmodule WaspVM.Decoder.InstructionParser do
   end
 
 #################### NOT COMPLETED ###############################
-
-
-  def parse_instruction(:i32_load8_u, bytecode), do: get_two_values(:i32_load8_u, bytecode)
-  def parse_instruction(:i32_load16_u, bytecode), do: get_two_values(:i32_load16_u, bytecode)
-  def parse_instruction(:i32_load16_s, bytecode), do: get_two_values(:i32_load16_s, bytecode)
-  def parse_instruction(:i64_load8_s, bytecode), do: get_two_values(:i64_load8_s, bytecode)
-  def parse_instruction(:i64_load8_u, bytecode), do: get_two_values(:i64_load8_u, bytecode)
-  def parse_instruction(:i64_load16_s, bytecode), do: get_two_values(:i64_load16_s, bytecode)
-  def parse_instruction(:i64_load16_u, bytecode), do: get_two_values(:i64_load16_u, bytecode)
-  def parse_instruction(:i64_load32_s, bytecode), do: get_two_values(:i64_load32_s, bytecode)
-  def parse_instruction(:i64_load32_u, bytecode), do: get_two_values(:i64_load32_u, bytecode)
-
   def parse_instruction(:i32_reinterpret_f32, bytecode), do: {:i32_reinterpret_f32, bytecode}
   def parse_instruction(:i64_reinterpret_f64, bytecode), do: {:i64_reinterpret_f64, bytecode}
   def parse_instruction(:f32_reinterpret_i32, bytecode), do: {:f32_reinterpret_i32, bytecode}
@@ -44,8 +32,15 @@ defmodule WaspVM.Decoder.InstructionParser do
 
 
   #################### COMPLETED WITH NOTES ###############################
-  def parse_instruction(:i32_load16_u, bytecode), do: get_two_values(:i32_load16_u, bytecode)
-  def parse_instruction(:i32_load8_u, bytecode), do: get_two_values(:i32_load8_u, bytecode)
+  def parse_instruction(:i64_load8_u, bytecode), do: get_two_values(:i64_load8_u, bytecode) # Done
+  def parse_instruction(:i64_load16_u, bytecode), do: get_two_values(:i64_load16_u, bytecode) # Done
+  def parse_instruction(:i64_load32_u, bytecode), do: get_two_values(:i64_load32_u, bytecode) # Done
+  def parse_instruction(:i32_load16_u, bytecode), do: get_two_values(:i32_load16_u, bytecode) # Done
+  def parse_instruction(:i32_load8_u, bytecode), do: get_two_values(:i32_load8_u, bytecode) # Done
+  def parse_instruction(:i64_load32_s, bytecode), do: get_two_values(:i64_load32_s, bytecode) # Done
+  def parse_instruction(:i64_load16_s, bytecode), do: get_two_values(:i64_load16_s, bytecode) # Done
+  def parse_instruction(:i64_load8_s, bytecode), do: get_two_values(:i64_load8_s, bytecode) # Done
+  def parse_instruction(:i32_load16_s, bytecode), do: get_two_values(:i32_load16_s, bytecode) # Done
   def parse_instruction(:i32_load8_s, bytecode), do: get_two_values(:i32_load8_s, bytecode) # Done
   def parse_instruction(:f64_promote_f32, bytecode), do: {:f64_promote_f32, bytecode} # Done
   def parse_instruction(:f32_demote_f64, bytecode), do: {:f32_demote_f64, bytecode} # Done

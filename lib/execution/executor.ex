@@ -977,43 +977,133 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 1)
 
-    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap(:i32, :i8, i8)))}
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_signed(:i32, :i8, i8)))}
   end
 
   defp exec_inst({frame, vm}, {:i32_load16_s, _alignment, offset}) do
-    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+    {address, stack} = Stack.pop(vm.stack)
 
     # Will only work while each module can only have 1 mem
     mem_addr = hd(frame.module.memaddrs)
 
-    mem =
+    <<i16::16>> =
       vm.store.mems
       |> Enum.at(mem_addr)
-      |> Memory.put_at(address + offset, band(value, 0xFFFFFFFF))
+      |> Memory.get_at(address + offset, 2)
 
-    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_signed(:i32, :i16, i16)))}
+  end
 
-    store = Map.put(vm.store, :mems, store_mems)
+  defp exec_inst({frame, vm}, {:i64_load8_s, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
 
-    {frame, Map.merge(vm, %{store: store, stack: stack})}
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    <<i8::8>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 1)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_signed(:i64, :i8, i8)))}
+  end
+
+  defp exec_inst({frame, vm}, {:i64_load16_s, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    <<i16::16>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 2)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_signed(:i64, :i16, i16)))}
+  end
+
+  defp exec_inst({frame, vm}, {:i64_load32_s, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    <<i32::32>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 4)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_signed(:i64, :i32, i32)))}
   end
 
   defp exec_inst({frame, vm}, {:i32_load8_u, _alignment, offset}) do
-    {[value, address], stack} = Stack.pop_multiple(vm.stack)
+    {address, stack} = Stack.pop(vm.stack)
 
     # Will only work while each module can only have 1 mem
     mem_addr = hd(frame.module.memaddrs)
 
-    mem =
+    <<i8::8>> =
       vm.store.mems
       |> Enum.at(mem_addr)
-      |> Memory.put_at(address + offset, band(value, 0xFFFFFFFF))
+      |> Memory.get_at(address + offset, 1)
 
-    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_unsigned(:i32, :i8, abs(i8))))}
+  end
 
-    store = Map.put(vm.store, :mems, store_mems)
+  defp exec_inst({frame, vm}, {:i32_load16_u, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
 
-    {frame, Map.merge(vm, %{store: store, stack: stack})}
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    <<i16::16>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 2)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_unsigned(:i32, :i16, abs(i16))))}
+  end
+
+  defp exec_inst({frame, vm}, {:i64_load8_u, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    <<i8::8>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 1)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_unsigned(:i64, :i8, abs(i8))))}
+  end
+
+  defp exec_inst({frame, vm}, {:i64_load16_u, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    <<i16::16>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 2)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_unsigned(:i64, :i16, abs(i16))))}
+  end
+
+  defp exec_inst({frame, vm}, {:i64_load32_u, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    <<i32::32>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 4)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_unsigned(:i64, :i32, abs(i32))))}
   end
 
   defp exec_inst({frame, vm}, {:i32_store, _alignment, offset}) do
@@ -1509,7 +1599,6 @@ defmodule WaspVM.Executor do
     |> check_value
   end
 
-
   defp count_bits(:t, number) do
     <<number::32>>
     |> Binary.to_list
@@ -1529,19 +1618,24 @@ defmodule WaspVM.Executor do
       |> Binary.from_list
       |> :binary.decode_unsigned()
 
-    value = integer && 0xFFFFFFFF
+    value = integer &&& 0xFFFFFFFF
   end
 
-  defp bin_wrap(:i32, :i8, integer) do
-    integer =
-      <<integer::64>>
-      |> Binary.to_list()
-      |> Enum.reverse
-      |> Binary.from_list
-      |> :binary.decode_unsigned()
+  defp bin_wrap(:i8, integer), do: :binary.decode_unsigned(<<integer::8>>)
+  defp bin_wrap(:i16, integer), do: :binary.decode_unsigned(<<integer::16>>)
+  defp bin_wrap(:i32, integer), do: :binary.decode_unsigned(<<integer::32>>)
+  defp bin_wrap_signed(:i32, :i8, integer), do: bin_wrap(:i8, integer) && 0xFFFFFFFF
+  defp bin_wrap_signed(:i32, :i16, integer), do: bin_wrap(:i16, integer) && 0xFFFFFFFF
+  defp bin_wrap_signed(:i64, :i8, integer), do: bin_wrap(:i8, integer) && 0xFFFFFFFFFFFFFFFF
+  defp bin_wrap_signed(:i64, :i16, integer), do: bin_wrap(:i16, integer) && 0xFFFFFFFFFFFFFFFF
+  defp bin_wrap_signed(:i64, :i32, integer), do: bin_wrap(:i32, integer) && 0xFFFFFFFFFFFFFFFF
+  defp bin_wrap_unsigned(:i32, :i8, integer), do: bin_wrap(:i8, integer) && 0xFF
+  defp bin_wrap_unsigned(:i32, :i16, integer), do: bin_wrap(:i16, integer) && 0xFFFF
+  defp bin_wrap_unsigned(:i64, :i8, integer), do: bin_wrap(:i8, integer) && 0xFFFF
+  defp bin_wrap_unsigned(:i64, :i16, integer), do: bin_wrap(:i16, integer) && 0xFFFF
+  defp bin_wrap_unsigned(:i64, :i32, integer), do: bin_wrap(:i32, integer) && 0xFFFFFFFF
 
-    value = integer && 0xFFFFFFFF
-  end
+
 
   defp bin_trunc(:f32, :i32, float), do: round(float)
   defp bin_trunc(:f32, :i64, float), do: round(float)

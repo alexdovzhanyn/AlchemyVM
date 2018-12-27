@@ -603,6 +603,70 @@ defmodule WaspVM.ExecutorTest do
       assert answer == 4294967295
     end
 
+    test "32 load8_u works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/load.wasm")
+      {status, answer} = WaspVM.execute(pid, "i32_load8_u", [])
+      assert answer == 255
+    end
+
+    test "32 load16_u works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/load.wasm")
+      {status, answer} = WaspVM.execute(pid, "i32_load16_u", [])
+      assert answer == 65535
+    end
+
+    test "64 load8_u works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/load.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_load8_u", [])
+      assert answer == 65535
+    end
+
+    test "64 load16_u works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/load.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_load16_u", [])
+      assert answer == 65535
+    end
+
+    test "64 load32_u works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/load.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_load32_u", [])
+      assert answer == 4294967295
+    end
+
+
+    test "32 load16_s works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/load.wasm")
+      {status, answer} = WaspVM.execute(pid, "i32_load16_s", [])
+      assert answer == 4294967295
+    end
+
+    test "64 load8_s works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/load.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_load8_s", [])
+      assert answer == 18446744073709551615
+    end
+
+    test "64 load16_s works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/load.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_load16_s", [])
+      assert answer == 18446744073709551615
+    end
+
+    test "64 load32_s works correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/load.wasm")
+      {status, answer} = WaspVM.execute(pid, "i64_load32_s", [])
+      assert answer == 18446744073709551615
+    end
+
     ### End Memory Tests
 
     ### Begin Wrapping & Trunc Tests
