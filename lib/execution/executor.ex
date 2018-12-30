@@ -13,23 +13,21 @@ defmodule WaspVM.Executor do
   def create_frame_and_execute(vm, addr, stack \\ []) do
     {{inputs, _outputs}, module_ref, instr, locals} = elem(vm.store.funcs, addr)
 
-    {args, stack} = Enum.split(stack, tuple_size(inputs))
+    # We don't need the stack that was passed in anymore at this point, it's
+    # safe to discard it since we'll just use an empty new stack from here on out.
+    args = Enum.take(stack, tuple_size(inputs))
 
-    if tuple_size(inputs) != length(args) do
-      {{:error, :param_mismatch, tuple_size(inputs), length(args)}, vm}
-    else
-      module = Enum.find(vm.modules, & &1.ref == module_ref)
+    %{^module_ref => module} = vm.modules
 
-      frame = %Frame{
-        module: module,
-        instructions: instr,
-        locals: List.to_tuple(args ++ locals)
-      }
+    frame = %Frame{
+      module: module,
+      instructions: instr,
+      locals: List.to_tuple(args ++ locals)
+    }
 
-      total_instr = map_size(instr)
+    total_instr = map_size(instr)
 
-      execute(frame, vm, stack, total_instr)
-    end
+    execute(frame, vm, [], total_instr)
   end
 
   def execute(_frame, vm, stack, total_instr, next_instr) when next_instr >= total_instr or next_instr < 0, do: {vm, stack}
@@ -142,8 +140,6 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm, n}, stack, {:call, funcidx}) do
-    # func_addr = Enum.at(frame.module.funcaddrs, funcidx)
-
     %{^funcidx => func_addr} = frame.module.funcaddrs
 
     # TODO: Maybe this shouldn't pass the existing stack in?
