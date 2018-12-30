@@ -1,14 +1,13 @@
 defmodule WaspVM do
   use GenServer
   alias WaspVM.Decoder
-  alias WaspVM.Stack
   alias WaspVM.ModuleInstance
   alias WaspVM.Store
   alias WaspVM.Executor
   require IEx
 
-  @enforce_keys [:modules, :stack, :store]
-  defstruct [:modules, :stack, :store]
+  @enforce_keys [:modules, :store]
+  defstruct [:modules, :store]
 
   @moduledoc """
     Execute WebAssembly code
@@ -26,8 +25,7 @@ defmodule WaspVM do
     {
       :ok,
       %WaspVM{
-        modules: [],
-        stack: Stack.new(),
+        modules: %{},
         store: %Store{}
       }
     }
@@ -67,14 +65,16 @@ defmodule WaspVM do
   def handle_call({:load_module, module}, _from, vm) do
     {moduleinst, store} = ModuleInstance.instantiate(ModuleInstance.new(), module, vm.store)
 
-    modules = [moduleinst | vm.modules]
+    modules = Map.put(vm.modules, moduleinst.ref, moduleinst)
 
     {:reply, :ok, Map.merge(vm, %{modules: modules, store: store})}
   end
 
   def handle_call({:execute, fname, args}, _from, vm) do
     {func_addr, _module} =
-      Enum.find_value(vm.modules, fn module ->
+      vm.modules
+      |> Map.values()
+      |> Enum.find_value(fn module ->
         a =
           Enum.find_value(module.exports, fn export ->
             if export !== nil do
@@ -101,16 +101,13 @@ defmodule WaspVM do
 
   @spec execute_func(WaspVM, integer, list) :: tuple
   defp execute_func(vm, addr, args) do
-    stack = Enum.reduce(args, vm.stack, fn arg, s -> Stack.push(s, arg) end)
+    stack = Enum.reduce(args, [], & [&1 | &2])
 
-    vm =
-      vm
-      |> Map.put(:stack, stack)
-      |> Executor.create_frame_and_execute(addr)
+    {vm, stack} = Executor.create_frame_and_execute(vm, addr, stack)
 
     case vm do
       tuple when is_tuple(tuple) -> tuple
-      _ -> {{:ok, hd(vm.stack.elements)}, vm}
+      _ -> {{:ok, hd(stack)}, vm}
     end
   end
 end

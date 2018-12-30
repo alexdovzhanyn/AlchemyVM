@@ -39,6 +39,9 @@ defmodule WaspVM.Decoder.CodeSectionParser do
       |> parse_bytecode()
       |> Enum.reverse()
       |> find_block_pairs()
+      |> Enum.with_index()
+      |> Enum.map(fn {v, k} -> {k, v} end)
+      |> Map.new()
 
     body = %{locals: locals, body: parsed_bytecode}
 

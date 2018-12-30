@@ -41,6 +41,12 @@ defmodule WaspVM.ModuleInstance do
         {addr, updated_s}
       end)
 
+    funcaddrs =
+      funcaddrs
+      |> Enum.with_index()
+      |> Enum.map(fn {k, v} -> {v, k} end)
+      |> Map.new()
+
     {globaladdrs, store} =
       Enum.map_reduce(module.globals, store, fn glob, s ->
         {:ok, addr, updated_s} = Store.allocate_global(s, glob)
@@ -93,15 +99,21 @@ defmodule WaspVM.ModuleInstance do
         typeidx = Enum.at(module.function_types, idx)
         type = Enum.at(module.types, typeidx)
 
-        {type, ref, func.body, func.locals}
+        locals =
+          func.locals
+          |> Enum.flat_map(& List.duplicate(0, &1.count))
+          |> List.to_tuple()
+
+        {type, ref, func.body, locals}
       end)
 
     host_funcs ++ funcs
   end
 
-  def generate_export(moduleinst, export) do
-    if export.kind == :func do
-      {export.name, Enum.at(moduleinst.funcaddrs, export.index)}
+  def generate_export(moduleinst, %{kind: kind, index: index, name: name}) do
+    if kind == :func do
+      %{^index => addr} = moduleinst.funcaddrs
+      {name, addr}
     end
   end
 end
