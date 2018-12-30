@@ -87,7 +87,7 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, [_, _ | stack], :i64_ge_s), do: {ctx, [0 | stack]}
   defp exec_inst(ctx, [_, _ | stack], :i32_lt_u), do: {ctx, [0 | stack]}
   defp exec_inst(ctx, [_, _ | stack], :i64_lt_u), do: {ctx, [0 | stack]}
-  defp exec_inst(ctx, [_, _ | stack], :i32_gt_u), do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i32_gt_u), do: {ctx, [0 | stack]}
   defp exec_inst(ctx, [_, _ | stack], :i64_gt_u), do: {ctx, [0 | stack]}
   defp exec_inst(ctx, [_, _ | stack], :i32_le_u), do: {ctx, [0 | stack]}
   defp exec_inst(ctx, [_, _ | stack], :i64_le_u), do: {ctx, [0 | stack]}
@@ -474,11 +474,11 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst(ctx, [a | stack], :f32_ceil) do
-    {ctx, [Float.ceil(a) | stack]}
+    {ctx, [float_point_op(Float.ceil(a)) | stack]}
   end
 
   defp exec_inst(ctx, [a | stack], :f64_ceil) do
-    {ctx, [Float.ceil(a) | stack]}
+    {ctx, [float_point_op(Float.ceil(a)) | stack]}
   end
 
   defp exec_inst(ctx, [b, a | stack], :f32_copysign) do

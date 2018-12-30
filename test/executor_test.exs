@@ -376,16 +376,16 @@ defmodule WaspVM.ExecutorTest do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
 
-      assert WaspVM.execute(pid, "i32__lt_u", [1, 0]) == {:ok, 0}
-      assert WaspVM.execute(pid, "i32__lt_u", [0, 1]) == {:ok, 1}
+      assert WaspVM.execute(pid, "i32__lt_u", [1, 0]) == {:ok, 1}
+      assert WaspVM.execute(pid, "i32__lt_u", [0, 1]) == {:ok, 0}
     end
 
     test "64 bit Integer lt_u Works Correctly" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
 
-      assert WaspVM.execute(pid, "i64__lt_u", [1, 0]) == {:ok, 0}
-      assert WaspVM.execute(pid, "i64__lt_u", [0, 1]) == {:ok, 1}
+      assert WaspVM.execute(pid, "i64__lt_u", [1, 0]) == {:ok, 1}
+      assert WaspVM.execute(pid, "i64__lt_u", [0, 1]) == {:ok, 0}
     end
 
     test "32 bit Integer lt_s Works Correctly" do
