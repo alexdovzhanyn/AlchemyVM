@@ -954,13 +954,13 @@ defmodule WaspVM.Executor do
 
 
   ### Memory Operations
-  defp exec_inst({frame, vm}, :current_memory) do
+  defp exec_inst({frame, vm}, :memory_size) do
     size = length(vm.memory.pages)
 
     {frame, Map.put(vm, :stack, Stack.push(vm.stack, size))}
   end
 
-  defp exec_inst({frame, vm}, :grow_memory) do
+  defp exec_inst({frame, vm}, :memory_grow) do
     {pages, stack} = Stack.pop(vm.stack)
 
     {frame, Map.merge(vm, %{memory: Memory.grow(vm.memory, pages), stack: Stack.push(stack, length(vm.memory))})}
