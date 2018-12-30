@@ -1472,6 +1472,24 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, float_promote(a * 1.0000000)))}
   end
 
+  defp exec_inst({frame, vm}, :i32_reinterpret_f32) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, reint(:f32, :i32, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_reinterpret_f32) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, reint(:f32, :i64, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_reinterpret_i64) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, reint(:f64, :i64, a)))}
+  end
+
 
   ### End Trunc, Wrap & Convert
 
@@ -1514,6 +1532,24 @@ defmodule WaspVM.Executor do
   end
 
   # Reference https://lemire.me/blog/2017/05/29/unsigned-vs-signed-integer-arithmetic/
+
+  defp reint(:f32, :i32, float) do
+    integer =
+      :erlang.float_to_binary(float)
+     |> :binary.decode_unsigned()
+  end
+
+  defp reint(:f32, :i64, float) do
+    integer =
+      :erlang.float_to_binary(float)
+     |> :binary.decode_unsigned()
+  end
+
+  defp reint(:f64, :i64, float) do
+    integer =
+      :erlang.float_to_binary(float)
+     |> :binary.decode_unsigned()
+  end
 
   defp sign_value(integer, n), do: sign_value(integer, n, :math.pow(2, 31), :math.pow(2, 32))
   defp sign_value(integer, n, lower, upper) when integer >= 0 and integer < lower, do: integer

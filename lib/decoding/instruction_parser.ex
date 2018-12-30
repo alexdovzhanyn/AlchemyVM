@@ -21,17 +21,15 @@ defmodule WaspVM.Decoder.InstructionParser do
   end
 
 #################### NOT COMPLETED ###############################
-  def parse_instruction(:i32_reinterpret_f32, bytecode), do: {:i32_reinterpret_f32, bytecode}
-  def parse_instruction(:i64_reinterpret_f64, bytecode), do: {:i64_reinterpret_f64, bytecode}
-  def parse_instruction(:f32_reinterpret_i32, bytecode), do: {:f32_reinterpret_i32, bytecode}
-  def parse_instruction(:f64_reinterpret_i64, bytecode), do: {:f64_reinterpret_i64, bytecode}
-
   def parse_instruction(:return, bytecode), do: {:return, bytecode}
   def parse_instruction(:memory_size, bytecode), do: {:memory_size, bytecode}
   def parse_instruction(:memory_grow, bytecode), do: {:memory_grow, bytecode}
 
 
   #################### COMPLETED WITH NOTES ###############################
+  def parse_instruction(:f64_reinterpret_i64, bytecode), do: {:f64_reinterpret_i64, bytecode} # Done
+  def parse_instruction(:i64_reinterpret_f64, bytecode), do: {:i64_reinterpret_f64, bytecode} # Done No Tests
+  def parse_instruction(:i32_reinterpret_f32, bytecode), do: {:i32_reinterpret_f32, bytecode} # Done No Tests
   def parse_instruction(:i64_load8_u, bytecode), do: get_two_values(:i64_load8_u, bytecode) # Done
   def parse_instruction(:i64_load16_u, bytecode), do: get_two_values(:i64_load16_u, bytecode) # Done
   def parse_instruction(:i64_load32_u, bytecode), do: get_two_values(:i64_load32_u, bytecode) # Done
