@@ -1,8 +1,8 @@
 (module
   (func $re (export "recurse") (param i32) (result i32)
     get_local 0
-    i32.const 100
-    i32.lt_s
+    i32.const 100000
+    i32.ne
     if (result i32)
       get_local 0
       i32.const 1
