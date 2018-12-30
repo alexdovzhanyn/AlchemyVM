@@ -7,15 +7,12 @@ defmodule WaspVM.Decoder.GlobalSectionParser do
 
   @moduledoc false
 
-  def parse(module) do
-    {count, entries} =
-      module.sections
-      |> Map.get(6)
-      |> LEB128.decode_unsigned()
+  def parse(section) do
+    {count, entries} = LEB128.decode_unsigned(section)
 
     globals = if count > 0, do: Enum.reverse(parse_entries(entries)), else: []
 
-    Map.put(module, :globals, globals)
+    {:globals, globals}
   end
 
   defp parse_entries(entries), do: parse_entries([], entries)

@@ -4,11 +4,8 @@ defmodule WaspVM.Decoder.TypeSectionParser do
 
   @moduledoc false
 
-  def parse(module) do
-    {count, entries} =
-      module.sections
-      |> Map.get(1)
-      |> LEB128.decode_unsigned()
+  def parse(section) do
+    {count, entries} = LEB128.decode_unsigned(section)
 
     entries =
       if count > 0 do
@@ -25,7 +22,7 @@ defmodule WaspVM.Decoder.TypeSectionParser do
         []
       end
 
-    Map.put(module, :types, entries)
+    {:types, entries}
   end
 
   defp parse_type_entry(entry) do

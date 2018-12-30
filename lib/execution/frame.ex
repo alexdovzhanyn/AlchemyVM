@@ -1,4 +1,4 @@
 defmodule WaspVM.Frame do
-  defstruct [:module, :instructions, :locals, :next_instr, labels: [], snapshots: []]
+  defstruct [:module, :instructions, :locals, labels: [], snapshots: []]
   @moduledoc false
 end
