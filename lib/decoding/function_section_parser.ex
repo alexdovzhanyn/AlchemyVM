@@ -3,12 +3,10 @@ defmodule WaspVM.Decoder.FunctionSectionParser do
 
   @moduledoc false
 
-  @spec parse(WaspVM.Module) :: WaspVM.Module
-  def parse(module) do
-    values = Map.get(module.sections, 3)
-    indexes = if values !== nil, do: parse_type_entry(values), else: []
+  def parse(section) do
+    indexes = if section !== nil, do: parse_type_entry(section), else: []
 
-    Map.put(module, :function_types, Enum.reverse(indexes))
+    {:function_types, Enum.reverse(indexes)}
   end
 
   @spec parse_type_entry(Binary) :: List

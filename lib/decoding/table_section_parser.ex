@@ -3,11 +3,8 @@ defmodule WaspVM.Decoder.TableSectionParser do
 
   @moduledoc false
 
-  def parse(module) do
-    {count, entries} =
-      module.sections
-      |> Map.get(4)
-      |> LEB128.decode_unsigned()
+  def parse(section) do
+    {count, entries} = LEB128.decode_unsigned(section)
 
     entries =
       # Not correct. Only parses first item out
@@ -29,7 +26,7 @@ defmodule WaspVM.Decoder.TableSectionParser do
         []
       end
 
-    Map.put(module, :table, entries)
+    {:table, entries}
   end
 
 end

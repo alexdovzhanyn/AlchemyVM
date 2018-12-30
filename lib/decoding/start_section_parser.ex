@@ -3,13 +3,10 @@ defmodule WaspVM.Decoder.StartSectionParser do
 
   @moduledoc false
 
-   def parse(module) do
-     {index, _entries} =
-       module.sections
-       |> Map.get(8)
-       |> LEB128.decode_unsigned()
+   def parse(section) do
+     {index, _entries} = LEB128.decode_unsigned(section)
 
-     Map.put(module, :start, index)
+     {:start, index}
    end
 
 end
