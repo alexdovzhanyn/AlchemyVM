@@ -81,8 +81,6 @@ defmodule WaspVM.Decoder.InstructionParser do
   def parse_instruction(:drop, bytecode), do: {:drop, bytecode} # Done
   def parse_instruction(:i64_clz, bytecode), do: {:i64_clz, bytecode} # Done
   def parse_instruction(:i64_ctz, bytecode), do: {:i64_ctz, bytecode} # Done
-  def parse_instruction(:i32_clz, bytecode), do: {:i32_clz, bytecode} # Done
-  def parse_instruction(:i32_ctz, bytecode), do: {:i32_ctz, bytecode} # Done
   def parse_instruction(:i32_ge_u, bytecode), do: {:i32_ge_u, bytecode} # Done
   def parse_instruction(:i64_ge_u, bytecode), do: {:i64_ge_u, bytecode} # Done
   def parse_instruction(:i32_le_u, bytecode), do: {:i32_le_u, bytecode} # Done
@@ -250,8 +248,19 @@ defmodule WaspVM.Decoder.InstructionParser do
   end
 
   defp little_to_big(bin) do
+    case leading_zeros(bin) do
+      nil -> bin
+      count ->
+        bin
+        |> :binary.decode_unsigned(:little)
+        |> :binary.encode_unsigned(:big)
+        |> Kernel.<>(String.duplicate(<<0>>, count))
+    end
+  end
+
+  def leading_zeros(bin) do
     bin
-    |> :binary.decode_unsigned(:little)
-    |> :binary.encode_unsigned(:big)
+    |> :binary.bin_to_list()
+    |> Enum.find_index(& &1 != 0)
   end
 end

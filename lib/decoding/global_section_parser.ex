@@ -55,7 +55,7 @@ defmodule WaspVM.Decoder.GlobalSectionParser do
       [{instr, val}] = parsed
 
       if instr == :get_global do
-        raise "Not implemented: :get_global in init expression"
+        {parsed, bytecode}
       else
         {val, bytecode}
       end
