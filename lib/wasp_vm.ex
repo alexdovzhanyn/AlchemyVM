@@ -37,7 +37,7 @@ defmodule WaspVM do
     Load a binary WebAssembly file (.wasm) as a module into the VM
   """
   @spec load_file(pid, String.t(), boolean) :: :ok
-  def load_file(ref, filename, parallel \\ false) do
+  def load_file(ref, filename, parallel \\ true) do
     GenServer.call(ref, {:load_module, Decoder.decode_file(filename, parallel)}, :infinity)
   end
 
@@ -45,7 +45,7 @@ defmodule WaspVM do
     Load a WebAssembly module directly from a binary into the VM
   """
   @spec load(pid, binary, boolean) :: :ok
-  def load(ref, binary, parallel \\ false) when is_binary(binary) do
+  def load(ref, binary, parallel \\ true) when is_binary(binary) do
     GenServer.call(ref, {:load_module, Decoder.decode(binary, parallel)}, :infinity)
   end
 
