@@ -13,9 +13,7 @@ defmodule WaspVM.Executor do
   def create_frame_and_execute(vm, addr, stack \\ []) do
     {{inputs, _outputs}, module_ref, instr, locals} = elem(vm.store.funcs, addr)
 
-    # We don't need the stack that was passed in anymore at this point, it's
-    # safe to discard it since we'll just use an empty new stack from here on out.
-    args = Enum.take(stack, tuple_size(inputs))
+    {args, stack} = Enum.split(stack, tuple_size(inputs))
 
     %{^module_ref => module} = vm.modules
 
@@ -27,7 +25,7 @@ defmodule WaspVM.Executor do
 
     total_instr = map_size(instr)
 
-    execute(frame, vm, [], total_instr)
+    execute(frame, vm, stack, total_instr)
   end
 
   def execute(_frame, vm, stack, total_instr, next_instr) when next_instr >= total_instr or next_instr < 0, do: {vm, stack}
