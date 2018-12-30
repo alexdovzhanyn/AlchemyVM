@@ -4,17 +4,14 @@ defmodule WaspVM.Decoder.ElementSectionParser do
 
   @moduledoc false
 
-  def parse(module) do
+  def parse(section) do
     raise "Element section parser not implemented"
 
-    {count, entries} =
-      module.sections
-      |> Map.get(9)
-      |> LEB128.decode_unsigned()
+    {count, entries} = LEB128.decode_unsigned(section)
 
     entries = if count > 0, do: parse_entries(entries), else: []
 
-    Map.put(module, :elements, entries)
+    {:elements, entries}
   end
 
   defp parse_entries(entries), do: parse_entries([], entries)

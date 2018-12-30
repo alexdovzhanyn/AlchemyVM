@@ -63,22 +63,26 @@ defmodule WaspVM.Decoder do
 
   defp parallel_decode(module) do
     module.sections
-    |> Enum.map(fn {k, _} -> Task.async(fn -> parse_section(module, k) end) end)
-    |> Enum.map(&Task.await/1)
-    |> Enum.reduce(& Map.merge(&2, &1))
+    |> Task.async_stream(&parse_section/1)
+    |> Enum.reduce(module, fn {k, v}, a -> Map.put(a, k, v) end)
+
+    # module.sections
+    # |> Stream.map(fn {k, _} -> Task.async(fn -> parse_section(module, k) end) end)
+    # |> Stream.map(&Task.await/1)
+    # |> Enum.reduce(&Map.merge(&2, &1))
   end
 
-  defp parse_section(module, 0), do: CustomSectionParser.parse(module)
-  defp parse_section(module, 1), do: TypeSectionParser.parse(module)
-  defp parse_section(module, 2), do: ImportSectionParser.parse(module)
-  defp parse_section(module, 3), do: FunctionSectionParser.parse(module)
-  defp parse_section(module, 4), do: TableSectionParser.parse(module)
-  defp parse_section(module, 5), do: MemorySectionParser.parse(module)
-  defp parse_section(module, 6), do: GlobalSectionParser.parse(module)
-  defp parse_section(module, 7), do: ExportSectionParser.parse(module)
-  defp parse_section(module, 8), do: StartSectionParser.parse(module)
-  defp parse_section(module, 9), do: ElementSectionParser.parse(module)
-  defp parse_section(module, 10), do: CodeSectionParser.parse(module)
-  defp parse_section(module, _), do: module
+  defp parse_section({0, section}), do: CustomSectionParser.parse(section)
+  defp parse_section({1, section}), do: TypeSectionParser.parse(section)
+  defp parse_section({2, section}), do: ImportSectionParser.parse(section)
+  defp parse_section({3, section}), do: FunctionSectionParser.parse(section)
+  defp parse_section({4, section}), do: TableSectionParser.parse(section)
+  defp parse_section({5, section}), do: MemorySectionParser.parse(section)
+  defp parse_section({6, section}), do: GlobalSectionParser.parse(section)
+  defp parse_section({7, section}), do: ExportSectionParser.parse(section)
+  defp parse_section({8, section}), do: StartSectionParser.parse(section)
+  defp parse_section({9, section}), do: ElementSectionParser.parse(section)
+  defp parse_section({10, section}), do: CodeSectionParser.parse(section)
+  defp parse_section({_, section}), do: section
 
 end

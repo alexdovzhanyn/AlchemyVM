@@ -5,16 +5,13 @@ defmodule WaspVM.Decoder.ExportSectionParser do
 
   @moduledoc false
 
-  def parse(module) do
-    {count, entries} =
-      module.sections
-      |> Map.get(7)
-      |> LEB128.decode_unsigned()
+  def parse(section) do
+    {count, entries} = LEB128.decode_unsigned(section)
 
     entries = if count > 0, do: parse_entries(entries), else: []
     entries = entries |> Enum.reject(&(&1 == nil))
 
-    Map.put(module, :exports, Enum.reverse(entries))
+    {:exports, Enum.reverse(entries)}
   end
 
   defp parse_entries(entries), do: parse_entries([], entries)
