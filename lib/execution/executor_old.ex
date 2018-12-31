@@ -561,52 +561,73 @@ defmodule WaspVM.Executor do
     {ctx, [bsl(a, b) | stack]}
   end
 
+<<<<<<< HEAD
+
+
+  defp exec_inst({frame, vm}, :i32_shr_u) do
+    {[b, a], stack} = Stack.pop_multiple(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, log_shr(a, b)))}
+=======
   defp exec_inst(ctx, [b, a | stack], :i32_shr_u) do
-    {ctx, [log_shr(a, b) | stack]}
+    j2 = Integer.mod(b, 32)
+
+    {ctx, [bsr(a, j2) | stack]}
+>>>>>>> 5c98ac4c434e3d10cea19a9d61f8126cd29c0bfa
   end
 
   defp exec_inst(ctx, [b, a | stack], :i64_shr_u) do
-    {ctx, [bsr(a, b) | stack]}
+    j2 = Integer.mod(b, 64)
+
+    {ctx, [bsr(a, j2) | stack]}
   end
 
   defp exec_inst(ctx, [b, a | stack], :i32_shr_s) do
     j2 = Integer.mod(b, 32)
+
     {ctx, [bsr(a, j2) | stack]}
   end
 
   defp exec_inst(ctx, [b, a | stack], :i64_shr_s) do
     j2 = Integer.mod(b, 64)
+
     {ctx, [bsr(a, j2) | stack]}
   end
 
   ### Complex Integer Operations Tests Done
   defp exec_inst(ctx, [b, a | stack], :i32_le_s) do
     val = if sign_value(a, 32) <= sign_value(b, 32), do: 1, else: 0
+
     {ctx, [val | stack]}
   end
 
   defp exec_inst(ctx, [b, a | stack], :i32_ge_s) do
     val = if sign_value(a, 32) >= sign_value(b, 32), do: 1, else: 0
+
     {ctx, [val | stack]}
   end
 
   defp exec_inst(ctx, [b, a | stack], :i32_lt_s) do
     val = if sign_value(a, 32) < sign_value(b, 32), do: 1, else: 0
+
     {ctx, [val | stack]}
   end
 
   defp exec_inst(ctx, [b, a | stack], :i64_lt_s) do
     val = if sign_value(a, 64) < sign_value(b, 64), do: 1, else: 0
+
     {ctx, [val | stack]}
   end
 
   defp exec_inst(ctx, [b, a | stack], :i32_gt_s) do
     val = if sign_value(a, 32) > sign_value(b, 32), do: 1, else: 0
+
     {ctx, [val | stack]}
   end
 
   defp exec_inst(ctx, [b, a | stack], :i64_gt_s) do
     val = if sign_value(a, 64) > sign_value(b, 64), do: 1, else: 0
+
     {ctx, [val | stack]}
   end
 
@@ -627,74 +648,6 @@ defmodule WaspVM.Executor do
   end
 
   ### END Integer Structure
-
-  ### BEGIN ADDITIONS
-  defp exec_inst(ctx, [value | stack], :i32_reinterpret_f32) do
-    {a, stack} = Stack.pop(vm.stack)
-    ans = reint(:f32, :i32, a)
-    {ctx, [ans | stack]}
-  end
-
-  defp exec_inst(ctx, [value | stack], :i64_reinterpret_f32) do
-    {a, stack} = Stack.pop(vm.stack)
-    ans = reint(:f32, :i64, a)
-    {ctx, [ans | stack]}
-  end
-
-  defp exec_inst(ctx, [value | stack], :f64_reinterpret_i64) do
-    {a, stack} = Stack.pop(vm.stack)
-    ans = reint(:f64, :i64, a)
-    {ctx, [ans | stack]}
-  end
-
-  defp exec_inst({frame, vm, n} = ctx, stack, :memory_size) do
-    {ctx, [length(vm.memory.pages) | stack]}
-  end
-
-  defp exec_inst({frame, vm, n}, [pages | stack], :memory_grow) do
-    {{frame, Map.put(vm, :memory, Memory.grow(vm.memory, pages)), n}, [length(vm.memory) | stack]}
-  end
-
-  ### Memory Operations
-  defp exec_inst({frame, vm, n} = ctx, [address | stack], {:i32_load8_s, _alignment, offset}) do
-    # Will only work while each module can only have 1 mem
-    mem_addr = hd(frame.module.memaddrs)
-
-    <<i8::8>> =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.get_at(address + offset, 1)
-
-    {ctx, [bin_wrap_signed(:i32, :i8, i8) | stack]}
-  end
-
-  defp exec_inst({frame, vm, n} = ctx, [address | stack], {:i32_load16_s, _alignment, offset}) do
-    # Will only work while each module can only have 1 mem
-    mem_addr = hd(frame.module.memaddrs)
-
-   <<i16::16>> =
-     vm.store.mems
-     |> Enum.at(mem_addr)
-     |> Memory.get_at(address + offset, 2)
-
-     {ctx, [bin_wrap_signed(:i32, :i16, i16) | stack]}
-   end
-
-   defp exec_inst({frame, vm, n} = ctx, [address | stack], {:i64_load8_s, _alignment, offset}) do
-     # Will only work while each module can only have 1 mem
-     mem_addr = hd(frame.module.memaddrs)
-
-     <<i8::8>> =
-       vm.store.mems
-       |> Enum.at(mem_addr)
-       |> Memory.get_at(address + offset, 1)
-       {ctx, [bin_wrap_signed(:i64, :i8, i8) | stack]}
-   end
-
-  ### END MEMORY
-
-
-  ### END ADDITIONS
 
   defp exec_inst({frame, vm, n}, stack, {:loop, _result_type}) do
     labels = [{n, n} | frame.labels]
@@ -717,9 +670,49 @@ defmodule WaspVM.Executor do
     {{Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm, n}, stack}
   end
 
+  ### Memory Operations
+<<<<<<< HEAD
+  defp exec_inst({frame, vm}, :memory_size) do
+    size = length(vm.memory.pages)
 
+    {frame, Map.put(vm, :stack, Stack.push(vm.stack, size))}
+  end
 
+  defp exec_inst({frame, vm}, :memory_grow) do
+    {pages, stack} = Stack.pop(vm.stack)
 
+    {frame, Map.merge(vm, %{memory: Memory.grow(vm.memory, pages), stack: Stack.push(stack, length(vm.memory))})}
+=======
+  defp exec_inst({frame, vm, n} = ctx, stack, :current_memory) do
+    {ctx, [length(vm.memory.pages) | stack]}
+  end
+
+  defp exec_inst({frame, vm, n}, [pages | stack], :grow_memory) do
+    {{frame, Map.put(vm, :memory, Memory.grow(vm.memory, pages)), n}, [length(vm.memory) | stack]}
+>>>>>>> 5c98ac4c434e3d10cea19a9d61f8126cd29c0bfa
+  end
+
+  defp exec_inst({frame, vm}, {:i32_load8_s, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+<<<<<<< HEAD
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+
+    <<i8::8>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 1)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_signed(:i32, :i8, i8)))}
+  end
+
+  defp exec_inst({frame, vm}, {:i32_load16_s, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
+
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
+=======
   defp exec_inst({frame, vm, n}, stack, :end) do
     [_ | labels] = frame.labels
     [_ | snapshots] = frame.snapshots
@@ -747,20 +740,41 @@ defmodule WaspVM.Executor do
           snapshot
         end
       end
+>>>>>>> 5c98ac4c434e3d10cea19a9d61f8126cd29c0bfa
 
+    <<i16::16>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 2)
+
+<<<<<<< HEAD
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_signed(:i32, :i16, i16)))}
+=======
     {{frame, vm, next_instr}, stack}
+>>>>>>> 5c98ac4c434e3d10cea19a9d61f8126cd29c0bfa
   end
 
+  defp exec_inst({frame, vm}, {:i64_load8_s, _alignment, offset}) do
+    {address, stack} = Stack.pop(vm.stack)
 
+<<<<<<< HEAD
+    # Will only work while each module can only have 1 mem
+    mem_addr = hd(frame.module.memaddrs)
 
+    <<i8::8>> =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(address + offset, 1)
+=======
   defp sign_value(integer, n), do: sign_value(integer, n, 2147483648, 4294967296) # 2^31...2^32
   defp sign_value(integer, n, lower, upper) when integer >= 0 and integer < lower, do: integer
   defp sign_value(integer, n, lower, upper) when integer < 0 and integer > -lower, do: integer
   defp sign_value(integer, n, lower, upper) when integer > lower and integer < upper, do: upper + integer
   defp sign_value(integer, n, lower, upper) when integer > -lower and integer < -upper, do: upper + integer
+>>>>>>> 5c98ac4c434e3d10cea19a9d61f8126cd29c0bfa
 
-
-
+    {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_signed(:i64, :i8, i8)))}
+  end
 
   defp exec_inst({frame, vm}, {:i64_load16_s, _alignment, offset}) do
     {address, stack} = Stack.pop(vm.stack)
@@ -782,6 +796,7 @@ defmodule WaspVM.Executor do
     # Will only work while each module can only have 1 mem
     mem_addr = hd(frame.module.memaddrs)
 
+<<<<<<< HEAD
     <<i32::32>> =
       vm.store.mems
       |> Enum.at(mem_addr)
@@ -795,6 +810,22 @@ defmodule WaspVM.Executor do
 
     # Will only work while each module can only have 1 mem
     mem_addr = hd(frame.module.memaddrs)
+=======
+    if a_truth && b_truth || !a_truth && !b_truth  do
+      a
+    else
+      if a_truth && !b_truth || !a_truth && b_truth do
+        b * -1
+      end
+    end
+  end
+
+  defp check_value([0, 0, 0, 0]), do: 4
+  defp check_value([0, 0, 0, _]), do: 3
+  defp check_value([0, 0, _, _]), do: 2
+  defp check_value([0, _, _, _]), do: 1
+  defp check_value(_), do: 0
+>>>>>>> 5c98ac4c434e3d10cea19a9d61f8126cd29c0bfa
 
     <<i8::8>> =
       vm.store.mems
@@ -804,8 +835,7 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, bin_wrap_unsigned(:i32, :i8, abs(i8))))}
   end
 
-
-
+<<<<<<< HEAD
   defp exec_inst({frame, vm}, {:i32_load16_u, _alignment, offset}) do
     {address, stack} = Stack.pop(vm.stack)
 
@@ -1228,7 +1258,23 @@ defmodule WaspVM.Executor do
     {frame, Map.put(vm, :stack, Stack.push(stack, float_promote(a * 1.0000000)))}
   end
 
+  defp exec_inst({frame, vm}, :i32_reinterpret_f32) do
+    {a, stack} = Stack.pop(vm.stack)
 
+    {frame, Map.put(vm, :stack, Stack.push(stack, reint(:f32, :i32, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :i64_reinterpret_f32) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, reint(:f32, :i64, a)))}
+  end
+
+  defp exec_inst({frame, vm}, :f64_reinterpret_i64) do
+    {a, stack} = Stack.pop(vm.stack)
+
+    {frame, Map.put(vm, :stack, Stack.push(stack, reint(:f64, :i64, a)))}
+  end
 
 
   ### End Trunc, Wrap & Convert
@@ -1362,11 +1408,12 @@ defmodule WaspVM.Executor do
     end
   end
 
+
+  defp check_value([0, b, c, d]) when b and c and d !== 0, do: 1
+  defp check_value([0, 0, c, d]) when c and d != 0, do: 2
+  defp check_value([0, 0, 0, d]) when d !== 0, do: 3
   defp check_value([0, 0, 0, 0]), do: 4
-  defp check_value([0, 0, 0, _]), do: 3
-  defp check_value([0, 0, _, _]), do: 2
-  defp check_value([0, _, _, _]), do: 1
-  defp check_value(_), do: 0
+  defp check_value([a, b, c, d]), do: 0
 
   defp count_bits(:l, number) do
     <<number::32>>
@@ -1374,14 +1421,15 @@ defmodule WaspVM.Executor do
     |> check_value
   end
 
-
+=======
+>>>>>>> 5c98ac4c434e3d10cea19a9d61f8126cd29c0bfa
   defp count_bits(:t, number) do
     <<number::32>>
     |> Binary.to_list
     |> Enum.reverse
     |> check_value
   end
-
+<<<<<<< HEAD
 
   defp wrap_to_value(:i8, integer), do: integer &&& 0xFF
   defp wrap_to_value(:i16, integer), do: integer &&& 0xFFFF
@@ -1439,5 +1487,6 @@ defmodule WaspVM.Executor do
         |> Integer.undigits(2)
   end
 
-
+=======
+>>>>>>> 5c98ac4c434e3d10cea19a9d61f8126cd29c0bfa
 end
