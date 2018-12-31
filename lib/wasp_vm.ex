@@ -34,17 +34,28 @@ defmodule WaspVM do
   @doc """
     Load a binary WebAssembly file (.wasm) as a module into the VM
   """
-  @spec load_file(pid, String.t(), boolean) :: :ok
-  def load_file(ref, filename, parallel \\ true) do
-    GenServer.call(ref, {:load_module, Decoder.decode_file(filename, parallel)}, :infinity)
+
+  @spec load_file(pid, String.t()) :: {:ok, WaspVM.Module}
+  def load_file(ref, filename) do
+    GenServer.call(ref, {:load_module, Decoder.decode_file(filename)}, :infinity)
   end
 
   @doc """
     Load a WebAssembly module directly from a binary into the VM
   """
-  @spec load(pid, binary, boolean) :: :ok
-  def load(ref, binary, parallel \\ true) when is_binary(binary) do
-    GenServer.call(ref, {:load_module, Decoder.decode(binary, parallel)}, :infinity)
+
+  @spec load(pid, binary) :: {:ok, WaspVM.Module}
+  def load(ref, binary) when is_binary(binary) do
+    GenServer.call(ref, {:load_module, Decoder.decode(binary)}, :infinity)
+  end
+
+  @doc """
+    Load a module that was already decoded by load/3 or load_file/3. This is useful
+    for caching modules, as it skips the entire decoding step.
+  """
+  @spec load_module(pid, WaspVM.Module) :: {:ok, WaspVM.Module}
+  def load_module(ref, module) do
+    GenServer.call(ref, {:load_module, module}, :infinity)
   end
 
   @doc """
@@ -67,7 +78,7 @@ defmodule WaspVM do
 
     modules = Map.put(vm.modules, moduleinst.ref, moduleinst)
 
-    {:reply, :ok, Map.merge(vm, %{modules: modules, store: store})}
+    {:reply, {:ok, module}, Map.merge(vm, %{modules: modules, store: store})}
   end
 
   def handle_call({:execute, fname, args}, _from, vm) do
