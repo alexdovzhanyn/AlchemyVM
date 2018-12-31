@@ -3,6 +3,7 @@ defmodule WaspVM.Decoder.GlobalSectionParser do
   alias WaspVM.OpCodes
   alias WaspVM.Module
   alias WaspVM.Decoder.InstructionParser
+  alias WaspVM.Decoder.Util
   require IEx
 
   @moduledoc false
@@ -27,38 +28,11 @@ defmodule WaspVM.Decoder.GlobalSectionParser do
 
     mutable = mutability == 1
 
-    {initial, entries} = evaluate_init_expr(entries)
+    {initial, entries} = Util.evaluate_init_expr(entries)
 
     global = %{type: type, mutable: mutable, initial: initial}
 
     parse_entries([global | parsed], entries)
-  end
-
-  # In the MVP, to keep things simple while still supporting the basic
-  # needs of dynamic linking, initializer expressions are restricted to
-  # the four constant operators and get_global, where the global index
-  # must refer to an immutable import.
-  defp evaluate_init_expr(entries), do: evaluate_init_expr([], entries)
-  defp evaluate_init_expr(parsed, bytecode) do
-    <<opcode::bytes-size(1), bytecode::binary>> = bytecode
-
-    {instruction, bytecode} =
-      opcode
-      |> OpCodes.encode_instr()
-      |> InstructionParser.parse_instruction(bytecode)
-
-    if instruction == :end do
-      # Should only be one instruction in the MVP, no other combination is valid
-      [{instr, val}] = parsed
-
-      if instr == :get_global do
-        {parsed, bytecode}
-      else
-        {val, bytecode}
-      end
-    else
-      evaluate_init_expr([instruction | parsed], bytecode)
-    end
   end
 
 

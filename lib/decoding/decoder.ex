@@ -16,16 +16,15 @@ defmodule WaspVM.Decoder do
 
   @moduledoc false
 
-  def decode_file(file_path, parallel) do
+  def decode_file(file_path, parallel \\ true) do
     {:ok, bin} = File.read(file_path)
 
     decode(bin, parallel)
   end
 
-  @doc false
+  def decode(bin, parallel \\ true)
   def decode(bin, parallel) when is_binary(bin), do: begin_split(%Module{}, bin, parallel)
 
-  @doc false
   def decode(bin, _parallel) do
     {fun, arity} = __ENV__.function
     raise "Invalid data provided for #{fun}/#{arity}. Must be binary, got: #{inspect(bin)}"
@@ -74,13 +73,8 @@ defmodule WaspVM.Decoder do
 
   defp parallel_decode(module) do
     module.sections
-    |> Task.async_stream(&parse_section/1)
-    |> Enum.reduce(module, fn {k, v}, a -> Map.put(a, k, v) end)
-
-    # module.sections
-    # |> Stream.map(fn {k, _} -> Task.async(fn -> parse_section(module, k) end) end)
-    # |> Stream.map(&Task.await/1)
-    # |> Enum.reduce(&Map.merge(&2, &1))
+    |> Task.async_stream(&parse_section/1, timeout: :infinity)
+    |> Enum.reduce(module, fn {:ok, {k, v}}, a -> Map.put(a, k, v) end)
   end
 
   defp parse_section({0, section}), do: CustomSectionParser.parse(section)
