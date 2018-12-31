@@ -12,6 +12,7 @@ defmodule WaspVM.Decoder do
   alias WaspVM.Decoder.ElementSectionParser
   alias WaspVM.Decoder.CodeSectionParser
   alias WaspVM.Decoder.CustomSectionParser
+  alias WaspVM.Decoder.DataSectionParser
   require IEx
 
   @moduledoc false
@@ -73,7 +74,7 @@ defmodule WaspVM.Decoder do
 
   defp parallel_decode(module) do
     module.sections
-    |> Task.async_stream(&parse_section/1, timeout: :infinity)
+    |> Task.async_stream(&parse_section/1, timeout: :infinity, max_concurrency: 12)
     |> Enum.reduce(module, fn {:ok, {k, v}}, a -> Map.put(a, k, v) end)
   end
 
@@ -88,6 +89,7 @@ defmodule WaspVM.Decoder do
   defp parse_section({8, section}), do: StartSectionParser.parse(section)
   defp parse_section({9, section}), do: ElementSectionParser.parse(section)
   defp parse_section({10, section}), do: CodeSectionParser.parse(section)
+  defp parse_section({11, section}), do: DataSectionParser.parse(section)
   defp parse_section({_, section}), do: section
 
 end
