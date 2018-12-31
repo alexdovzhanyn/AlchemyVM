@@ -3,7 +3,7 @@ defmodule WaspVM.Store do
   alias WaspVM.Memory
   alias WaspVM.Store
 
-  defstruct funcs: [],
+  defstruct funcs: {},
             mems: [],
             globals: [],
             tables: []
@@ -33,8 +33,13 @@ defmodule WaspVM.Store do
   """
   @spec allocate_func(Store, map) :: {:ok, integer, Store}
   def allocate_func(store, func) do
-    index = length(store.funcs)
-    funcs = List.insert_at(store.funcs, index, func)
+    index = tuple_size(store.funcs)
+
+    funcs =
+      store.funcs
+      |> Tuple.to_list()
+      |> List.insert_at(index, func)
+      |> List.to_tuple()
 
     {:ok, index, Map.put(store, :funcs, funcs)}
   end

@@ -5,15 +5,12 @@ defmodule WaspVM.Decoder.ImportSectionParser do
 
   @moduledoc false
 
-  def parse(module) do
-    {count, entries} =
-      module.sections
-      |> Map.get(2)
-      |> LEB128.decode_unsigned()
+  def parse(section) do
+    {count, entries} = LEB128.decode_unsigned(section)
 
     entries = if count > 0, do: parse_entries(entries), else: []
 
-    Map.put(module, :imports, entries)
+    {:imports, entries}
   end
 
   defp parse_entries(entries), do: parse_entries([], entries)
