@@ -2,6 +2,8 @@ defmodule WaspVM.Decoder.DataSectionParser do
   alias WaspVM.LEB128
   alias WaspVM.Decoder.Util
 
+  @moduledoc false
+
   def parse(section) do
     {count, entries} = LEB128.decode_unsigned(section)
 

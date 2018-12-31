@@ -2,7 +2,6 @@ defmodule WaspVM.Decoder.GlobalSectionParser do
   alias WaspVM.LEB128
   alias WaspVM.OpCodes
   alias WaspVM.Module
-  alias WaspVM.Decoder.InstructionParser
   alias WaspVM.Decoder.Util
   require IEx
 
@@ -11,7 +10,15 @@ defmodule WaspVM.Decoder.GlobalSectionParser do
   def parse(section) do
     {count, entries} = LEB128.decode_unsigned(section)
 
-    globals = if count > 0, do: Enum.reverse(parse_entries(entries)), else: []
+    globals =
+      if count > 0 do
+        entries
+        |> parse_entries()
+        |> Enum.reverse()
+        |> resolve_globals()
+      else
+        []
+      end
 
     {:globals, globals}
   end
@@ -35,5 +42,12 @@ defmodule WaspVM.Decoder.GlobalSectionParser do
     parse_entries([global | parsed], entries)
   end
 
+  defp resolve_globals(globals), do: Enum.map(globals, & resolve_global(&1, globals))
 
+  defp resolve_global(%{initial: i} = glob, _globals) when is_number(i), do: glob
+  defp resolve_global(%{initial: [{_, i}]}, globals) do
+    globals
+    |> Enum.at(i)
+    |> resolve_global(globals)
+  end
 end

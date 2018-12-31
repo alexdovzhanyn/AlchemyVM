@@ -24,20 +24,22 @@ defmodule WaspVM.Decoder do
   end
 
   def decode(bin, parallel \\ true)
-  def decode(bin, parallel) when is_binary(bin), do: begin_split(%Module{}, bin, parallel)
+  def decode(bin, parallel) when is_binary(bin), do: begin_split(bin, parallel)
 
   def decode(bin, _parallel) do
     {fun, arity} = __ENV__.function
     raise "Invalid data provided for #{fun}/#{arity}. Must be binary, got: #{inspect(bin)}"
   end
 
-  defp begin_split(module, bin, parallel) do
+  defp begin_split(bin, parallel) do
     <<magic::bytes-size(4), version::bytes-size(4), rest::binary>> = bin
 
     if magic != <<0, 97, 115, 109>> do
       raise "Malformed or incomplete binary"
     else
-      split_sections(%Module{magic: magic, version: version}, rest, parallel)
+      %Module{magic: magic, version: version}
+      |> split_sections(rest, parallel)
+      |> resolve_globals()
     end
   end
 
@@ -78,6 +80,25 @@ defmodule WaspVM.Decoder do
     |> Enum.reduce(module, fn {:ok, {k, v}}, a -> Map.put(a, k, v) end)
   end
 
+  defp resolve_globals(module) do
+    resolve = fn v ->
+      if !is_number(v.offset) do
+        [{:get_global, i}] = v.offset
+
+        val = Enum.at(module.globals, i).initial
+
+        Map.put(v, :offset, val)
+      else
+        v
+      end
+    end
+
+    elements = Enum.map(module.elements, & resolve.(&1))
+    data = Enum.map(module.data, & resolve.(&1))
+
+    Map.merge(module, %{elements: elements, data: data})
+  end
+
   defp parse_section({0, section}), do: CustomSectionParser.parse(section)
   defp parse_section({1, section}), do: TypeSectionParser.parse(section)
   defp parse_section({2, section}), do: ImportSectionParser.parse(section)
@@ -91,5 +112,4 @@ defmodule WaspVM.Decoder do
   defp parse_section({10, section}), do: CodeSectionParser.parse(section)
   defp parse_section({11, section}), do: DataSectionParser.parse(section)
   defp parse_section({_, section}), do: section
-
 end
