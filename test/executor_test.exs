@@ -8,7 +8,7 @@ defmodule WaspVM.ExecutorTest do
   test "32 bit integers with add properly" do
     {:ok, pid} = WaspVM.start()
     WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-    assert WaspVM.execute(pid, "i32__add", [4, 2]) == {:ok, 6}
+    assert WaspVM.execute(pid, "i32__add", [4, 2]) == 6
   end
 
   test "64 bit integers with add properly" do

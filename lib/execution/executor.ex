@@ -17,14 +17,15 @@ defmodule WaspVM.Executor do
     # safe to discard it since we'll just use an empty new stack from here on out.
     args = Enum.take(stack, tuple_size(inputs))
 
+
     %{^module_ref => module} = vm.modules
 
     frame = %Frame{
       module: module,
       instructions: instr,
-      locals: List.to_tuple(args ++ locals)
+      locals: List.to_tuple([args | locals])
     }
-
+      
     total_instr = map_size(instr)
 
     execute(frame, vm, [], total_instr)
@@ -95,7 +96,10 @@ defmodule WaspVM.Executor do
 
 
   ### BEGIN NUMERIC INSTRUCTIONS
-  defp exec_inst(ctx, [b, a | stack], :i32_add), do: {ctx, [a + b | stack]}
+  defp exec_inst(ctx, [b, a | stack], :i32_add) do
+    IO.puts "running"
+     {ctx, [(a + b) | stack]}
+   end
   defp exec_inst(ctx, [b, a | stack], :i32_sub), do: {ctx, [a - b | stack]}
   defp exec_inst(ctx, [b, a | stack], :i32_mul), do: {ctx, [a * b | stack]}
   defp exec_inst(ctx, [b, a | stack], :i64_add), do: {ctx, [a + b | stack]}
@@ -289,7 +293,7 @@ defmodule WaspVM.Executor do
   ### END NUMERIC INSTRUCTIONS
 
   ### Begin Wrapping & Trunc Operations
-  defp exec_inst(ctx, [a | stack], :i32_wrap_i64), do: {ctx, [bin_wrap(:i64, :i32, a)) | stack]}
+  defp exec_inst(ctx, [a | stack], :i32_wrap_i64), do: {ctx, [bin_wrap(:i64, :i32, a) | stack]}
   defp exec_inst(ctx, [a | stack], :i32_trunc_u_f32), do: {ctx, [bin_trunc(:f32, :i32, a) | stack]}
   defp exec_inst(ctx, [a | stack], :i32_trunc_s_f32), do: {ctx, [bin_trunc(:f32, :i32, a) | stack]}
   defp exec_inst(ctx, [a | stack], :i32_trunc_u_f64), do: {ctx, [bin_trunc(:f32, :i32, a) | stack]}
@@ -298,21 +302,23 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, [a | stack], :i64_trunc_s_f32), do: {ctx, [bin_trunc(:f32, :i64, a) | stack]}
   defp exec_inst(ctx, [a | stack], :i64_trunc_u_f64), do: {ctx, [bin_trunc(:f64, :i64, a) | stack]}
   defp exec_inst(ctx, [a | stack], :i64_trunc_s_f64), do: {ctx, [bin_trunc(:f64, :i64, a) | stack]}
-  defp exec_inst(ctx, [a | stack], :f32_convert_s_i32), do: {ctx, [float_point_op(a * 1.000 | stack]0)))}
+  defp exec_inst(ctx, [a | stack], :f32_convert_s_i32), do: {ctx, [float_point_op(a * 1.000) | stack]}
   defp exec_inst(ctx, [a | stack], :f32_convert_u_i32), do: {ctx, [float_point_op(band(a, 0xFFFFFFFF) * 1.000000) | stack]}
   defp exec_inst(ctx, [a | stack], :f32_convert_s_i64), do: {ctx, [float_point_op(a * 1.000000) | stack]}
-  defp exec_inst(ctx, [a | stack], :f32_convert_u_i64), do: {ctx, [float_point_op(band(a, 0xFFFFFFFFFFFFFF) * 1.000000) | stack]}))}
-  defp exec_inst(ctx, [a | stack], :f64_convert_s_i64), do: {ctx, [ float_point_op(a * 1.000000) | stack]}))}
-  defp exec_inst(ctx, [a | stack], :f64_convert_u_i64), do: {ctx, [ float_point_op(band(a, 0xFFFFFFFFFFFFFF) * 1.000000) | stack]}))}
-  defp exec_inst(ctx, [a | stack], :f64_convert_s_i32), do: {ctx, [float_point_op(a * 1.000000) | stack]}))}
-  defp exec_inst(ctx, [a | stack], :f64_convert_u_i32), do: {ctx, [float_point_op(band(a, 0xFFFFFFFF) * 1.000000) | stack]}))}
+  defp exec_inst(ctx, [a | stack], :f32_convert_u_i64), do: {ctx, [float_point_op(band(a, 0xFFFFFFFFFFFFFF) * 1.000000) | stack]}
+  defp exec_inst(ctx, [a | stack], :f64_convert_s_i64), do: {ctx, [ float_point_op(a * 1.000000) | stack]}
+  defp exec_inst(ctx, [a | stack], :f64_convert_u_i64), do: {ctx, [ float_point_op(band(a, 0xFFFFFFFFFFFFFF) * 1.000000) | stack]}
+  defp exec_inst(ctx, [a | stack], :f64_convert_s_i32), do: {ctx, [float_point_op(a * 1.000000) | stack]}
+  defp exec_inst(ctx, [a | stack], :f64_convert_u_i32), do: {ctx, [float_point_op(band(a, 0xFFFFFFFF) * 1.000000) | stack]}
   defp exec_inst(ctx, [a | stack], :i64_extend_u_i32), do: {ctx, [round(:math.pow(2, 32) + a) | stack]}
   defp exec_inst(ctx, [a | stack], :i64_extend_s_i32), do: {ctx, [band(a, 0xFFFFFFFFFFFFFFFF) | stack]}
   defp exec_inst(ctx, [a | stack], :f32_demote_f64), do: {ctx, [float_demote(a * 1.0000000) | stack]}
   defp exec_inst(ctx, [a | stack], :f64_promote_f32), do: {ctx, [float_promote(a * 1.0000000) | stack]}
-  defp exec_inst(ctx, [value | stack], :i32_reinterpret_f32), do: {ctx, [reint(:f32, :i32, a) | stack]}
-  defp exec_inst(ctx, [value | stack], :i64_reinterpret_f32), do: {ctx, [reint(:f32, :i64, a) | stack]}
-  defp exec_inst(ctx, [value | stack], :f64_reinterpret_i64), do: {ctx, [reint(:f64, :i64, a) | stack]}
+  defp exec_inst(ctx, [value | stack], :i32_reinterpret_f32), do: {ctx, [reint(:f32, :i32, value) | stack]}
+  defp exec_inst(ctx, [value | stack], :i64_reinterpret_f32), do: {ctx, [reint(:f32, :i64, value) | stack]}
+  defp exec_inst(ctx, [value | stack], :f64_reinterpret_i64), do: {ctx, [reint(:f64, :i64, value) | stack]}
+  defp exec_inst(ctx, [value | stack], :f32_reinterpret_i32), do: {ctx, [reint(:f32, :i32, value) | stack]}
+
   ### End Wrapping & Trunc Operations
 
   ### BEGIN BIT & STRUCTURE
@@ -382,7 +388,7 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, stack, {:f32_const, f32}), do: {ctx, [f32 | stack]}
   defp exec_inst(ctx, stack, {:f64_const, f64}), do: {ctx, [f64 | stack]}
   defp exec_inst({frame, vm, n} = ctx, stack, {:get_local, idx}), do: {ctx, [elem(frame.locals, idx) | stack]}
-  defp exec_inst({frame, vm, n} = ctx, stack, {:get_global, idx}) do: {ctx, [Enum.at(vm.globals, idx) | stack]}
+  defp exec_inst({frame, vm, n} = ctx, stack, {:get_global, idx}), do: {ctx, [Enum.at(vm.globals, idx) | stack]}
   defp exec_inst({frame, vm, n}, [value | stack], {:set_global, idx}) do
     globals = List.replace_at(vm.globals, idx, value)
 
@@ -468,7 +474,7 @@ defmodule WaspVM.Executor do
        |> Enum.at(mem_addr)
        |> Memory.get_at(address + offset, 1)
 
-     {ctx, bin_wrap_unsigned(:i32, :i8, abs(i8) | stack]}
+     {ctx, [bin_wrap_unsigned(:i32, :i8, abs(i8)) | stack]}
    end
 
    defp exec_inst({frame, vm, n} = ctx, [address | stack], {:i32_load16_u, _alignment, offset}) do
@@ -479,7 +485,7 @@ defmodule WaspVM.Executor do
        |> Enum.at(mem_addr)
        |> Memory.get_at(address + offset, 2)
 
-     {ctx, [bin_wrap_unsigned(:i32, :i16, abs(i16) | stack]}
+     {ctx, [bin_wrap_unsigned(:i32, :i16, abs(i16)) | stack]}
    end
 
    defp exec_inst({frame, vm, n} = ctx, [address | stack], {:i64_load8_u, _alignment, offset}) do
@@ -490,7 +496,7 @@ defmodule WaspVM.Executor do
        |> Enum.at(mem_addr)
        |> Memory.get_at(address + offset, 1)
 
-     {ctx, [bin_wrap_unsigned(:i64, :i8, abs(i8) | stack]}
+     {ctx, [bin_wrap_unsigned(:i64, :i8, abs(i8)) | stack]}
    end
 
    defp exec_inst({frame, vm, n} = ctx, [address | stack], {:i64_load16_u, _alignment, offset}) do
@@ -501,7 +507,7 @@ defmodule WaspVM.Executor do
        |> Enum.at(mem_addr)
        |> Memory.get_at(address + offset, 2)
 
-     {ctx, [bin_wrap_unsigned(:i64, :i16, abs(i16) | stack]}
+     {ctx, [bin_wrap_unsigned(:i64, :i16, abs(i16)) | stack]}
    end
 
    defp exec_inst({frame, vm, n} = ctx, [address | stack], {:i64_load32_u, _alignment, offset}) do
@@ -512,7 +518,7 @@ defmodule WaspVM.Executor do
        |> Enum.at(mem_addr)
        |> Memory.get_at(address + offset, 4)
 
-     {ctx, [bin_wrap_unsigned(:i64, :i32, abs(i32) | stack]}
+     {ctx, [bin_wrap_unsigned(:i64, :i32, abs(i32)) | stack]}
    end
 
    defp exec_inst({frame, vm, n}, [value, address | stack], {:i32_store, _alignment, offset}) do
@@ -792,7 +798,7 @@ defmodule WaspVM.Executor do
   defp sign_value(integer, n, lower, upper) when integer > lower and integer < upper, do: :math.pow(2, 32) + integer
   defp sign_value(integer, n, lower, upper) when integer > -lower and integer < -upper, do: :math.pow(2, 32) + integer
 
-  defp popcnt(integer, 32) do: popcnt(<<integer::32>>)
+  defp popcnt(integer, 32), do: popcnt(<<integer::32>>)
   defp popcnt(integer, 64), do: popcnt(<<integer::64>>)
   defp popcnt(binary) do
     binary
