@@ -8,7 +8,7 @@ defmodule WaspVM.ExecutorTest do
   test "32 bit integers with add properly" do
     {:ok, pid} = WaspVM.start()
     WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-    assert WaspVM.execute(pid, "i32__add", [4, 2]) == 6
+    assert WaspVM.execute(pid, "i32__add", [4, 2]) == {:ok, 6}
   end
 
   test "64 bit integers with add properly" do
@@ -852,6 +852,22 @@ defmodule WaspVM.ExecutorTest do
       WaspVM.load_file(pid, "test/fixtures/wasm/compare.wasm")
       {status, answer} = WaspVM.execute(pid, "i64_eq_false", [])
       assert answer == 0
+    end
+
+    ### END COMPARE
+
+    ### START GAS SYSTEM
+
+    test "gas instantiates correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      WaspVM.execute(pid, "i32__add", [2, 4]) |> IO.inspect
+    end
+
+    test "gas instantiates with limit correctly" do
+      {:ok, pid} = WaspVM.start()
+      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
+      WaspVM.execute(pid, "i32__add", [2, 4], [gas_limit: 10]) |> IO.inspect
     end
 
 

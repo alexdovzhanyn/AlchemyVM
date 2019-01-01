@@ -63,8 +63,8 @@ defmodule WaspVM do
     been loaded in through a module using load_file/2 or load/2 previously
   """
   @spec execute(pid, String.t(), list) :: :ok | {:ok, any} | {:error, any}
-  def execute(ref, func, args \\ []) do
-    GenServer.call(ref, {:execute, func, args}, :infinity)
+  def execute(ref, func, args \\ [], opts \\ []) do
+    GenServer.call(ref, {:execute, func, args, opts}, :infinity)
   end
 
   @doc """
@@ -81,7 +81,7 @@ defmodule WaspVM do
     {:reply, {:ok, module}, Map.merge(vm, %{modules: modules, store: store})}
   end
 
-  def handle_call({:execute, fname, args}, _from, vm) do
+  def handle_call({:execute, fname, args, opts}, _from, vm) do
     {func_addr, _module} =
       vm.modules
       |> Map.values()
@@ -102,7 +102,12 @@ defmodule WaspVM do
     {reply, vm} =
       case func_addr do
         :not_found -> {{:error, :no_exported_function, fname}, vm}
-        addr -> execute_func(vm, addr, args)
+        addr ->
+          if opts[:gas_limit] == nil do
+            execute_func(vm, addr, args, {:gas_limit, :false})
+          else
+            execute_func(vm, addr, args, {:gas_limit, opts[:gas_limit]})
+          end
       end
 
     {:reply, reply, vm}
@@ -110,11 +115,11 @@ defmodule WaspVM do
 
   def handle_call(:vm_state, _from, vm), do: {:reply, vm, vm}
 
-  @spec execute_func(WaspVM, integer, list) :: tuple
-  defp execute_func(vm, addr, args) do
+  @spec execute_func(WaspVM, integer, list, tuple) :: tuple
+  defp execute_func(vm, addr, args, gas_limit) do
     stack = Enum.reduce(args, [], & [&1 | &2])
 
-    {vm, stack} = Executor.create_frame_and_execute(vm, addr, stack)
+    {vm, gas, stack} = Executor.create_frame_and_execute(vm, addr, stack, gas_limit)
 
     case vm do
       tuple when is_tuple(tuple) -> tuple
