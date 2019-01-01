@@ -861,13 +861,14 @@ defmodule WaspVM.ExecutorTest do
     test "gas instantiates correctly" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-      WaspVM.execute(pid, "i32__add", [2, 4]) |> IO.inspect
+      assert WaspVM.execute(pid, "i32__add", [2, 4]) == {:ok, 3, 6}
     end
 
     test "gas instantiates with limit correctly" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-      WaspVM.execute(pid, "i32__add", [2, 4], [gas_limit: 10])
+      WaspVM.execute(pid, "i32__add", [2, 4], [gas_limit: 1])
+      #assert WaspVM.execute(pid, "i32__add", [2, 4]) == {:ok, 0, 0}
     end
 
 

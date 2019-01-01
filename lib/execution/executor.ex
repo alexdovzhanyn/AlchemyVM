@@ -26,17 +26,27 @@ defmodule WaspVM.Executor do
 
     total_instr = map_size(instr)
 
-    execute(frame, vm, 0, stack, total_instr)
+
+    execute(frame, vm, 0, stack, total_instr, gas_limit)
+
   end
 
-  def execute(_frame, vm, gas, stack, total_instr, next_instr) when next_instr >= total_instr or next_instr < 0, do: {vm, gas, stack}
-  def execute(frame, vm, gas, stack, total_instr, next_instr \\ 0) do
+
+  # Use this if gas limit is enabled, allows us to catch the next instruction at a gas limit
+  def execute(_frame, vm, gas, stack, total_instr, gas_limit, next_instr) when next_instr >= total_instr or next_instr < 0, do: {vm, gas, stack}
+  def execute(frame, vm, gas, stack, total_instr, gas_limit, next_instr \\ 0) do
     %{^next_instr => instr} = frame.instructions
 
     {{frame, vm, next_instr}, gas, stack} = instruction(instr, frame, vm, gas, stack, next_instr)
-
-    execute(frame, vm, gas, stack, total_instr, next_instr + 1)
+    if gas_limit < gas do
+      execute(frame, vm, gas, stack, total_instr, next_instr + 1, gas_limit)
+    else
+      Logger.info "Reached Gas Limit"
+      {vm, gas, stack}
+    end
   end
+
+
 
   def instruction(opcode, f, v, g, s, n) when is_atom(opcode), do: exec_inst({f, v, n}, g, s, opcode)
   def instruction(opcode, f, v, g, s, n) when is_tuple(opcode), do: exec_inst({f, v, n}, g, s, opcode)
@@ -86,12 +96,12 @@ defmodule WaspVM.Executor do
   ### END PARAMETRIC INSTRUCTIONS
 
   ### BEGIN NUMERIC INSTRUCTIONS
-  defp exec_inst(ctx, gas, [b, a | stack], :i32_add), do: {ctx, gas, [(a + b) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], :i32_sub), do: {ctx, gas, [a - b | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], :i32_mul), do: {ctx, gas, [a * b | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], :i64_add), do: {ctx, gas, [a + b | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], :i64_sub), do: {ctx, gas, [a - b | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], :i64_mul), do: {ctx, gas, [a * b | stack]}
+  defp exec_inst(ctx, gas, [b, a | stack], :i32_add), do: {ctx, gas + 3, [(a + b) | stack]}
+  defp exec_inst(ctx, gas, [b, a | stack], :i32_sub), do: {ctx, gas + 3, [a - b | stack]}
+  defp exec_inst(ctx, gas, [b, a | stack], :i32_mul), do: {ctx, gas + 5, [a * b | stack]}
+  defp exec_inst(ctx, gas, [b, a | stack], :i64_add), do: {ctx, gas + 3, [a + b | stack]}
+  defp exec_inst(ctx, gas, [b, a | stack], :i64_sub), do: {ctx, gas + 3, [a - b | stack]}
+  defp exec_inst(ctx, gas, [b, a | stack], :i64_mul), do: {ctx, gas + 5, [a * b | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], :i64_le_s) when a <= b, do: {ctx, gas, [1 | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], :i64_ge_s) when a >= b, do: {ctx, gas, [1 | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], :i32_lt_u) when a < b, do: {ctx, gas, [1 | stack]}

@@ -104,9 +104,9 @@ defmodule WaspVM do
         :not_found -> {{:error, :no_exported_function, fname}, vm}
         addr ->
           if opts[:gas_limit] == nil do
-            execute_func(vm, addr, args, {:gas_limit, :false})
+            execute_func(vm, addr, args, false)
           else
-            execute_func(vm, addr, args, {:gas_limit, opts[:gas_limit]})
+            execute_func(vm, addr, args, opts[:gas_limit])
           end
       end
 
@@ -115,7 +115,7 @@ defmodule WaspVM do
 
   def handle_call(:vm_state, _from, vm), do: {:reply, vm, vm}
 
-  @spec execute_func(WaspVM, integer, list, tuple) :: tuple
+  @spec execute_func(WaspVM, integer, list, boolean) :: tuple
   defp execute_func(vm, addr, args, gas_limit) do
     stack = Enum.reduce(args, [], & [&1 | &2])
 
