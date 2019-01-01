@@ -11,7 +11,9 @@ defmodule WaspVM.Module do
             table: nil,
             start: nil,
             functions: [],
+            elements: [],
             globals: [],
+            data: [],
             custom: %{}
 
   @moduledoc false

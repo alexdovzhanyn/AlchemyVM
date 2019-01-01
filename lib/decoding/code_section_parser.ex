@@ -6,15 +6,12 @@ defmodule WaspVM.Decoder.CodeSectionParser do
 
   @moduledoc false
 
-  def parse(module) do
-    {count, bodies} =
-      module.sections
-      |> Map.get(10)
-      |> LEB128.decode_unsigned()
+  def parse(section) do
+    {count, bodies} = LEB128.decode_unsigned(section)
 
     bodies = if count > 0, do: parse_bodies(bodies), else: []
 
-    Map.put(module, :functions, Enum.reverse(bodies))
+    {:functions, Enum.reverse(bodies)}
   end
 
   defp parse_bodies(bodies), do: parse_bodies([], bodies)

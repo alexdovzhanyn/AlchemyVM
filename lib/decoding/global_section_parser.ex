@@ -2,20 +2,25 @@ defmodule WaspVM.Decoder.GlobalSectionParser do
   alias WaspVM.LEB128
   alias WaspVM.OpCodes
   alias WaspVM.Module
-  alias WaspVM.Decoder.InstructionParser
+  alias WaspVM.Decoder.Util
   require IEx
 
   @moduledoc false
 
-  def parse(module) do
-    {count, entries} =
-      module.sections
-      |> Map.get(6)
-      |> LEB128.decode_unsigned()
+  def parse(section) do
+    {count, entries} = LEB128.decode_unsigned(section)
 
-    globals = if count > 0, do: Enum.reverse(parse_entries(entries)), else: []
+    globals =
+      if count > 0 do
+        entries
+        |> parse_entries()
+        |> Enum.reverse()
+        |> resolve_globals()
+      else
+        []
+      end
 
-    Map.put(module, :globals, globals)
+    {:globals, globals}
   end
 
   defp parse_entries(entries), do: parse_entries([], entries)
@@ -30,39 +35,19 @@ defmodule WaspVM.Decoder.GlobalSectionParser do
 
     mutable = mutability == 1
 
-    {initial, entries} = evaluate_init_expr(entries)
+    {initial, entries} = Util.evaluate_init_expr(entries)
 
     global = %{type: type, mutable: mutable, initial: initial}
 
     parse_entries([global | parsed], entries)
   end
 
-  # In the MVP, to keep things simple while still supporting the basic
-  # needs of dynamic linking, initializer expressions are restricted to
-  # the four constant operators and get_global, where the global index
-  # must refer to an immutable import.
-  defp evaluate_init_expr(entries), do: evaluate_init_expr([], entries)
-  defp evaluate_init_expr(parsed, bytecode) do
-    <<opcode::bytes-size(1), bytecode::binary>> = bytecode
+  defp resolve_globals(globals), do: Enum.map(globals, & resolve_global(&1, globals))
 
-    {instruction, bytecode} =
-      opcode
-      |> OpCodes.encode_instr()
-      |> InstructionParser.parse_instruction(bytecode)
-
-    if instruction == :end do
-      # Should only be one instruction in the MVP, no other combination is valid
-      [{instr, val}] = parsed
-
-      if instr == :get_global do
-        raise "Not implemented: :get_global in init expression"
-      else
-        {val, bytecode}
-      end
-    else
-      evaluate_init_expr([instruction | parsed], bytecode)
-    end
+  defp resolve_global(%{initial: i} = glob, _globals) when is_number(i), do: glob
+  defp resolve_global(%{initial: [{_, i}]}, globals) do
+    globals
+    |> Enum.at(i)
+    |> resolve_global(globals)
   end
-
-
 end

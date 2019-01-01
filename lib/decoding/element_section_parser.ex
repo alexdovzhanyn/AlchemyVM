@@ -1,20 +1,16 @@
 defmodule WaspVM.Decoder.ElementSectionParser do
   alias WaspVM.LEB128
+  alias WaspVM.Decoder.Util
   require IEx
 
   @moduledoc false
 
-  def parse(module) do
-    raise "Element section parser not implemented"
-
-    {count, entries} =
-      module.sections
-      |> Map.get(9)
-      |> LEB128.decode_unsigned()
+  def parse(section) do
+    {count, entries} = LEB128.decode_unsigned(section)
 
     entries = if count > 0, do: parse_entries(entries), else: []
 
-    Map.put(module, :elements, entries)
+    {:elements, entries}
   end
 
   defp parse_entries(entries), do: parse_entries([], entries)
@@ -22,10 +18,22 @@ defmodule WaspVM.Decoder.ElementSectionParser do
 
   defp parse_entries(parsed, entries) do
     {index, entries} = LEB128.decode_unsigned(entries)
+    {offset, entries} = Util.evaluate_init_expr(entries)
+    {count, entries} = LEB128.decode_unsigned(entries)
 
-    end_opcode = 0x0b
+    {indices, entries} = if count > 0, do: parse_indices(entries, count), else: []
 
-    IEx.pry
+    entry = %{table_idx: index, offset: offset, indices: indices}
+
+    parse_entries([entry | parsed], entries)
+  end
+
+  defp parse_indices(bin, count), do: parse_indices([], bin, count)
+  defp parse_indices(parsed, bin, 0), do: {parsed, bin}
+  defp parse_indices(parsed, bin, count) do
+    {idx, rest} = LEB128.decode_unsigned(bin)
+
+    parse_indices([idx | parsed], rest, count - 1)
   end
 
 end

@@ -12,51 +12,61 @@ defmodule WaspVM.Decoder do
   alias WaspVM.Decoder.ElementSectionParser
   alias WaspVM.Decoder.CodeSectionParser
   alias WaspVM.Decoder.CustomSectionParser
+  alias WaspVM.Decoder.DataSectionParser
   require IEx
 
   @moduledoc false
 
-  def decode_file(file_path) do
+  def decode_file(file_path, parallel \\ true) do
     {:ok, bin} = File.read(file_path)
 
-    decode(bin)
+    decode(bin, parallel)
   end
 
-  @doc false
-  def decode(bin) when is_binary(bin), do: do_decode(%Module{}, bin)
+  def decode(bin, parallel \\ true)
+  def decode(bin, parallel) when is_binary(bin), do: begin_split(bin, parallel)
 
-  @doc false
-  def decode(bin) do
+  def decode(bin, _parallel) do
     {fun, arity} = __ENV__.function
     raise "Invalid data provided for #{fun}/#{arity}. Must be binary, got: #{inspect(bin)}"
   end
 
-  defp do_decode(module, <<>>), do: module
-
-  defp do_decode(module, bin) when module == %Module{} do
+  defp begin_split(bin, parallel) do
     <<magic::bytes-size(4), version::bytes-size(4), rest::binary>> = bin
 
     if magic != <<0, 97, 115, 109>> do
       raise "Malformed or incomplete binary"
     else
-      do_decode(%Module{magic: magic, version: version}, rest)
+      %Module{magic: magic, version: version}
+      |> split_sections(rest, parallel)
+      |> resolve_globals()
     end
   end
 
-  defp do_decode(module, bin) do
+  defp split_sections(module, <<>>, true), do: parallel_decode(module)
+  defp split_sections(module, <<>>, false), do: module
+
+  defp split_sections(module, bin, parallel) do
     <<section_code, rest::binary>> = bin
 
-    {unparsed_section, rest} = decode_section(section_code, rest)
+    {unparsed_section, rest} = split_section(section_code, rest)
+
+    module = Module.add_section(module, section_code, unparsed_section)
 
     module =
-      module
-      |> Module.add_section(section_code, unparsed_section)
-      |> parse_section(section_code)
+      if !parallel do
+        section = Map.get(module.sections, section_code)
+        {k, v} = parse_section({section_code, section})
 
-    do_decode(module, rest)
+        Map.put(module, k, v)
+      else
+        module
+      end
+
+    split_sections(module, rest, parallel)
   end
 
-  defp decode_section(sec_code, bin) when sec_code >= 0 do
+  defp split_section(sec_code, bin) when sec_code >= 0 do
     {size, rest} = LEB128.decode_unsigned(bin)
 
     <<section::bytes-size(size), rest::binary>> = rest
@@ -64,17 +74,42 @@ defmodule WaspVM.Decoder do
     {section, rest}
   end
 
-  defp parse_section(module, 0), do: CustomSectionParser.parse(module)
-  defp parse_section(module, 1), do: TypeSectionParser.parse(module)
-  defp parse_section(module, 2), do: ImportSectionParser.parse(module)
-  defp parse_section(module, 3), do: FunctionSectionParser.parse(module)
-  defp parse_section(module, 4), do: TableSectionParser.parse(module)
-  defp parse_section(module, 5), do: MemorySectionParser.parse(module)
-  defp parse_section(module, 6), do: GlobalSectionParser.parse(module)
-  defp parse_section(module, 7), do: ExportSectionParser.parse(module)
-  defp parse_section(module, 8), do: StartSectionParser.parse(module)
-  defp parse_section(module, 9), do: ElementSectionParser.parse(module)
-  defp parse_section(module, 10), do: CodeSectionParser.parse(module)
-  defp parse_section(module, _), do: module
+  defp parallel_decode(module) do
+    module.sections
+    |> Task.async_stream(&parse_section/1, timeout: :infinity, max_concurrency: 12)
+    |> Enum.reduce(module, fn {:ok, {k, v}}, a -> Map.put(a, k, v) end)
+  end
 
+  defp resolve_globals(module) do
+    resolve = fn v ->
+      if !is_number(v.offset) do
+        [{:get_global, i}] = v.offset
+
+        val = Enum.at(module.globals, i).initial
+
+        Map.put(v, :offset, val)
+      else
+        v
+      end
+    end
+
+    elements = Enum.map(module.elements, & resolve.(&1))
+    data = Enum.map(module.data, & resolve.(&1))
+
+    Map.merge(module, %{elements: elements, data: data})
+  end
+
+  defp parse_section({0, section}), do: CustomSectionParser.parse(section)
+  defp parse_section({1, section}), do: TypeSectionParser.parse(section)
+  defp parse_section({2, section}), do: ImportSectionParser.parse(section)
+  defp parse_section({3, section}), do: FunctionSectionParser.parse(section)
+  defp parse_section({4, section}), do: TableSectionParser.parse(section)
+  defp parse_section({5, section}), do: MemorySectionParser.parse(section)
+  defp parse_section({6, section}), do: GlobalSectionParser.parse(section)
+  defp parse_section({7, section}), do: ExportSectionParser.parse(section)
+  defp parse_section({8, section}), do: StartSectionParser.parse(section)
+  defp parse_section({9, section}), do: ElementSectionParser.parse(section)
+  defp parse_section({10, section}), do: CodeSectionParser.parse(section)
+  defp parse_section({11, section}), do: DataSectionParser.parse(section)
+  defp parse_section({_, section}), do: section
 end

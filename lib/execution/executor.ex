@@ -13,9 +13,7 @@ defmodule WaspVM.Executor do
   def create_frame_and_execute(vm, addr, stack \\ []) do
     {{inputs, _outputs}, module_ref, instr, locals} = elem(vm.store.funcs, addr)
 
-    # We don't need the stack that was passed in anymore at this point, it's
-    # safe to discard it since we'll just use an empty new stack from here on out.
-    args = Enum.take(stack, tuple_size(inputs))
+    {args, stack} = Enum.split(stack, tuple_size(inputs))
 
 
     %{^module_ref => module} = vm.modules
@@ -25,10 +23,10 @@ defmodule WaspVM.Executor do
       instructions: instr,
       locals: List.to_tuple([args | locals])
     }
-      
+
     total_instr = map_size(instr)
 
-    execute(frame, vm, [], total_instr)
+    execute(frame, vm, stack, total_instr)
   end
 
   def execute(_frame, vm, stack, total_instr, next_instr) when next_instr >= total_instr or next_instr < 0, do: {vm, stack}
@@ -138,7 +136,7 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, [_, _ | stack], :i64_ge_s), do: {ctx, [0 | stack]}
   defp exec_inst(ctx, [_, _ | stack], :i32_lt_u), do: {ctx, [0 | stack]}
   defp exec_inst(ctx, [_, _ | stack], :i64_lt_u), do: {ctx, [0 | stack]}
-  defp exec_inst(ctx, [_, _ | stack], :i32_gt_u), do: {ctx, [1 | stack]}
+  defp exec_inst(ctx, [_, _ | stack], :i32_gt_u), do: {ctx, [0 | stack]}
   defp exec_inst(ctx, [_, _ | stack], :i64_gt_u), do: {ctx, [0 | stack]}
   defp exec_inst(ctx, [_, _ | stack], :i32_le_u), do: {ctx, [0 | stack]}
   defp exec_inst(ctx, [_, _ | stack], :i64_le_u), do: {ctx, [0 | stack]}
@@ -190,6 +188,9 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, [b, a | stack], :f32_div), do: {ctx, [float_point_op(a / b) | stack]}
   defp exec_inst(ctx, [a | stack], :i32_popcnt), do: {ctx, [popcnt(a, 32) | stack]}
   defp exec_inst(ctx, [a | stack], :i64_popcnt), do: {ctx, [popcnt(a, 64) | stack]}
+  defp exec_inst(ctx, [a | stack], :f32_ceil), do: {ctx, [float_point_op(Float.ceil(a)) | stack]}
+  defp exec_inst(ctx, [a | stack], :f64_ceil), do: {ctx, [float_point_op(Float.ceil(a)) | stack]}
+
   defp exec_inst(ctx, [b | _], :i32_div_u) when b == 0, do: {:error, :undefined}
   defp exec_inst(ctx, [b | _], :i32_rem_s) when b == 0, do: {:error, :undefined}
   defp exec_inst(ctx, [b | _], :i64_rem_s) when b == 0, do: {:error, :undefined}
@@ -202,10 +203,10 @@ defmodule WaspVM.Executor do
     j2 = sign_value(b, 32)
 
     if j2 == 0 do
-      {:error, :undefined}
+      trap("Divide by zero in i32.div_s")
     else
       if j1 / j2 == 2147483648 do
-        {:error, :undefined}
+        trap("Out of bounds in i32.div_s")
       else
         res = trunc(j1 / j2)
         ans = sign_value(res, 32)
@@ -220,10 +221,10 @@ defmodule WaspVM.Executor do
     j2 = sign_value(b, 64)
 
     if j2 == 0 do
-      {:error, :undefined}
+      trap("Divide by zero in i64.div_s")
     else
       if j1 / j2 == 9.223372036854776e18 do
-        {:error, :undefined}
+        trap("Out of bounds in i64.div_s")
       else
         res = trunc(j1 / j2)
         ans = sign_value(res, 64)
@@ -233,12 +234,14 @@ defmodule WaspVM.Executor do
     end
   end
 
+  defp exec_inst(ctx, [b | _], :i32_div_u) when b == 0, do: trap("Divide by zero in i32.div_u")
   defp exec_inst(ctx, [b, a | stack], :i32_div_u) do
     rem = a - (b * trunc(a / b))
     result = Integer.floor_div((a - rem), b)
     {ctx, [result | stack]}
   end
 
+  defp exec_inst(ctx, [b | _], :i32_rem_s) when b == 0, do: trap("Divide by zero in i32.rem_s")
   defp exec_inst(ctx, [b, a | stack], :i32_rem_s) do
     j1 = sign_value(a, 32)
     j2 = sign_value(b, 32)
@@ -248,7 +251,7 @@ defmodule WaspVM.Executor do
     {ctx, [rem | stack]}
   end
 
-
+  defp exec_inst(ctx, [b | _], :i64_rem_s) when b == 0, do: trap("Divide by zero in i64.rem_s")
   defp exec_inst(ctx, [b, a | stack], :i64_rem_s) do
     j1 = sign_value(a, 64)
     j2 = sign_value(b, 64)
@@ -259,13 +262,15 @@ defmodule WaspVM.Executor do
     {ctx, [res | stack]}
   end
 
-
+  defp exec_inst(ctx, [b | _], :i64_div_u) when b == 0, do: trap("Divide by zero in i64.div_u")
   defp exec_inst(ctx, [b, a | stack], :i64_div_u) do
     rem = a - (b * trunc(a / b))
     result = Integer.floor_div((a - rem), b)
     {ctx, [result | stack]}
   end
 
+
+  defp exec_inst(ctx, [b | _], :i32_rem_u) when b == 0, do: trap("Divide by zero in i32.rem_u")
   defp exec_inst(ctx, [b, a | stack], :i32_rem_u) do
     c =
       a
@@ -278,7 +283,7 @@ defmodule WaspVM.Executor do
     {ctx, [res | stack]}
   end
 
-
+  defp exec_inst(ctx, [b | _], :i64_rem_u) when b == 0, do: trap("Divide by zero in i64.rem_u")
   defp exec_inst(ctx, [b, a | stack], :i64_rem_u) do
     c =
       a
@@ -415,13 +420,16 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm, n} = ctx, [address | stack], {:i32_load8_s, _alignment, offset}) do
     mem_addr = hd(frame.module.memaddrs)
 
-    <<i8::8>> =
+      <<i8::8>> =
       vm.store.mems
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 1)
 
     {ctx, [bin_wrap_signed(:i32, :i8, i8) | stack]}
   end
+
+
+
 
   defp exec_inst({frame, vm, n} = ctx, [address | stack], {:i32_load16_s, _alignment, offset}) do
     mem_addr = hd(frame.module.memaddrs)
@@ -856,6 +864,8 @@ defmodule WaspVM.Executor do
       end
     end
   end
+
+  defp trap(reason), do: raise "Runtime Error -- #{reason}"
 
   defp check_value([0, 0, 0, 0]), do: 4
   defp check_value([0, 0, 0, _]), do: 3

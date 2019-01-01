@@ -20,6 +20,56 @@ defmodule WaspVM.Decoder.InstructionParser do
     {{:br_table, target_table, default_target}, rest}
   end
 
+#################### NOT COMPLETED ###############################
+
+  def parse_instruction(:i32_load8_s, bytecode), do: get_two_values(:i32_load8_s, bytecode)
+  def parse_instruction(:i32_load8_u, bytecode), do: get_two_values(:i32_load8_u, bytecode)
+  def parse_instruction(:i32_load16_u, bytecode), do: get_two_values(:i32_load16_u, bytecode)
+  def parse_instruction(:i32_load16_s, bytecode), do: get_two_values(:i32_load16_s, bytecode)
+  def parse_instruction(:i64_load8_s, bytecode), do: get_two_values(:i64_load8_s, bytecode)
+  def parse_instruction(:i64_load8_u, bytecode), do: get_two_values(:i64_load8_u, bytecode)
+  def parse_instruction(:i64_load16_s, bytecode), do: get_two_values(:i64_load16_s, bytecode)
+  def parse_instruction(:i64_load16_u, bytecode), do: get_two_values(:i64_load16_u, bytecode)
+  def parse_instruction(:i64_load32_s, bytecode), do: get_two_values(:i64_load32_s, bytecode)
+  def parse_instruction(:i64_load32_u, bytecode), do: get_two_values(:i64_load32_u, bytecode)
+  def parse_instruction(:i32_store8, bytecode), do: get_two_values(:i32_store8, bytecode)
+  def parse_instruction(:i32_store16, bytecode), do: get_two_values(:i32_store16, bytecode)
+  def parse_instruction(:i64_store8, bytecode), do: get_two_values(:i64_store8, bytecode)
+  def parse_instruction(:i64_store16, bytecode), do: get_two_values(:i64_store16, bytecode)
+  def parse_instruction(:i64_store32, bytecode), do: get_two_values(:i64_store32, bytecode)
+
+  def parse_instruction(:i32_wrap_i64, bytecode), do: {:i32_wrap_i64, bytecode}
+  def parse_instruction(:i32_trunc_s_f32, bytecode), do: {:i32_trunc_s_f32, bytecode}
+  def parse_instruction(:i32_trunc_u_f32, bytecode), do: {:i32_trunc_u_f32, bytecode}
+  def parse_instruction(:i32_trunc_s_f64, bytecode), do: {:i32_trunc_s_f64, bytecode}
+  def parse_instruction(:i32_trunc_u_f64, bytecode), do: {:i32_trunc_u_f64, bytecode}
+  def parse_instruction(:i64_extend_s_i32, bytecode), do: {:i64_extend_s_i32, bytecode}
+  def parse_instruction(:i64_extend_u_i32, bytecode), do: {:i64_extend_u_i32, bytecode}
+  def parse_instruction(:i64_trunc_s_f32, bytecode), do: {:i64_trunc_s_f32, bytecode}
+  def parse_instruction(:i64_trunc_u_f32, bytecode), do: {:i64_trunc_u_f32, bytecode}
+  def parse_instruction(:i64_trunc_s_f64, bytecode), do: {:i64_trunc_s_f64, bytecode}
+  def parse_instruction(:i64_trunc_u_f64, bytecode), do: {:i64_trunc_u_f64, bytecode}
+  def parse_instruction(:f32_convert_s_i32, bytecode), do: {:f32_convert_s_i32, bytecode}
+  def parse_instruction(:f32_convert_u_i32, bytecode), do: {:f32_convert_u_i32, bytecode}
+  def parse_instruction(:f32_convert_s_i64, bytecode), do: {:f32_convert_s_i64, bytecode}
+  def parse_instruction(:f32_convert_u_i64, bytecode), do: {:f32_convert_u_i64, bytecode}
+  def parse_instruction(:f32_demote_f64, bytecode), do: {:f32_demote_f64, bytecode}
+  def parse_instruction(:f64_convert_s_i32, bytecode), do: {:f64_convert_s_i32, bytecode}
+  def parse_instruction(:f64_convert_u_i32, bytecode), do: {:f64_convert_u_i32, bytecode}
+  def parse_instruction(:f64_convert_s_i64, bytecode), do: {:f64_convert_s_i64, bytecode}
+  def parse_instruction(:f64_convert_u_i64, bytecode), do: {:f64_convert_u_i64, bytecode}
+  def parse_instruction(:f64_promote_f32, bytecode), do: {:f64_promote_f32, bytecode}
+  def parse_instruction(:i32_reinterpret_f32, bytecode), do: {:i32_reinterpret_f32, bytecode}
+  def parse_instruction(:i64_reinterpret_f64, bytecode), do: {:i64_reinterpret_f64, bytecode}
+  def parse_instruction(:f32_reinterpret_i32, bytecode), do: {:f32_reinterpret_i32, bytecode}
+  def parse_instruction(:f64_reinterpret_i64, bytecode), do: {:f64_reinterpret_i64, bytecode}
+
+
+  def parse_instruction(:return, bytecode), do: {:return, bytecode}
+  def parse_instruction(:memory_size, bytecode), do: {:memory_size, bytecode}
+  def parse_instruction(:memory_grow, bytecode), do: {:memory_grow, bytecode}
+
+
   #################### COMPLETED WITH NOTES ###############################
   def parse_instruction(:memory_size, bytecode), do: {:memory_size, bytecode} # Done
   def parse_instruction(:memory_grow, bytecode), do: {:memory_grow, bytecode} # Done
@@ -75,8 +125,6 @@ defmodule WaspVM.Decoder.InstructionParser do
   def parse_instruction(:drop, bytecode), do: {:drop, bytecode} # Done
   def parse_instruction(:i64_clz, bytecode), do: {:i64_clz, bytecode} # Done
   def parse_instruction(:i64_ctz, bytecode), do: {:i64_ctz, bytecode} # Done
-  def parse_instruction(:i32_clz, bytecode), do: {:i32_clz, bytecode} # Done
-  def parse_instruction(:i32_ctz, bytecode), do: {:i32_ctz, bytecode} # Done
   def parse_instruction(:i32_ge_u, bytecode), do: {:i32_ge_u, bytecode} # Done
   def parse_instruction(:i64_ge_u, bytecode), do: {:i64_ge_u, bytecode} # Done
   def parse_instruction(:i32_le_u, bytecode), do: {:i32_le_u, bytecode} # Done
@@ -224,7 +272,6 @@ defmodule WaspVM.Decoder.InstructionParser do
     <<little_endian::bytes-size(8), rest::binary>> = bytecode
 
     <<val::64-float>> = little_to_big(little_endian)
-
     {{opcode, val}, rest}
   end
 
@@ -243,9 +290,13 @@ defmodule WaspVM.Decoder.InstructionParser do
     get_entries([entry | entries], bin, count - 1)
   end
 
-  defp little_to_big(bin) do
-    bin
-    |> :binary.decode_unsigned(:little)
-    |> :binary.encode_unsigned(:big)
+  def little_to_big(bin) do
+    if :binary.decode_unsigned(bin) != 0 do
+      bin
+      |> :binary.decode_unsigned(:little)
+      |> :binary.encode_unsigned(:big)
+    else
+      bin
+    end
   end
 end
