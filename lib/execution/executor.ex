@@ -535,7 +535,6 @@ defmodule WaspVM.Executor do
 
      mem =
        vm.store.mems
-       |> IO.inspect
        |> Enum.at(mem_addr)
        |> Memory.put_at(address + offset, <<wrap_to_value(:i8, value)::8>>)
 
