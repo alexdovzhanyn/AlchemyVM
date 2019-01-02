@@ -35,10 +35,9 @@ defmodule WaspVM.Executor do
   # Use this if gas limit is enabled, allows us to catch the next instruction at a gas limit
   def execute(_frame, vm, gas, stack, total_instr, gas_limit, next_instr) when next_instr >= total_instr or next_instr < 0, do: {vm, gas, stack}
   def execute(frame, vm, gas, stack, total_instr, gas_limit, next_instr \\ 0) do
-    %{^next_instr => instr} = frame.instructions
-
+    if gas < gas_limit do
+      %{^next_instr => instr} = frame.instructions
     {{frame, vm, next_instr}, gas, stack} = instruction(instr, frame, vm, gas, stack, next_instr)
-    if gas_limit < gas do
       execute(frame, vm, gas, stack, total_instr, next_instr + 1, gas_limit)
     else
       Logger.info "Reached Gas Limit"
@@ -50,6 +49,7 @@ defmodule WaspVM.Executor do
 
   def instruction(opcode, f, v, g, s, n) when is_atom(opcode), do: exec_inst({f, v, n}, g, s, opcode)
   def instruction(opcode, f, v, g, s, n) when is_tuple(opcode), do: exec_inst({f, v, n}, g, s, opcode)
+
 
   defp exec_inst(ctx, gas, [_ | stack], :drop), do: {ctx, gas, stack}
   defp exec_inst(ctx, gas, stack, {:br, label_idx}), do: break_to(ctx, gas, stack, label_idx)
@@ -375,10 +375,10 @@ defmodule WaspVM.Executor do
 
 
   ### Memory Operations
-  defp exec_inst(ctx, gas, stack, {:i32_const, i32}), do: {ctx, gas, [i32 | stack]}
-  defp exec_inst(ctx, gas, stack, {:i64_const, i64}), do: {ctx, gas, [i64 | stack]}
-  defp exec_inst(ctx, gas, stack, {:f32_const, f32}), do: {ctx, gas, [f32 | stack]}
-  defp exec_inst(ctx, gas, stack, {:f64_const, f64}), do: {ctx, gas, [f64 | stack]}
+  defp exec_inst(ctx, gas, stack, {:i32_const, i32}), do: {ctx, gas + 3, [i32 | stack]}
+  defp exec_inst(ctx, gas, stack, {:i64_const, i64}), do: {ctx, gas + 3, [i64 | stack]}
+  defp exec_inst(ctx, gas, stack, {:f32_const, f32}), do: {ctx, gas + 3, [f32 | stack]}
+  defp exec_inst(ctx, gas, stack, {:f64_const, f64}), do: {ctx, gas + 3, [f64 | stack]}
   defp exec_inst({frame, vm, n} = ctx, gas, stack, {:get_local, idx}), do: {ctx, gas + 3, [elem(frame.locals, idx) | stack]}
   defp exec_inst({frame, vm, n} = ctx, gas, stack, {:get_global, idx}), do: {ctx, gas + 3, [Enum.at(vm.globals, idx) | stack]}
   defp exec_inst({frame, vm, n}, gas, [value | stack], {:set_global, idx}) do

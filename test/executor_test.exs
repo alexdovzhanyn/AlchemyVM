@@ -866,8 +866,11 @@ defmodule WaspVM.ExecutorTest do
 
     test "gas instantiates with limit correctly" do
       {:ok, pid} = WaspVM.start()
-      WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
-      WaspVM.execute(pid, "i32__add", [2, 4], [gas_limit: 1])
+      WaspVM.load_file(pid, "test/fixtures/wasm/add_2.wasm")
+      {status, gas_cost, stack_value} =  WaspVM.execute(pid, "_Z3addPi", [4], [gas_limit: 10])
+
+      assert gas_cost == 3
+      assert stack_value == 4
       #assert WaspVM.execute(pid, "i32__add", [2, 4]) == {:ok, 0, 0}
     end
 
