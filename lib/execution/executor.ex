@@ -32,13 +32,14 @@ defmodule WaspVM.Executor do
   end
 
 
-  # Use this if gas limit is enabled, allows us to catch the next instruction at a gas limit
+  # What happens is we pass in the main limit for the gas & the gas_limit, then every iteration before we procedd we check the gas limit and the returned op_gas (gas accumulted from executing that opcode)
   def execute(_frame, vm, gas, stack, total_instr, gas_limit, next_instr) when next_instr >= total_instr or next_instr < 0, do: {vm, gas, stack}
   def execute(frame, vm, gas, stack, total_instr, gas_limit, next_instr \\ 0) do
-    if gas < gas_limit do
-      %{^next_instr => instr} = frame.instructions
-    {{frame, vm, next_instr}, gas, stack} = instruction(instr, frame, vm, gas, stack, next_instr)
-      execute(frame, vm, gas, stack, total_instr, next_instr + 1, gas_limit)
+    %{^next_instr => instr} = frame.instructions
+    {{frame, vm, next_instr}, op_gas, stack} = instruction(instr, frame, vm, gas, stack, next_instr)
+
+    if op_gas < gas_limit do
+      execute(frame, vm, op_gas, stack, total_instr, next_instr + 1, gas_limit)
     else
       Logger.info "Reached Gas Limit"
       {vm, gas, stack}
