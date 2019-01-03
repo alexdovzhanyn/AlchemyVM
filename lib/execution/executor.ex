@@ -10,11 +10,10 @@ defmodule WaspVM.Executor do
 
   # Reference for tests being used: https://github.com/WebAssembly/wabt/tree/master/test
 
-  def create_frame_and_execute(vm, addr, stack \\ [], gas_limit) do
+  def create_frame_and_execute(vm, addr, gas_limit, stack \\ []) do
     {{inputs, _outputs}, module_ref, instr, locals} = elem(vm.store.funcs, addr)
 
     {args, stack} = Enum.split(stack, tuple_size(inputs))
-
 
     %{^module_ref => module} = vm.modules
 
@@ -26,31 +25,23 @@ defmodule WaspVM.Executor do
 
     total_instr = map_size(instr)
 
-
     execute(frame, vm, 0, stack, total_instr, gas_limit)
-
   end
 
-
-  # What happens is we pass in the main limit for the gas & the gas_limit, then every iteration before we procedd we check the gas limit and the returned op_gas (gas accumulted from executing that opcode)
+  # What happens is we pass in the main limit for the gas & the gas_limit,
+  # then every iteration before we procedd we check the gas limit and the
+  # returned op_gas (gas accumulted from executing that opcode)
+  def execute(_frame, vm, gas, stack, _total, gas_limit, _next) when gas >= gas_limit, do: {:error, :reached_gas_limit}
   def execute(_frame, vm, gas, stack, total_instr, gas_limit, next_instr) when next_instr >= total_instr or next_instr < 0, do: {vm, gas, stack}
   def execute(frame, vm, gas, stack, total_instr, gas_limit, next_instr \\ 0) do
     %{^next_instr => instr} = frame.instructions
     {{frame, vm, next_instr}, op_gas, stack} = instruction(instr, frame, vm, gas, stack, next_instr)
 
-    if op_gas < gas_limit do
-      execute(frame, vm, op_gas, stack, total_instr, next_instr + 1, gas_limit)
-    else
-      Logger.info "Reached Gas Limit"
-      {vm, gas, stack}
-    end
+    execute(frame, vm, op_gas, stack, total_instr, next_instr + 1, gas_limit)
   end
-
-
 
   def instruction(opcode, f, v, g, s, n) when is_atom(opcode), do: exec_inst({f, v, n}, g, s, opcode)
   def instruction(opcode, f, v, g, s, n) when is_tuple(opcode), do: exec_inst({f, v, n}, g, s, opcode)
-
 
   defp exec_inst(ctx, gas, [_ | stack], :drop), do: {ctx, gas, stack}
   defp exec_inst(ctx, gas, stack, {:br, label_idx}), do: break_to(ctx, gas, stack, label_idx)
@@ -188,7 +179,6 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, gas, [a | stack], :i64_popcnt), do: {ctx, gas + 5, [popcnt(a, 64) | stack]}
   defp exec_inst(ctx, gas, [a | stack], :f32_ceil), do: {ctx, gas + 5, [float_point_op(Float.ceil(a)) | stack]}
   defp exec_inst(ctx, gas, [a | stack], :f64_ceil), do: {ctx, gas + 5, [float_point_op(Float.ceil(a)) | stack]}
-
   defp exec_inst(ctx, gas, [b | _], :i32_div_u) when b == 0, do: {:error, :undefined}
   defp exec_inst(ctx, gas, [b | _], :i32_rem_s) when b == 0, do: {:error, :undefined}
   defp exec_inst(ctx, gas, [b | _], :i64_rem_s) when b == 0, do: {:error, :undefined}
@@ -339,6 +329,7 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, gas, [b, a | stack], :i64_shr_u), do: {ctx, gas + 5, [bsr(a, b) | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], :i32_shr_s), do: {ctx, gas + 5, [bsr(a, Integer.mod(b, 32)) | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], :i64_shr_s), do: {ctx, gas + 5, [bsr(a, Integer.mod(b, 64)) | stack]}
+
   defp exec_inst(ctx, gas, [b, a | stack], :i32_le_s) do
     val = if sign_value(a, 32) <= sign_value(b, 32), do: 1, else: 0
     {ctx, gas + 3, [val | stack]}
@@ -892,22 +883,23 @@ defmodule WaspVM.Executor do
   defp bin_wrap(:i8, integer), do: :binary.decode_unsigned(<<integer::8>>)
   defp bin_wrap(:i16, integer), do: :binary.decode_unsigned(<<integer::16>>)
   defp bin_wrap(:i32, integer), do: :binary.decode_unsigned(<<integer::32>>)
+
   defp bin_wrap_signed(:i32, :i8, integer), do: bin_wrap(:i8, integer) && 0xFFFFFFFF
   defp bin_wrap_signed(:i32, :i16, integer), do: bin_wrap(:i16, integer) && 0xFFFFFFFF
   defp bin_wrap_signed(:i64, :i8, integer), do: bin_wrap(:i8, integer) && 0xFFFFFFFFFFFFFFFF
   defp bin_wrap_signed(:i64, :i16, integer), do: bin_wrap(:i16, integer) && 0xFFFFFFFFFFFFFFFF
   defp bin_wrap_signed(:i64, :i32, integer), do: bin_wrap(:i32, integer) && 0xFFFFFFFFFFFFFFFF
+
   defp bin_wrap_unsigned(:i32, :i8, integer), do: bin_wrap(:i8, integer) && 0xFF
   defp bin_wrap_unsigned(:i32, :i16, integer), do: bin_wrap(:i16, integer) && 0xFFFF
   defp bin_wrap_unsigned(:i64, :i8, integer), do: bin_wrap(:i8, integer) && 0xFFFF
   defp bin_wrap_unsigned(:i64, :i16, integer), do: bin_wrap(:i16, integer) && 0xFFFF
   defp bin_wrap_unsigned(:i64, :i32, integer), do: bin_wrap(:i32, integer) && 0xFFFFFFFF
 
-
-
   defp bin_trunc(:f32, :i32, float), do: round(float)
   defp bin_trunc(:f32, :i64, float), do: round(float)
   defp bin_trunc(:f64, :i64, float), do: round(float)
+
   defp negate(int), do: &(-&1)
 
   defp log_shr(integer, shift) do
@@ -929,6 +921,4 @@ defmodule WaspVM.Executor do
         zero_leading_map ++ bin
         |> Integer.undigits(2)
   end
-
-
 end
