@@ -10,7 +10,17 @@ defmodule WaspVM.MixProject do
       deps: deps(),
       description: description(),
       package: package(),
-      source_url: "https://github.com/ElixiumNetwork/WaspVM"
+      source_url: "https://github.com/ElixiumNetwork/WaspVM",
+      docs: docs()
+    ]
+  end
+
+  defp deps do
+    [
+      {:binary, "~> 0.0.5"},
+      {:decimal, "~> 1.0"},
+      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:benchee, "~> 0.13", only: :dev},
     ]
   end
 
@@ -36,11 +46,8 @@ defmodule WaspVM.MixProject do
     ]
   end
 
-  defp deps do
-    [
-      {:binary, "~> 0.0.5"},
-      {:decimal, "~> 1.0"},
-      {:ex_doc, ">= 0.0.0", only: :dev},
-    ]
+  defp docs do
+    source_url: "https://github.com/ElixiumNetwork/WaspVM",
+    extras: ["README.md"]
   end
 end
