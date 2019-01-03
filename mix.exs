@@ -47,7 +47,9 @@ defmodule WaspVM.MixProject do
   end
 
   defp docs do
-    source_url: "https://github.com/ElixiumNetwork/WaspVM",
-    extras: ["README.md"]
+    [
+      source_url: "https://github.com/ElixiumNetwork/WaspVM",
+      extras: ["README.md"]
+    ]
   end
 end
