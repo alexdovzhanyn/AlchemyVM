@@ -116,7 +116,7 @@ defmodule WaspVM do
   defp execute_func(vm, addr, args, gas_limit) do
     stack = Enum.reduce(args, [], & [&1 | &2])
 
-    {vm, gas, stack} = Executor.create_frame_and_execute(vm, addr, gas_limit, stack)
+    {vm, gas, stack} = Executor.create_frame_and_execute(vm, addr, gas_limit, 0, stack)
 
     case vm do
       tuple when is_tuple(tuple) -> tuple

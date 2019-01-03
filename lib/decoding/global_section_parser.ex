@@ -1,7 +1,6 @@
 defmodule WaspVM.Decoder.GlobalSectionParser do
   alias WaspVM.LEB128
   alias WaspVM.OpCodes
-  alias WaspVM.Module
   alias WaspVM.Decoder.Util
   require IEx
 
