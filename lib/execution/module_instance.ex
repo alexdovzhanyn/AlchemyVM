@@ -88,6 +88,7 @@ defmodule WaspVM.ModuleInstance do
     host_funcs =
       module.imports
       |> Enum.filter(& &1.type == :typeidx)
+      |> Enum.sort(& &1.index <= &2.index)
       |> Enum.map(fn imp ->
         type = Enum.at(module.types, imp.index)
 

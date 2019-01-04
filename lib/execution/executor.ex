@@ -36,9 +36,13 @@ defmodule WaspVM.Executor do
           |> Map.get(mname)
           |> Map.get(fname)
 
-        apply(func, args)
+        return_val = apply(func, args)
 
-        {vm, stack}
+        if !is_number(return_val) do
+          {vm, stack}
+        else
+          {vm, [return_val | stack]}
+        end
     end
   end
 
