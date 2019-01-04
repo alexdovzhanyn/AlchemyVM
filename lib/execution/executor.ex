@@ -11,21 +11,35 @@ defmodule WaspVM.Executor do
   # Reference for tests being used: https://github.com/WebAssembly/wabt/tree/master/test
 
   def create_frame_and_execute(vm, addr, stack \\ []) do
-    {{inputs, _outputs}, module_ref, instr, locals} = elem(vm.store.funcs, addr)
+    case elem(vm.store.funcs, addr) do
+      {{inputs, _outputs}, module_ref, instr, locals} ->
+        {args, stack} = Enum.split(stack, tuple_size(inputs))
 
-    {args, stack} = Enum.split(stack, tuple_size(inputs))
+        %{^module_ref => module} = vm.modules
 
-    %{^module_ref => module} = vm.modules
+        frame = %Frame{
+          module: module,
+          instructions: instr,
+          locals: List.to_tuple(args ++ locals)
+        }
 
-    frame = %Frame{
-      module: module,
-      instructions: instr,
-      locals: List.to_tuple(args ++ locals)
-    }
+        total_instr = map_size(instr)
 
-    total_instr = map_size(instr)
+        execute(frame, vm, stack, total_instr)
+      {:hostfunc, {inputs, _outputs}, mname, fname, module_ref} ->
+        {args, stack} = Enum.split(stack, tuple_size(inputs))
 
-    execute(frame, vm, stack, total_instr)
+        %{^module_ref => module} = vm.modules
+
+        func =
+          module.resolved_imports
+          |> Map.get(mname)
+          |> Map.get(fname)
+
+        apply(func, args)
+
+        {vm, stack}
+    end
   end
 
   def execute(_frame, vm, stack, total_instr, next_instr) when next_instr >= total_instr or next_instr < 0, do: {vm, stack}

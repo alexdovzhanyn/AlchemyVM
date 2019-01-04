@@ -21,41 +21,31 @@ defmodule WaspVM do
   def start, do: GenServer.start_link(__MODULE__, [])
 
   @doc false
-  def init(_args) do
-    {
-      :ok,
-      %WaspVM{
-        modules: %{},
-        store: %Store{}
-      }
-    }
-  end
+  def init(_args), do: {:ok, %WaspVM{modules: %{}, store: %Store{}}}
 
   @doc """
     Load a binary WebAssembly file (.wasm) as a module into the VM
   """
-
-  @spec load_file(pid, String.t()) :: {:ok, WaspVM.Module}
-  def load_file(ref, filename) do
-    GenServer.call(ref, {:load_module, Decoder.decode_file(filename)}, :infinity)
+  @spec load_file(pid, String.t(), map) :: {:ok, WaspVM.Module}
+  def load_file(ref, filename, imports \\ %{}) do
+    GenServer.call(ref, {:load_module, Decoder.decode_file(filename), imports}, :infinity)
   end
 
   @doc """
     Load a WebAssembly module directly from a binary into the VM
   """
-
-  @spec load(pid, binary) :: {:ok, WaspVM.Module}
-  def load(ref, binary) when is_binary(binary) do
-    GenServer.call(ref, {:load_module, Decoder.decode(binary)}, :infinity)
+  @spec load(pid, binary, map) :: {:ok, WaspVM.Module}
+  def load(ref, binary, imports \\ %{}) when is_binary(binary) do
+    GenServer.call(ref, {:load_module, Decoder.decode(binary), imports}, :infinity)
   end
 
   @doc """
     Load a module that was already decoded by load/3 or load_file/3. This is useful
     for caching modules, as it skips the entire decoding step.
   """
-  @spec load_module(pid, WaspVM.Module) :: {:ok, WaspVM.Module}
-  def load_module(ref, module) do
-    GenServer.call(ref, {:load_module, module}, :infinity)
+  @spec load_module(pid, WaspVM.Module, map) :: {:ok, WaspVM.Module}
+  def load_module(ref, module, imports \\ %{}) do
+    GenServer.call(ref, {:load_module, module, imports}, :infinity)
   end
 
   @doc """
@@ -73,7 +63,9 @@ defmodule WaspVM do
   @spec vm_state(pid) :: WaspVM
   def vm_state(ref), do: GenServer.call(ref, :vm_state, :infinity)
 
-  def handle_call({:load_module, module}, _from, vm) do
+  def handle_call({:load_module, module, imports}, _from, vm) do
+    module = Map.put(module, :resolved_imports, imports)
+
     {moduleinst, store} = ModuleInstance.instantiate(ModuleInstance.new(), module, vm.store)
 
     modules = Map.put(vm.modules, moduleinst.ref, moduleinst)
