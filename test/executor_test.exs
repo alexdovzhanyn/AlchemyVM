@@ -200,9 +200,9 @@ defmodule WaspVM.ExecutorTest do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
 
-      #{:ok, gas, result} = WaspVM.execute(pid, "i32__shr_u", [3, 100])
-
-      #assert result == 536870899
+      {:ok, gas, result} = WaspVM.execute(pid, "i32__shr_u", [3, 100])
+      
+      assert result == 536870899
     end
 
 #NW
