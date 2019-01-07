@@ -188,7 +188,7 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, gas, stack, {:i64_const, i64}), do: {ctx, gas + 3, [i64 | stack]}
   defp exec_inst(ctx, gas, stack, {:f32_const, f32}), do: {ctx, gas + 3, [f32 | stack]}
   defp exec_inst(ctx, gas, stack, {:f64_const, f64}), do: {ctx, gas + 3, [f64 | stack]}
-  defp exec_inst({_frame, vm, _n} = ctx, gas, stack, :memory_size),  do: {ctx, gas + 3, [length(vm.memory.pages) | stack]}
+  defp exec_inst({_frame, vm, _n} = ctx, gas, stack, :current_memory),  do: {ctx, gas + 3, [length(vm.memory.pages) | stack]}
   defp exec_inst({frame, _vm, _n} = ctx, gas, stack, {:get_local, idx}), do: {ctx, gas + 3, [elem(frame.locals, idx) | stack]}
   defp exec_inst({_frame, vm, _n} = ctx, gas, stack, {:get_global, idx}), do: {ctx, gas + 3, [Enum.at(vm.globals, idx) | stack]}
   defp exec_inst(ctx, gas, [_ | stack], :drop), do: {ctx, gas, stack}
@@ -368,7 +368,7 @@ defmodule WaspVM.Executor do
     {{Map.put(frame, :locals, locals), vm, n}, gas + 3, stack}
   end
 
-  defp exec_inst({frame, vm, n}, gas, [pages | stack], :memory_grow) do
+  defp exec_inst({frame, vm, n}, gas, [pages | stack], :grow_memory) do
     {{frame, Map.put(vm, :memory, Memory.grow(vm.memory, pages)), n}, gas + 3, [length(vm.memory) | stack]}
   end
 
