@@ -18,8 +18,7 @@ WaspVM.execute(ref, "some_exported_function") # Call a function
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `wasp_vm` to your list of dependencies in `mix.exs`:
+Add `wasp_vm` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
