@@ -14,17 +14,4 @@ defmodule WaspVM.ProgramTest do
     assert result_2 == 2
   end
 
-  test "atom program works properly" do
-    {:ok, pid} = WaspVM.start()
-    WaspVM.load_file(pid, "test/fixtures/wasm/AtomVM.wasm") |> IO.inspect
-    #{status, result_1} = WaspVM.execute(pid, "main", [-4])
-    #{status, result_2} = WaspVM.execute(pid, "main", [4])
-
-    #assert result_1 == -2
-  #  assert result_2 == 2
-  end
-
-
-
-
 end

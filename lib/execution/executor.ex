@@ -890,12 +890,8 @@ defmodule WaspVM.Executor do
 
     bin_size = Enum.count(bin)
     target = 32 - bin_size - shift
-    zero_leading_map = Enum.map(1..target, fn -> 1 end)
+    zero_leading_map = Enum.map(1..target, fn _ -> 1 end)
 
     Integer.undigits(zero_leading_map ++ bin, 2)
   end
-
-
-
-
 end
