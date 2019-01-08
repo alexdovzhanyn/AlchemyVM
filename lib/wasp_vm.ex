@@ -51,6 +51,70 @@ defmodule WaspVM do
   @doc """
     Call an exported function by name from the VM. The function must have
     been loaded in through a module using load_file/2 or load/2 previously
+
+  ## Usage
+  ### Most basic usage for a simple module (no imports or host functions):
+
+  #### Wasm File (add.wat)
+  ```
+  (module
+   (func (export "basic_add") (param i32 i32) (result i32)
+    get_local 0
+    get_local 1
+    i32.add
+   )
+  )
+  ```
+  Use an external tool to compile add.wat to add.wasm (compile from text
+  representation to binary representation)
+
+      {:ok, pid} = WaspVM.start() # Start the VM
+      WaspVM.load_file(pid, "path/to/add.wasm") # Load the module that contains our add function
+
+      # Call the add function, passing in 3 and 10 as args
+      {:ok, gas, result} = WaspVM.execute(pid, "basic_add", [3, 10])
+
+  ### Executing modules with host functions:
+
+  #### Wasm file (log.wat)
+  ```
+  (module
+    (import "env" "consoleLog" (func $consoleLog (param f32)))
+    (export "getSqrt" (func $getSqrt))
+    (func $getSqrt (param f32) (result f32)
+      get_local 0
+      f32.sqrt
+      tee_local 0
+      call $consoleLog
+
+      get_local 0
+    )
+  )
+  ```
+  Use an external tool to compile log.wat to log.wasm (compile from text
+  representation to binary representation)
+
+      {:ok, pid} = WaspVM.start() # Start the VM
+
+      # Define the imports used in this module. Keys in the import map
+      # must be strings
+      imports = %{
+        "env" => %{
+          "consoleLog" => fn x -> IO.puts "its \#{x}" end
+        }
+      }
+
+      # Load the file, passing in the imports
+      WaspVM.load_file(pid, "path/to/log.wasm", imports)
+
+      # Call getSqrt with an argument of 25
+      WaspVM.execute(pid, "getSqrt", [25])
+
+  Program execution can also be limited by specifying a `:gas_limit` option:
+
+      WaspVM.execute(pid, "some_func", [], gas_limit: 100)
+
+  This will stop execution of the program if the accumulated gas exceeds 100
   """
   @spec execute(pid, String.t(), list, list) :: :ok | {:ok, any} | {:error, any}
   def execute(ref, func, args \\ [], opts \\ []) do
