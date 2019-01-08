@@ -26,8 +26,11 @@ defmodule WaspVM.Executor do
 
         total_instr = map_size(instr)
 
-        execute(frame, vm, stack, total_instr)
+        execute(frame, vm, gas, stack, total_instr, gas_limit)
       {:hostfunc, {inputs, _outputs}, mname, fname, module_ref} ->
+        # TODO: How should we handle gas for host functions? Does gas price get passed in?
+        # Do we default to a gas value?
+
         {args, stack} = Enum.split(stack, tuple_size(inputs))
 
         %{^module_ref => module} = vm.modules
@@ -39,10 +42,12 @@ defmodule WaspVM.Executor do
 
         return_val = apply(func, args)
 
+        # TODO: Gas needs to be updated based on the comment above instead of
+        # just getting passed through
         if !is_number(return_val) do
-          {vm, stack}
+          {vm, gas, stack}
         else
-          {vm, [return_val | stack]}
+          {vm, gas, [return_val | stack]}
         end
     end
   end
@@ -885,7 +890,7 @@ defmodule WaspVM.Executor do
 
     bin_size = Enum.count(bin)
     target = 32 - bin_size - shift
-    zero_leading_map = Enum.map(1..target, fn x -> 1 end)
+    zero_leading_map = Enum.map(1..target, fn -> 1 end)
 
     Integer.undigits(zero_leading_map ++ bin, 2)
   end
