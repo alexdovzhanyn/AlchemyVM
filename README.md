@@ -16,6 +16,8 @@ WaspVM.execute(ref, "some_exported_function") # Call a function
 # => {:ok, total_gas_cost, :function_return_value}
 ```
 
+More detailed usage instructions can be found on [HexDocs](https://hexdocs.pm/wasp_vm/0.8.0/WaspVM.html#execute/4-usage).
+
 ## Installation
 
 Add `wasp_vm` to your list of dependencies in `mix.exs`:
