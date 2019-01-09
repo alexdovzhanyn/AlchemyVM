@@ -1,6 +1,8 @@
 defmodule WaspVM.Decoder.NameSectionParser do
   alias WaspVM.LEB128
 
+  @moduledoc false
+
   def parse(binary) do
     binary
     |> parse_subsections()

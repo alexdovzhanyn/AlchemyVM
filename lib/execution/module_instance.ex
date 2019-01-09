@@ -11,7 +11,8 @@ defmodule WaspVM.ModuleInstance do
             memaddrs: [],
             globaladdrs: [],
             exports: [],
-            types: []
+            types: [],
+            resolved_imports: %{}
 
   @moduledoc false
 
@@ -59,7 +60,8 @@ defmodule WaspVM.ModuleInstance do
       memaddrs: memaddrs,
       funcaddrs: funcaddrs,
       globaladdrs: globaladdrs,
-      types: module.types
+      types: module.types,
+      resolved_imports: module.resolved_imports
     })
 
     # Exports need to happen after everything else is initialized
@@ -86,10 +88,11 @@ defmodule WaspVM.ModuleInstance do
     host_funcs =
       module.imports
       |> Enum.filter(& &1.type == :typeidx)
+      |> Enum.sort(& &1.index <= &2.index)
       |> Enum.map(fn imp ->
         type = Enum.at(module.types, imp.index)
 
-        {:hostfunc, type, imp.module, imp.field}
+        {:hostfunc, type, imp.module, imp.field, ref}
       end)
 
     funcs =

@@ -13,7 +13,7 @@ the [Elixium Network](https://www.elixiumnetwork.org)
 {:ok, ref} = WaspVM.start() # Start WaspVM
 WaspVM.load_file(ref, "path/to/wasm/file.wasm") # Load a module
 WaspVM.execute(ref, "some_exported_function") # Call a function
-# => {:ok, :function_return_value}
+# => {:ok, total_gas_cost, :function_return_value}
 ```
 
 ## Installation

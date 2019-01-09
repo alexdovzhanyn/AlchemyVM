@@ -14,6 +14,7 @@ defmodule WaspVM.Module do
             elements: [],
             globals: [],
             data: [],
+            resolved_imports: %{},
             custom: %{}
 
   @moduledoc false

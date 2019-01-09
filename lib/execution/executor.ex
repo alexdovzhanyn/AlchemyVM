@@ -11,22 +11,45 @@ defmodule WaspVM.Executor do
   # Reference for tests being used: https://github.com/WebAssembly/wabt/tree/master/test
 
   def create_frame_and_execute(vm, addr, gas_limit, gas \\ 0, stack \\ []) do
-    {{inputs, _outputs}, module_ref, instr, locals} = elem(vm.store.funcs, addr)
+    case elem(vm.store.funcs, addr) do
+      {{inputs, _outputs}, module_ref, instr, locals} ->
+        {args, stack} = Enum.split(stack, tuple_size(inputs))
 
-    {args, stack} = Enum.split(stack, tuple_size(inputs))
+        %{^module_ref => module} = vm.modules
 
-    %{^module_ref => module} = vm.modules
+        frame = %Frame{
+          module: module,
+          instructions: instr,
+          locals: List.to_tuple(args ++ locals),
+          gas_limit: gas_limit
+        }
 
-    frame = %Frame{
-      module: module,
-      instructions: instr,
-      locals: List.to_tuple(args ++ locals),
-      gas_limit: gas_limit
-    }
+        total_instr = map_size(instr)
 
-    total_instr = map_size(instr)
+        execute(frame, vm, gas, stack, total_instr, gas_limit)
+      {:hostfunc, {inputs, _outputs}, mname, fname, module_ref} ->
+        # TODO: How should we handle gas for host functions? Does gas price get passed in?
+        # Do we default to a gas value?
 
-    execute(frame, vm, gas, stack, total_instr, gas_limit)
+        {args, stack} = Enum.split(stack, tuple_size(inputs))
+
+        %{^module_ref => module} = vm.modules
+
+        func =
+          module.resolved_imports
+          |> Map.get(mname)
+          |> Map.get(fname)
+
+        return_val = apply(func, args)
+
+        # TODO: Gas needs to be updated based on the comment above instead of
+        # just getting passed through
+        if !is_number(return_val) do
+          {vm, gas, stack}
+        else
+          {vm, gas, [return_val | stack]}
+        end
+    end
   end
 
   # What happens is we pass in the main limit for the gas & the gas_limit,
@@ -867,12 +890,8 @@ defmodule WaspVM.Executor do
 
     bin_size = Enum.count(bin)
     target = 32 - bin_size - shift
-    zero_leading_map = Enum.map(1..target, fn x -> 1 end)
+    zero_leading_map = Enum.map(1..target, fn _ -> 1 end)
 
     Integer.undigits(zero_leading_map ++ bin, 2)
   end
-
-
-
-
 end
