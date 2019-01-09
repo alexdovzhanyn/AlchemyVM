@@ -13,13 +13,12 @@ the [Elixium Network](https://www.elixiumnetwork.org)
 {:ok, ref} = WaspVM.start() # Start WaspVM
 WaspVM.load_file(ref, "path/to/wasm/file.wasm") # Load a module
 WaspVM.execute(ref, "some_exported_function") # Call a function
-# => {:ok, :function_return_value}
+# => {:ok, total_gas_cost, :function_return_value}
 ```
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `wasp_vm` to your list of dependencies in `mix.exs`:
+Add `wasp_vm` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
