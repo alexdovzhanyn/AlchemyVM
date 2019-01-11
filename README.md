@@ -25,7 +25,7 @@ For Gas Limit use:
 
 For Trace use:
 ```elixir
-WaspVM.execute(ref, "some_exported_function", [:trace, true])```
+WaspVM.execute(ref, "some_exported_function", [:trace, true])
 ```
 
 For Trace & gas limit use:
