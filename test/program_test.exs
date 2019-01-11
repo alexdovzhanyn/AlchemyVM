@@ -14,4 +14,13 @@ defmodule WaspVM.ProgramTest do
     assert result_2 == 2
   end
 
+  test "Trace Works" do
+    {:ok, pid} = WaspVM.start()
+    WaspVM.load_file(pid, "test/fixtures/wasm/int_div.wasm")
+    {status, gas, result} = WaspVM.execute(pid, "main", [-4], [trace: true])
+
+
+    assert result == -2
+  end
+
 end

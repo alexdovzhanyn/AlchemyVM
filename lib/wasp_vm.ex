@@ -160,7 +160,7 @@ defmodule WaspVM do
     {reply, vm} =
       case func_addr do
         :not_found -> {{:error, :no_exported_function, fname}, vm}
-        addr -> execute_func(vm, addr, args, opts[:gas_limit])
+        addr -> execute_func(vm, addr, args, opts[:gas_limit], opts[:trace])
       end
 
     {:reply, reply, vm}
@@ -168,11 +168,11 @@ defmodule WaspVM do
 
   def handle_call(:vm_state, _from, vm), do: {:reply, vm, vm}
 
-  @spec execute_func(WaspVM, integer, list, :infinity | integer) :: tuple
-  defp execute_func(vm, addr, args, gas_limit) do
+  @spec execute_func(WaspVM, integer, list, :infinity | integer, false | true) :: tuple
+  defp execute_func(vm, addr, args, gas_limit, trace) do
     stack = Enum.reduce(args, [], & [&1 | &2])
 
-    {vm, gas, stack} = Executor.create_frame_and_execute(vm, addr, gas_limit, 0, stack)
+    {vm, gas, stack} = Executor.create_frame_and_execute(vm, addr, gas_limit, 0, trace, stack)
 
     case vm do
       tuple when is_tuple(tuple) -> tuple

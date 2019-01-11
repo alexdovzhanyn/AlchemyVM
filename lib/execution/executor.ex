@@ -10,7 +10,7 @@ defmodule WaspVM.Executor do
 
   # Reference for tests being used: https://github.com/WebAssembly/wabt/tree/master/test
 
-  def create_frame_and_execute(vm, addr, gas_limit, gas \\ 0, stack \\ []) do
+  def create_frame_and_execute(vm, addr, gas_limit, gas \\ 0, trace \\ false, stack \\ []) do
     case elem(vm.store.funcs, addr) do
       {{inputs, _outputs}, module_ref, instr, locals} ->
         {args, stack} = Enum.split(stack, tuple_size(inputs))
@@ -26,7 +26,7 @@ defmodule WaspVM.Executor do
 
         total_instr = map_size(instr)
 
-        execute(frame, vm, gas, stack, total_instr, gas_limit)
+        execute(frame, vm, gas, stack, total_instr, gas_limit, trace)
       {:hostfunc, {inputs, _outputs}, mname, fname, module_ref} ->
         # TODO: How should we handle gas for host functions? Does gas price get passed in?
         # Do we default to a gas value?
@@ -55,15 +55,18 @@ defmodule WaspVM.Executor do
   # What happens is we pass in the main limit for the gas & the gas_limit,
   # then every iteration before we procedd we check the gas limit and the
   # returned op_gas (gas accumulted from executing that opcode)
-  def execute(frame, vm, gas, stack, total_instr, gas_limit, next_instr \\ 0)
-  def execute(_frame, vm, gas, stack, _total, gas_limit, _next) when gas_limit != :infinity and gas > gas_limit, do: IEx.pry #{:error, :reached_gas_limit}
-  def execute(_frame, vm, gas, stack, total_instr, _gas_limit, next_instr) when next_instr >= total_instr or next_instr < 0, do: {vm, gas, stack}
-  def execute(frame, vm, gas, stack, total_instr, gas_limit, next_instr) do
+  def execute(frame, vm, gas, stack, total_instr, gas_limit, trace, next_instr \\ 0)
+  def execute(_frame, vm, gas, stack, _total, gas_limit, trace, _next) when gas_limit != :infinity and gas > gas_limit, do: IEx.pry #{:error, :reached_gas_limit}
+  def execute(_frame, vm, gas, stack, total_instr, _gas_limit, trace, next_instr) when next_instr >= total_instr or next_instr < 0, do: {vm, gas, stack}
+  def execute(frame, vm, gas, stack, total_instr, gas_limit, trace, next_instr) do
     %{^next_instr => instr} = frame.instructions
-
     {{frame, vm, next_instr}, gas, stack} = instruction(instr, frame, vm, gas, stack, next_instr)
 
-    execute(frame, vm, gas, stack, total_instr, gas_limit, next_instr + 1)
+    if trace == true do
+      write_to_file(instr, gas)
+    end
+
+    execute(frame, vm, gas, stack, total_instr, gas_limit, trace, next_instr + 1)
   end
 
   def instruction(opcode, f, v, g, s, n) when is_atom(opcode), do: exec_inst({f, v, n}, g, s, opcode)
@@ -894,4 +897,16 @@ defmodule WaspVM.Executor do
 
     Integer.undigits(zero_leading_map ++ bin, 2)
   end
+
+  defp create_entry(instruction) when is_tuple(instruction) == false, do: "#{instruction}"
+  defp create_entry({instruction, variable}), do: "#{instruction}"
+
+  defp write_to_file(instruction, gas) do
+    file =
+      Path.expand('./trace_log.log')
+      |> Path.absname
+      |> File.write(create_entry(instruction) <> " " <> "#{gas}" <> "\n", [:append])
+  end
+
+
 end

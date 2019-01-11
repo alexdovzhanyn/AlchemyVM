@@ -1,0 +1,9 @@
+
+get_local 3
+i32_const 6
+i32_div_s 11
+end 11
+get_local 3
+i32_const 6
+i32_div_s 11
+end 11
