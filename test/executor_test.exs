@@ -201,7 +201,7 @@ defmodule WaspVM.ExecutorTest do
       WaspVM.load_file(pid, "test/fixtures/wasm/types.wasm")
 
       {:ok, gas, result} = WaspVM.execute(pid, "i32__shr_u", [3, 100])
-      
+
       assert result == 536870899
     end
 
@@ -239,7 +239,7 @@ defmodule WaspVM.ExecutorTest do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/nested_func_call.wasm")
 
-      {:ok, gas, result} =  WaspVM.execute(pid, "nested_func_call", [0, 32])
+      {:ok, gas, result} =  WaspVM.execute(pid, "nested_func_call", [0, 32], [gas_limit: :infinity])
 
       assert result == -7367
     end
