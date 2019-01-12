@@ -3,7 +3,7 @@
   (global $g (import "js" "global") (mut i32))
   (global $a i32 (i32.const -2))
   (start 1)
-  (memory 1)
+  (memory (export "main_mem") 1)
   (func
   	i32.const 0
     i32.const 1512

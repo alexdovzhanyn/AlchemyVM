@@ -111,10 +111,17 @@ defmodule WaspVM.ModuleInstance do
     host_funcs ++ funcs
   end
 
-  def generate_export(moduleinst, %{kind: kind, index: index, name: name}) do
-    if kind == :func do
-      %{^index => addr} = moduleinst.funcaddrs
-      {name, addr}
-    end
+  def generate_export(moduleinst, %{kind: :func, index: index, name: name}) do
+    %{^index => addr} = moduleinst.funcaddrs
+    {:func, name, addr}
+  end
+
+  def generate_export(moduleinst, %{kind: :mem, index: index, name: name}) do
+    addr = Enum.at(moduleinst.memaddrs, index)
+    {:mem, name, addr}
+  end
+
+  def generate_export(_moduleinst, %{kind: kind, index: _index, name: _name}) do
+    raise "Export not handled for kind: #{kind}"
   end
 end

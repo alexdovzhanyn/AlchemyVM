@@ -7,8 +7,6 @@ defmodule WaspVM.Memory do
 
   @page_size 0x10000 # 64 KiB
 
-  @moduledoc false
-
   @doc """
     Creates a new memory instance, with a given number of 64kb pages
   """

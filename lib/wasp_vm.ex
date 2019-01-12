@@ -124,6 +124,24 @@ defmodule WaspVM do
   end
 
   @doc """
+    Retrieve a Virtual Memory set from the VM. Memory must have been exported
+    from the WebAssembly module in order to be accessible here.
+  """
+  @spec get_memory(pid, String.t()) :: WaspVM.Memory
+  def get_memory(ref, mem_name) do
+    GenServer.call(ref, {:get_mem, mem_name}, :infinity)
+  end
+
+  @doc """
+    Write to a module's exported memory directly. Memory must have been exported
+    from the WebAssembly module in order to be accessible here.
+  """
+  @spec update_memory(pid, String.t(), WaspVM.Memory) :: WaspVM
+  def update_memory(ref, mem_name, mem) do
+    GenServer.call(ref, {:update_mem, mem_name, mem}, :infinity)
+  end
+
+  @doc """
     Returns the state for a given VM instance
   """
   @spec vm_state(pid) :: WaspVM
@@ -140,25 +158,8 @@ defmodule WaspVM do
   end
 
   def handle_call({:execute, fname, args, opts}, _from, vm) do
-    {func_addr, _module} =
-      vm.modules
-      |> Map.values()
-      |> Enum.find_value(fn module ->
-        a =
-          Enum.find_value(module.exports, fn export ->
-            if export !== nil do
-              {name, addr} = export
-              if name == fname, do: addr, else: false
-            else
-              false
-            end
-          end)
-
-        if a, do: {a, module}, else: {:not_found, 0}
-      end)
-
     {reply, vm} =
-      case func_addr do
+      case get_export_by_name(vm, fname, :func) do
         :not_found -> {{:error, :no_exported_function, fname}, vm}
         addr -> execute_func(vm, addr, args, opts[:gas_limit])
       end
@@ -166,7 +167,47 @@ defmodule WaspVM do
     {:reply, reply, vm}
   end
 
+  def handle_call({:get_mem, mname}, _from, vm) do
+    reply =
+      case get_export_by_name(vm, mname, :mem) do
+        :not_found -> {:error, :no_exported_mem, mname}
+        addr -> Enum.at(vm.store.mems, addr)
+      end
+
+    {:reply, reply, vm}
+  end
+
+  def handle_call({:update_mem, mname, mem}, _from, vm) do
+    case get_export_by_name(vm, mname, :mem) do
+      :not_found -> {:reply, {:error, :no_exported_mem, mname}, vm}
+      addr ->
+        mems = List.replace_at(vm.store.mems, addr, mem)
+        store = Map.put(vm.store, :mems, mems)
+        reply = Map.put(vm, :store, store)
+        {:reply, reply, reply}
+    end
+  end
+
   def handle_call(:vm_state, _from, vm), do: {:reply, vm, vm}
+
+  @spec get_export_by_name(WaspVM, String.t(), atom) :: integer | :not_found
+  defp get_export_by_name(vm, mname, type) do
+    vm.modules
+    |> Map.values()
+    |> Enum.find_value(fn module ->
+      a =
+        Enum.find_value(module.exports, fn export ->
+          try do
+            {^type, name, addr} = export
+            if name == mname, do: addr, else: false
+          rescue
+            _ -> false
+          end
+        end)
+
+      if a, do: a, else: :not_found
+    end)
+  end
 
   @spec execute_func(WaspVM, integer, list, :infinity | integer) :: tuple
   defp execute_func(vm, addr, args, gas_limit) do
