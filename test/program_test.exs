@@ -14,4 +14,21 @@ defmodule WaspVM.ProgramTest do
     assert result_2 == 2
   end
 
+  test "Host funcs can interface with Memory API properly" do
+    # Load host func fixture
+    Code.load_file("test/fixtures/hostfuncs/host.ex")
+
+    {:ok, pid} = WaspVM.start()
+
+    # Create a host func that interfaces with the module's memory
+
+    imports = WaspVM.HostFunction.create_imports(Host)
+
+    WaspVM.load_file(pid, "test/fixtures/wasm/host_func.wasm", imports)
+
+    res = WaspVM.execute(pid, "f0", [])
+
+    IO.inspect res
+  end
+
 end

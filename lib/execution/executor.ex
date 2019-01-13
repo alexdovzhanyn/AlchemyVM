@@ -40,7 +40,8 @@ defmodule WaspVM.Executor do
           |> Map.get(mname)
           |> Map.get(fname)
 
-        return_val = apply(func, args)
+        # TODO: Don't just pass entire VM in, only pass what's in context
+        return_val = apply(func, [vm, args])
 
         # TODO: Gas needs to be updated based on the comment above instead of
         # just getting passed through

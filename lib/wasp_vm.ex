@@ -217,7 +217,7 @@ defmodule WaspVM do
 
     case vm do
       tuple when is_tuple(tuple) -> tuple
-      _ -> {{:ok, gas, hd(stack)}, vm}
+      _ -> {{:ok, gas, List.first(stack)}, vm}
     end
   end
 end
