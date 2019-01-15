@@ -10,7 +10,7 @@ defmodule WaspVM.Decoder.ImportSectionParser do
 
     entries = if count > 0, do: parse_entries(entries), else: []
 
-    {:imports, entries}
+    {:imports, Enum.reverse(entries)}
   end
 
   defp parse_entries(entries), do: parse_entries([], entries)

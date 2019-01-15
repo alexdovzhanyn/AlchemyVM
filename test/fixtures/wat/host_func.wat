@@ -1,6 +1,5 @@
 (module
   (import "Host" "function0" (func $f0 (param i32 i32))) ;; Function 0 takes no params and returns no value
-  ;; (import "host" "function1" (func $f1))
   (memory (export "memory1") 1) ;; Define and export a memory (only way to access memory from outside)
   (func (export "f0") (result i32) (local i32)
     i32.const 123

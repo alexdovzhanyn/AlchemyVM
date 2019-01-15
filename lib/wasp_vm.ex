@@ -4,6 +4,7 @@ defmodule WaspVM do
   alias WaspVM.ModuleInstance
   alias WaspVM.Store
   alias WaspVM.Executor
+  alias WaspVM.Helpers
   require IEx
 
   @enforce_keys [:modules, :store]
@@ -159,7 +160,7 @@ defmodule WaspVM do
 
   def handle_call({:execute, fname, args, opts}, _from, vm) do
     {reply, vm} =
-      case get_export_by_name(vm, fname, :func) do
+      case Helpers.get_export_by_name(vm, fname, :func) do
         :not_found -> {{:error, :no_exported_function, fname}, vm}
         addr -> execute_func(vm, addr, args, opts[:gas_limit])
       end
@@ -169,7 +170,7 @@ defmodule WaspVM do
 
   def handle_call({:get_mem, mname}, _from, vm) do
     reply =
-      case get_export_by_name(vm, mname, :mem) do
+      case Helpers.get_export_by_name(vm, mname, :mem) do
         :not_found -> {:error, :no_exported_mem, mname}
         addr -> Enum.at(vm.store.mems, addr)
       end
@@ -178,7 +179,7 @@ defmodule WaspVM do
   end
 
   def handle_call({:update_mem, mname, mem}, _from, vm) do
-    case get_export_by_name(vm, mname, :mem) do
+    case Helpers.get_export_by_name(vm, mname, :mem) do
       :not_found -> {:reply, {:error, :no_exported_mem, mname}, vm}
       addr ->
         mems = List.replace_at(vm.store.mems, addr, mem)
@@ -189,25 +190,6 @@ defmodule WaspVM do
   end
 
   def handle_call(:vm_state, _from, vm), do: {:reply, vm, vm}
-
-  @spec get_export_by_name(WaspVM, String.t(), atom) :: integer | :not_found
-  defp get_export_by_name(vm, mname, type) do
-    vm.modules
-    |> Map.values()
-    |> Enum.find_value(fn module ->
-      a =
-        Enum.find_value(module.exports, fn export ->
-          try do
-            {^type, name, addr} = export
-            if name == mname, do: addr, else: false
-          rescue
-            _ -> false
-          end
-        end)
-
-      if a, do: a, else: :not_found
-    end)
-  end
 
   @spec execute_func(WaspVM, integer, list, :infinity | integer) :: tuple
   defp execute_func(vm, addr, args, gas_limit) do

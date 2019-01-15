@@ -20,18 +20,18 @@ defmodule WaspVM.HostFunction do
   end
 
   defmacro defhost(fname, args, do: block) when is_atom(fname) do
-    quote do
-      name = to_string(unquote(fname))
+    name = to_string(fname)
 
-      WaspVM.HostFunction.defhost(name, args) do
+    quote do
+      WaspVM.HostFunction.defhost(unquote(name), unquote(args)) do
         unquote(block)
       end
     end
   end
 
   defmacro defhost(fname, args, do: block) do
-    quote do
-      def hostfunc(unquote(fname), unquote(args), var!(vm)), do: unquote(block)
+    quote generated: true do
+      def hostfunc(unquote(fname), unquote(args), var!(ctx)), do: unquote(block)
 
       Module.put_attribute(__MODULE__, :host_funcs, unquote(fname))
     end
@@ -47,12 +47,11 @@ defmodule WaspVM.HostFunction do
   def create_imports(module), do: create_imports([module])
 
   defp create_import(module) do
-    funcs =
-      module
-      |> apply(:hostfuncs, [])
-      |> Enum.reduce(%{}, fn fname, acc ->
-        Map.put(acc, fname, fn vm, args -> apply(module, :hostfunc, [fname, args, vm]) end)
-      end)
+    module
+    |> apply(:hostfuncs, [])
+    |> Enum.reduce(%{}, fn fname, acc ->
+      Map.put(acc, fname, fn ctx, args -> apply(module, :hostfunc, [fname, args, ctx]) end)
+    end)
   end
 
   defmacro __before_compile__(_env) do

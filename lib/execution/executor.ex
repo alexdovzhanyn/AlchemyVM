@@ -1,6 +1,7 @@
 defmodule WaspVM.Executor do
   alias WaspVM.Frame
   alias WaspVM.Memory
+  alias WaspVM.HostFunction.API
   use Bitwise
   require Logger
   require IEx
@@ -40,8 +41,17 @@ defmodule WaspVM.Executor do
           |> Map.get(mname)
           |> Map.get(fname)
 
-        # TODO: Don't just pass entire VM in, only pass what's in context
-        return_val = apply(func, [vm, args])
+        # Start an API agent that isolates VM state until the host function
+        # finishes running.
+        {:ok, ctx} = API.start_link(vm)
+
+        return_val = apply(func, [ctx, args])
+
+        # Get updated state from the API agent
+        vm = API.state(ctx)
+
+        # Kill the API agent now that it's served it's purpose
+        API.stop(ctx)
 
         # TODO: Gas needs to be updated based on the comment above instead of
         # just getting passed through
