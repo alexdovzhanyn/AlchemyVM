@@ -899,8 +899,8 @@ defmodule WaspVM.Executor do
     Integer.undigits(zero_leading_map ++ bin, 2)
   end
 
-  defp create_entry(instruction) when is_tuple(instruction) == false, do: "#{instruction}"
-  defp create_entry({instruction, variable}), do: "#{instruction}"
+  defp create_entry(instruction) when not is_tuple(instruction), do: Kernel.to_string(instruction)
+  defp create_entry({instruction, variable}), do: Kernel.to_string(instruction)
 
   defp write_to_file(instruction, gas) do
     file =

@@ -114,8 +114,16 @@ defmodule WaspVM do
 
       WaspVM.execute(pid, "some_func", [], gas_limit: 100)
 
-  This will stop execution of the program if the accumulated gas exceeds 100
+      This will stop execution of the program if the accumulated gas exceeds 100
+
+  Program execution can also output to a log file by specifying a `:trace` option:
+
+      WaspVM.execute(pid, "some_func", [], trace: true)
+
+      This will trace all instructions passed, as well as the gas cost accumulated to a log file
+
   """
+
   @spec execute(pid, String.t(), list, list) :: :ok | {:ok, any} | {:error, any}
   def execute(ref, func, args \\ [], opts \\ []) do
     opts = Keyword.merge([gas_limit: :infinity], opts)
