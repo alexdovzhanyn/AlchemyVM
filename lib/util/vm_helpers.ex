@@ -1,5 +1,7 @@
 defmodule WaspVM.Helpers do
 
+  @moduledoc false
+
   @spec get_export_by_name(WaspVM, String.t(), atom) :: integer | :not_found
   def get_export_by_name(vm, mname, type) do
     vm.modules

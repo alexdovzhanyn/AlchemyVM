@@ -232,13 +232,19 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm, _n}, gas, stack, :return), do: {{frame, vm, -10}, gas, stack}
   defp exec_inst(ctx, gas, stack, :unreachable), do: {ctx, gas, stack}
   defp exec_inst(ctx, gas, stack, :nop), do: {ctx, gas, stack}
-  defp exec_inst(ctx, gas, [1 | stack], {:if, _, _, _}), do: {ctx, gas, stack}
   defp exec_inst(_ctx, _gas, [0 | _], :i32_div_u), do: trap("Divide by zero in i32.div_u")
   defp exec_inst(_ctx, _gas, [0 | _], :i32_rem_s), do: trap("Divide by zero in i32.rem_s")
   defp exec_inst(_ctx, _gas, [0 | _], :i64_rem_s), do: trap("Divide by zero in i64.rem_s")
   defp exec_inst(_ctx, _gas, [0 | _], :i64_div_u), do: trap("Divide by zero in i64.div_u")
   defp exec_inst(_ctx, _gas, [0 | _], :i32_rem_u), do: trap("Divide by zero in i32.rem_u")
   defp exec_inst(_ctx, _gas, [0 | _], :i64_rem_u), do: trap("Divide by zero in i64.rem_u")
+
+  defp exec_inst({frame, vm, n}, gas, [1 | stack], {:if, _type, _else_idx, end_idx}) do
+    labels = [{n, end_idx} | frame.labels]
+    snapshots = [stack | frame.snapshots]
+
+    {{Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm, n}, gas + 2, stack}
+  end
 
   defp exec_inst({frame, vm, _n}, gas, [_val | stack], {:if, _type, else_idx, end_idx}) do
     next_instr = if else_idx != :none, do: else_idx, else: end_idx
@@ -409,7 +415,7 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], {:i32_load8_s, _alignment, offset}) do
     mem_addr = hd(frame.module.memaddrs)
 
-      <<i8::8>> =
+    <<i8::8>> =
       vm.store.mems
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 1)
@@ -713,13 +719,6 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm, n}, gas, stack, {:block, _result_type, end_idx}) do
-    labels = [{n, end_idx - 1} | frame.labels]
-    snapshots = [stack | frame.snapshots]
-
-    {{Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm, n}, gas + 2, stack}
-  end
-
-  defp exec_inst({frame, vm, n}, gas, [_val | stack], {:if, _type, _else_idx, end_idx}) do
     labels = [{n, end_idx} | frame.labels]
     snapshots = [stack | frame.snapshots]
 
@@ -739,10 +738,10 @@ defmodule WaspVM.Executor do
   end
 
   defp break_to({frame, vm, _n}, gas, stack, label_idx) do
-    {_label_instr_idx, next_instr} = Enum.at(frame.labels, label_idx)
+    {label_instr_idx, next_instr} = Enum.at(frame.labels, label_idx)
     snapshot = Enum.at(frame.snapshots, label_idx)
 
-    %{^next_instr => instr} = frame.instructions
+    %{^label_instr_idx => instr} = frame.instructions
 
     drop_changes =
       fn type ->
@@ -874,17 +873,17 @@ defmodule WaspVM.Executor do
   defp bin_wrap(:i16, integer), do: :binary.decode_unsigned(<<integer::16>>)
   defp bin_wrap(:i32, integer), do: :binary.decode_unsigned(<<integer::32>>)
 
-  defp bin_wrap_signed(:i32, :i8, integer), do: bin_wrap(:i8, integer) && 0xFFFFFFFF
-  defp bin_wrap_signed(:i32, :i16, integer), do: bin_wrap(:i16, integer) && 0xFFFFFFFF
-  defp bin_wrap_signed(:i64, :i8, integer), do: bin_wrap(:i8, integer) && 0xFFFFFFFFFFFFFFFF
-  defp bin_wrap_signed(:i64, :i16, integer), do: bin_wrap(:i16, integer) && 0xFFFFFFFFFFFFFFFF
-  defp bin_wrap_signed(:i64, :i32, integer), do: bin_wrap(:i32, integer) && 0xFFFFFFFFFFFFFFFF
+  defp bin_wrap_signed(:i32, :i8, integer), do: bin_wrap(:i8, integer) &&& 0xFFFFFFFF
+  defp bin_wrap_signed(:i32, :i16, integer), do: bin_wrap(:i16, integer) &&& 0xFFFFFFFF
+  defp bin_wrap_signed(:i64, :i8, integer), do: bin_wrap(:i8, integer) &&& 0xFFFFFFFFFFFFFFFF
+  defp bin_wrap_signed(:i64, :i16, integer), do: bin_wrap(:i16, integer) &&& 0xFFFFFFFFFFFFFFFF
+  defp bin_wrap_signed(:i64, :i32, integer), do: bin_wrap(:i32, integer) &&& 0xFFFFFFFFFFFFFFFF
 
-  defp bin_wrap_unsigned(:i32, :i8, integer), do: bin_wrap(:i8, integer) && 0xFF
-  defp bin_wrap_unsigned(:i32, :i16, integer), do: bin_wrap(:i16, integer) && 0xFFFF
-  defp bin_wrap_unsigned(:i64, :i8, integer), do: bin_wrap(:i8, integer) && 0xFFFF
-  defp bin_wrap_unsigned(:i64, :i16, integer), do: bin_wrap(:i16, integer) && 0xFFFF
-  defp bin_wrap_unsigned(:i64, :i32, integer), do: bin_wrap(:i32, integer) && 0xFFFFFFFF
+  defp bin_wrap_unsigned(:i32, :i8, integer), do: bin_wrap(:i8, integer) &&& 0xFF
+  defp bin_wrap_unsigned(:i32, :i16, integer), do: bin_wrap(:i16, integer) &&& 0xFFFF
+  defp bin_wrap_unsigned(:i64, :i8, integer), do: bin_wrap(:i8, integer) &&& 0xFFFF
+  defp bin_wrap_unsigned(:i64, :i16, integer), do: bin_wrap(:i16, integer) &&& 0xFFFF
+  defp bin_wrap_unsigned(:i64, :i32, integer), do: bin_wrap(:i32, integer) &&& 0xFFFFFFFF
 
   defp bin_trunc(:f32, :i32, float), do: round(float)
   defp bin_trunc(:f32, :i64, float), do: round(float)
