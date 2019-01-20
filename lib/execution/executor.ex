@@ -906,7 +906,8 @@ defmodule WaspVM.Executor do
     file =
       Path.expand('./trace_log.log')
       |> Path.absname
-      |> File.write(create_entry(instruction) <> " " <> "#{gas}" <> "\n", [:append])
+      |> File.write("#{create_entry(instruction)} #{gas}\n", [:append])
+
   end
 
 

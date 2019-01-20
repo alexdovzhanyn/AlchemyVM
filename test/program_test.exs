@@ -19,8 +19,20 @@ defmodule WaspVM.ProgramTest do
     WaspVM.load_file(pid, "test/fixtures/wasm/int_div.wasm")
     {status, gas, result} = WaspVM.execute(pid, "main", [-4], [trace: true])
 
+    {status, text} =
+      Path.expand('./trace_log.log')
+      |> Path.absname
+      |> File.read
+
+
+    assert String.length(text) > 0
 
     assert result == -2
+
+    Path.expand('./trace_log.log')
+    |> Path.absname
+    |> File.rm!
+
   end
 
 end
