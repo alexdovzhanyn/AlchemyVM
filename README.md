@@ -33,6 +33,7 @@ For Trace & gas limit use:
 WaspVM.execute(ref, "some_exported_function", [gas_limit: 100, trace: true])
 ```
 
+More detailed usage instructions can be found on [HexDocs](https://hexdocs.pm/wasp_vm/0.8.0/WaspVM.html#execute/4-usage).
 
 ## Installation
 

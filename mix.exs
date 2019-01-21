@@ -4,7 +4,7 @@ defmodule WaspVM.MixProject do
   def project do
     [
       app: :wasp_vm,
-      version: "0.7.0",
+      version: "0.8.0",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -30,9 +30,7 @@ defmodule WaspVM.MixProject do
     ]
   end
 
-  def description do
-    "A WebAssembly Virtual Machine"
-  end
+  def description, do: "A WebAssembly Virtual Machine"
 
   defp package() do
     [
