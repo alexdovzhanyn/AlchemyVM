@@ -74,7 +74,6 @@ defmodule WaspVM.Executor do
     %{^next_instr => instr} = frame.instructions
     {{frame, vm, next_instr}, gas, stack} = instruction(instr, frame, vm, gas, stack, next_instr, opts)
 
-<<<<<<< HEAD
     if opts[:trace] do
       write_to_file(instr, gas)
     end
@@ -1093,7 +1092,7 @@ defmodule WaspVM.Executor do
 
   defp write_to_file(instruction, gas) do
     file =
-      Path.expand('./trace_log.log')
+      Path.expand('./trace.log')
       |> Path.absname
       |> File.write("#{create_entry(instruction)} #{gas}\n", [:append])
 

@@ -20,7 +20,7 @@ defmodule WaspVM.ProgramTest do
     {status, gas, result} = WaspVM.execute(pid, "main", [-4], [trace: true])
 
     {status, text} =
-      Path.expand('./trace_log.log')
+      Path.expand('./trace.log')
       |> Path.absname
       |> File.read
 
@@ -29,7 +29,7 @@ defmodule WaspVM.ProgramTest do
 
     assert result == -2
 
-    Path.expand('./trace_log.log')
+    Path.expand('./trace.log')
     |> Path.absname
     |> File.rm!
 
