@@ -244,13 +244,6 @@ defmodule WaspVM.Executor do
   defp exec_inst(_ctx, _gas, [0 | _], opts, :i32_rem_u), do: trap("Divide by zero in i32.rem_u")
   defp exec_inst(_ctx, _gas, [0 | _], opts, :i64_rem_u), do: trap("Divide by zero in i64.rem_u")
 
-  defp exec_inst({frame, vm, _n}, gas, [_val | stack], opts, {:if, _type, else_idx, end_idx}) do
-=======
-    {{frame, vm, next_instr}, gas, stack} = instruction(instr, frame, vm, gas, stack, next_instr)
-
-    execute(frame, vm, gas, stack, total_instr, gas_limit, next_instr + 1)
-  end
-
   def instruction(opcode, f, v, g, s, n) when is_atom(opcode), do: exec_inst({f, v, n}, g, s, opcode)
   def instruction(opcode, f, v, g, s, n) when is_tuple(opcode), do: exec_inst({f, v, n}, g, s, opcode)
 
@@ -421,7 +414,6 @@ defmodule WaspVM.Executor do
   end
 
   defp exec_inst({frame, vm, _n}, gas, [_val | stack], {:if, _type, else_idx, end_idx}) do
->>>>>>> a66b75a99fa7acd8706e107f437c72011eae66ca
     next_instr = if else_idx != :none, do: else_idx, else: end_idx
     {{frame, vm, next_instr}, gas, stack}
   end
