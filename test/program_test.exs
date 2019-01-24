@@ -17,17 +17,16 @@ defmodule WaspVM.ProgramTest do
   test "Trace Works" do
     {:ok, pid} = WaspVM.start()
     WaspVM.load_file(pid, "test/fixtures/wasm/int_div.wasm")
-    {status, gas, result} = WaspVM.execute(pid, "main", [-4], [trace: true])
 
-    {status, text} =
-      Path.expand('./trace.log')
-      |> Path.absname
-      |> File.read
+    assert {:ok, _gas, -2} = WaspVM.execute(pid, "main", [-4], [trace: true])
 
+    {_status, text} =
+      './trace.log'
+      |> Path.expand()
+      |> Path.absname()
+      |> File.read()
 
     assert String.length(text) > 0
-
-    assert result == -2
 
     # Clean up file
     './trace.log'

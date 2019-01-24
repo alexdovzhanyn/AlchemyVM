@@ -481,7 +481,6 @@ defmodule WaspVM.ExecutorTest do
     ### END COMPLEX INTEGER
 
     ### BEGIN PARAMETRIC TEST
-
     test "if statement works" do
       {:ok, pid} = WaspVM.start()
       WaspVM.load_file(pid, "test/fixtures/wasm/if_2.wasm")
