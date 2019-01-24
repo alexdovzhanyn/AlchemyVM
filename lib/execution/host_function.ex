@@ -67,6 +67,32 @@ defmodule WaspVM.HostFunction do
     end
   end
 
+  @doc """
+    Pass in an Elixir module or list of Elixir modules that implement `defhost`
+    calls to generate imports for WebAssembly to be passed in when loading a
+    WebAssembly module into the VM
+
+  ## Usage
+
+  When using a single module to define imports:
+
+      WaspVM.HostFunction.create_imports(Module1)
+
+  Functions will be accessible in the WebAssembly module as:
+
+      (import "Module1" "function_name")
+
+  When using multiple modules to define imports:
+
+      WaspVM.HostFunction.create_imports([Module1, Module2, Module3])
+
+  Functions will be accessible in the WebAssembly module as:
+
+      (import "Module1" "function_name")
+      (import "Module2" "function_name")
+      (import "Module3" "function_name")
+  """
+  @spec create_imports(list | atom) :: map
   def create_imports(modules) when is_list(modules) do
     Enum.reduce(modules, %{}, fn mod, acc ->
       "Elixir." <> mod_string = to_string(mod)
