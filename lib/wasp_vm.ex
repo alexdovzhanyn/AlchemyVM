@@ -148,10 +148,7 @@ defmodule WaspVM do
   @spec vm_state(pid) :: WaspVM
   def vm_state(ref), do: GenServer.call(ref, :vm_state, :infinity)
 
-  @spec run_start(integer) :: none
-  defp run_start(start_addr), do: GenServer.cast(self(), {:start, start_addr})
-
-  def handle_call({:load_module, module, imports}, from, vm) do
+  def handle_call({:load_module, module, imports}, _from, vm) do
     module = Map.put(module, :resolved_imports, imports)
 
     {moduleinst, store} = ModuleInstance.instantiate(ModuleInstance.new(), module, vm.store)
@@ -180,12 +177,6 @@ defmodule WaspVM do
     {:reply, reply, vm}
   end
 
-  def handle_continue({:start, start_addr}, vm) do
-    {_, vm} = execute_func(vm, start_addr, [], :infinity)
-
-    {:noreply, vm}
-  end
-
   def handle_call({:get_mem, mname}, _from, vm) do
     reply =
       case Helpers.get_export_by_name(vm, mname, :mem) do
@@ -208,6 +199,12 @@ defmodule WaspVM do
   end
 
   def handle_call(:vm_state, _from, vm), do: {:reply, vm, vm}
+
+  def handle_continue({:start, start_addr}, vm) do
+    {_, vm} = execute_func(vm, start_addr, [], :infinity)
+
+    {:noreply, vm}
+  end
 
   @spec execute_func(WaspVM, integer, list, :infinity | integer) :: tuple
   defp execute_func(vm, addr, args, gas_limit) do

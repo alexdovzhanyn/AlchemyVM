@@ -6,7 +6,7 @@ defmodule WaspVM.HostFunctionTest do
     defmodule DefhostTest do
       use WaspVM.HostFunction
 
-      defhost :a_function do
+      defhost a_function do
         5 + 5
       end
     end
@@ -18,6 +18,8 @@ defmodule WaspVM.HostFunctionTest do
     Code.load_file("test/fixtures/hostfuncs/math.ex")
 
     {:ok, pid} = WaspVM.start()
+
+    IO.inspect Math.__info__(:functions)
 
     imports = WaspVM.HostFunction.create_imports(Math)
 
