@@ -14,6 +14,27 @@ defmodule WaspVM.ProgramTest do
     assert result_2 == 2
   end
 
+  test "Trace Works" do
+    {:ok, pid} = WaspVM.start()
+    WaspVM.load_file(pid, "test/fixtures/wasm/int_div.wasm")
+
+    assert {:ok, _gas, -2} = WaspVM.execute(pid, "main", [-4], [trace: true])
+
+    {_status, text} =
+      './trace.log'
+      |> Path.expand()
+      |> Path.absname()
+      |> File.read()
+
+    assert String.length(text) > 0
+
+    # Clean up file
+    './trace.log'
+    |> Path.expand()
+    |> Path.absname
+    |> File.rm!
+  end
+
   test "Modules with start functions execute immediately after initialization" do
     Code.load_file("test/fixtures/hostfuncs/host.ex")
 

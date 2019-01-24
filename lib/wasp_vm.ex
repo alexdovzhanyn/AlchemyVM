@@ -115,8 +115,16 @@ defmodule WaspVM do
 
       WaspVM.execute(pid, "some_func", [], gas_limit: 100)
 
-  This will stop execution of the program if the accumulated gas exceeds 100
+      This will stop execution of the program if the accumulated gas exceeds 100
+
+  Program execution can also output to a log file by specifying a `:trace` option:
+
+      WaspVM.execute(pid, "some_func", [], trace: true)
+
+      This will trace all instructions passed, as well as the gas cost accumulated to a log file
+
   """
+
   @spec execute(pid, String.t(), list, list) :: :ok | {:ok, any} | {:error, any}
   def execute(ref, func, args \\ [], opts \\ []) do
     opts = Keyword.merge([gas_limit: :infinity], opts)
@@ -174,14 +182,14 @@ defmodule WaspVM do
     {reply, vm} =
       case Helpers.get_export_by_name(vm, fname, :func) do
         :not_found -> {{:error, :no_exported_function, fname}, vm}
-        addr -> execute_func(vm, addr, args, opts[:gas_limit])
+        addr -> execute_func(vm, addr, args, opts[:gas_limit], fname, opts)
       end
 
     {:reply, reply, vm}
   end
 
   def handle_continue({:start, start_addr}, vm) do
-    {_, vm} = execute_func(vm, start_addr, [], :infinity)
+    {_, vm} = execute_func(vm, start_addr, [], :infinity, "start", [])
 
     {:noreply, vm}
   end
@@ -209,15 +217,25 @@ defmodule WaspVM do
 
   def handle_call(:vm_state, _from, vm), do: {:reply, vm, vm}
 
-  @spec execute_func(WaspVM, integer, list, :infinity | integer) :: tuple
-  defp execute_func(vm, addr, args, gas_limit) do
+  @spec execute_func(WaspVM, integer, list, :infinity | integer, String.t(), list) :: tuple
+  defp execute_func(vm, addr, args, gas_limit, fname, opts) do
     stack = Enum.reduce(args, [], & [&1 | &2])
 
-    {vm, gas, stack} = Executor.create_frame_and_execute(vm, addr, gas_limit, 0, stack)
+    # Conditional for Trace
+    if opts[:trace], do: create_log_timestamp(fname)
+
+    {vm, gas, stack} = Executor.create_frame_and_execute(vm, addr, gas_limit, opts, 0, stack)
 
     case vm do
       tuple when is_tuple(tuple) -> tuple
       _ -> {{:ok, gas, List.first(stack)}, vm}
     end
+  end
+
+  defp create_log_timestamp(fname) do
+    file =
+      Path.expand('./trace.log')
+      |> Path.absname
+      |> File.write("\n#{DateTime.utc_now()} :: #{fname} ================================\n", [:append])
   end
 end
