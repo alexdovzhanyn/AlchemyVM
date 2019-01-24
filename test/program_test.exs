@@ -29,10 +29,28 @@ defmodule WaspVM.ProgramTest do
 
     assert result == -2
 
-    Path.expand('./trace.log')
+    # Clean up file
+    './trace.log'
+    |> Path.expand()
     |> Path.absname
     |> File.rm!
-
   end
 
+  test "Modules with start functions execute immediately after initialization" do
+    Code.load_file("test/fixtures/hostfuncs/host.ex")
+
+    {:ok, pid} = WaspVM.start()
+
+    imports = WaspVM.HostFunction.create_imports(Host)
+
+    WaspVM.load_file(pid, "test/fixtures/wasm/start.wasm", imports)
+
+    %{store: %{mems: mems}} = WaspVM.vm_state(pid)
+
+    assert <<15>> =
+      mems
+      |> hd()
+      |> Map.get(:data)
+      |> elem(0)
+  end
 end

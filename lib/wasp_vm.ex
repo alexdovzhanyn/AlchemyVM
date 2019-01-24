@@ -156,14 +156,26 @@ defmodule WaspVM do
   @spec vm_state(pid) :: WaspVM
   def vm_state(ref), do: GenServer.call(ref, :vm_state, :infinity)
 
-  def handle_call({:load_module, module, imports}, _from, vm) do
+  @spec run_start(integer) :: none
+  defp run_start(start_addr), do: GenServer.cast(self(), {:start, start_addr})
+
+  def handle_call({:load_module, module, imports}, from, vm) do
     module = Map.put(module, :resolved_imports, imports)
 
     {moduleinst, store} = ModuleInstance.instantiate(ModuleInstance.new(), module, vm.store)
 
     modules = Map.put(vm.modules, moduleinst.ref, moduleinst)
 
-    {:reply, {:ok, module}, Map.merge(vm, %{modules: modules, store: store})}
+    vm = Map.merge(vm, %{modules: modules, store: store})
+
+    if module.start do
+      startidx = module.start
+      %{^startidx => start_addr} = moduleinst.funcaddrs
+
+      {:reply, {:ok, module}, vm, {:continue, {:start, start_addr}}}
+    else
+      {:reply, {:ok, module}, vm}
+    end
   end
 
   def handle_call({:execute, fname, args, opts}, _from, vm) do
@@ -174,6 +186,12 @@ defmodule WaspVM do
       end
 
     {:reply, reply, vm}
+  end
+
+  def handle_continue({:start, start_addr}, vm) do
+    {_, vm} = execute_func(vm, start_addr, [], :infinity)
+
+    {:noreply, vm}
   end
 
   def handle_call({:get_mem, mname}, _from, vm) do

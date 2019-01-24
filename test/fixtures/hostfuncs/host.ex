@@ -14,4 +14,8 @@ defmodule Host do
     WaspVM.HostFunction.API.update_memory(ctx, "memory1", addr1, <<0, 50, 130, 53>>) # 3310133
     WaspVM.HostFunction.API.update_memory(ctx, "memory1", addr2, <<0, 102, 20, 75>>) # 6689867
   end
+
+  defhost :log, [a] do
+    IO.puts a
+  end
 end
