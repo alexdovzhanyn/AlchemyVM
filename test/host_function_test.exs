@@ -19,8 +19,6 @@ defmodule WaspVM.HostFunctionTest do
 
     {:ok, pid} = WaspVM.start()
 
-    IO.inspect Math.__info__(:functions)
-
     imports = WaspVM.HostFunction.create_imports(Math)
 
     WaspVM.load_file(pid, "test/fixtures/wasm/host_func_math.wasm", imports)

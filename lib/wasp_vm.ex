@@ -209,7 +209,7 @@ defmodule WaspVM do
   def handle_call(:vm_state, _from, vm), do: {:reply, vm, vm}
 
   def handle_continue({:start, start_addr}, vm) do
-    {_, vm} = execute_func(vm, start_addr, [], :infinity)
+    {_, vm} = execute_func(vm, start_addr, [], :infinity, "start", [])
 
     {:noreply, vm}
   end
@@ -230,9 +230,9 @@ defmodule WaspVM do
   end
 
   defp create_log_timestamp(fname) do
-    file =
-      Path.expand('./trace.log')
-      |> Path.absname
-      |> File.write("\n#{DateTime.utc_now()} :: #{fname} ================================\n", [:append])
+    './trace.log'
+    |> Path.expand()
+    |> Path.absname
+    |> File.write("\n#{DateTime.utc_now()} :: #{fname} ================================\n", [:append])
   end
 end
