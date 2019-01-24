@@ -9,11 +9,28 @@ the [Elixium Network](https://www.elixiumnetwork.org)
 
 ## Usage
 
+# Standard Usage
 ```elixir
 {:ok, ref} = WaspVM.start() # Start WaspVM
 WaspVM.load_file(ref, "path/to/wasm/file.wasm") # Load a module
 WaspVM.execute(ref, "some_exported_function") # Call a function
 # => {:ok, total_gas_cost, :function_return_value}
+```
+
+# Options
+For Gas Limit use:
+``` elixir
+ WaspVM.execute(ref, "some_exported_function", [:gas_limt, 100])
+ ```
+
+For Trace use:
+```elixir
+WaspVM.execute(ref, "some_exported_function", [:trace, true])
+```
+
+For Trace & gas limit use:
+```elixir
+WaspVM.execute(ref, "some_exported_function", [gas_limit: 100, trace: true])
 ```
 
 More detailed usage instructions can be found on [HexDocs](https://hexdocs.pm/wasp_vm/0.8.0/WaspVM.html#execute/4-usage).
