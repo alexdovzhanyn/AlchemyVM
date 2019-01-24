@@ -13,4 +13,22 @@ defmodule WaspVM.ProgramTest do
     assert result_1 == -2
     assert result_2 == 2
   end
+
+  test "Modules with start functions execute immediately after initialization" do
+    Code.load_file("test/fixtures/hostfuncs/host.ex")
+
+    {:ok, pid} = WaspVM.start()
+
+    imports = WaspVM.HostFunction.create_imports(Host)
+
+    WaspVM.load_file(pid, "test/fixtures/wasm/start.wasm", imports)
+
+    %{store: %{mems: mems}} = WaspVM.vm_state(pid)
+
+    assert <<15>> =
+      mems
+      |> hd()
+      |> Map.get(:data)
+      |> elem(0)
+  end
 end

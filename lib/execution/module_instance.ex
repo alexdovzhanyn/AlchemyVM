@@ -28,6 +28,12 @@ defmodule WaspVM.ModuleInstance do
       module.memory
       |> initialize_memories()
       |> Enum.map_reduce(store, fn mem, s ->
+        # Initialize data segments into memory. We'll need to update this
+        # post-MVP, once module can have more than one memory.
+        mem = Enum.reduce(module.data, mem, fn segment, acc ->
+          Memory.put_at(acc, segment.offset, segment.data)
+        end)
+
         {:ok, addr, updated_s} = Store.allocate_memory(s, mem)
 
         {addr, updated_s}
