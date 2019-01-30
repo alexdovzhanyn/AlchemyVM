@@ -132,6 +132,8 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_div), do: {ctx, gas + 5, [float_point_op(a / b) | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_rotl), do: {ctx, gas + 5, [rotl(b, a) | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_rotr), do: {ctx, gas + 5, [rotr(b, a) | stack]}
+  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_rotl), do: {ctx, gas + 5, [rotl(b, a) | stack]}
+  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_rotr), do: {ctx, gas + 5, [rotr(b, a) | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_and), do: {ctx, gas + 3, [band(a, b) | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_or), do: {ctx, gas + 3, [bor(a, b) | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_xor), do: {ctx, gas + 3, [bxor(a, b) | stack]}
@@ -784,6 +786,8 @@ defmodule WaspVM.Executor do
   defp sign_value(integer, _n, lower, upper) when integer > lower and integer < upper, do: :math.pow(2, 32) + integer
   defp sign_value(integer, _n, lower, upper) when integer > -lower and integer < -upper, do: :math.pow(2, 32) + integer
 
+  # TODO: This is implemented wrong. Should count number of bits set to 1,
+  # currently counts number of bytes set to 1
   defp popcnt(integer, 32), do: popcnt(<<integer::32>>)
   defp popcnt(integer, 64), do: popcnt(<<integer::64>>)
   defp popcnt(binary) do
@@ -820,6 +824,11 @@ defmodule WaspVM.Executor do
     |> D.new()
   end
 
+
+  # Return a value whose absolute value matches that of a, but whose sign bit
+  # matches that of b. For example, copysign(42.0, -1.0) and copysign(-42.0, -1.0)
+  # both return -42.0.
+  # TODO: This is implemented incorrectly, need to revisit
   defp copysign(a, b) do
     a_truth =
       to_string(a)
@@ -831,10 +840,11 @@ defmodule WaspVM.Executor do
       |> String.codepoints
       |> Enum.any?(&(&1 == "-"))
 
-    if a_truth == true && b_truth == true || a_truth == false && b_truth == false  do
+    # TODO: What if neither match?
+    if a_truth && b_truth || !a_truth && !b_truth  do
       a
     else
-      if a_truth == true && b_truth == false || a_truth == false && b_truth == true do
+      if a_truth && !b_truth || !a_truth && b_truth do
         b * -1
       end
     end
