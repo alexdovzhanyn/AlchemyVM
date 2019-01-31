@@ -282,20 +282,11 @@ defmodule WaspVM.Executor do
     {{frame, vm, next_instr}, gas + Gas.cost(:if), stack}
   end
 
-  # defp exec_inst({frame, vm, n}, gas, stack, _opts, :end) do
-  #   [corresponding_label | labels] = frame.labels
-  #
-  #   case corresponding_label do
-  #     {:loop, _instr} -> {{Map.put(frame, :labels, labels), vm, n}, gas + Gas.cost(:end, false), stack}
-  #     _ -> {{frame, vm, n}, gas, stack}
-  #   end
-  # end
-
   defp exec_inst({frame, vm, n}, gas, stack, _opts, :end) do
     [_ | labels] = frame.labels
     [_ | snapshots] = frame.snapshots
 
-    {{Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm, n}, gas + 2, stack}
+    {{Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm, n}, gas + Gas.cost(:end, false), stack}
   end
 
   defp exec_inst({frame, vm, n}, gas, stack, opts, {:call, funcidx}) do
@@ -304,7 +295,7 @@ defmodule WaspVM.Executor do
     # TODO: Maybe this shouldn't pass the existing stack in?
     {vm, gas, stack} = create_frame_and_execute(vm, func_addr, frame.gas_limit, opts, gas, stack)
 
-    {{frame, vm, n}, gas, stack}
+    {{frame, vm, n}, gas + Gas.cost(:call), stack}
   end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_div_s) do
@@ -320,7 +311,7 @@ defmodule WaspVM.Executor do
         res = trunc(j1 / j2)
         ans = sign_value(res, 32)
 
-        {ctx, gas + 5, [ans | stack]}
+        {ctx, gas + Gas.cost(:i32_div_s), [ans | stack]}
       end
     end
   end
@@ -338,7 +329,7 @@ defmodule WaspVM.Executor do
         res = trunc(j1 / j2)
         ans = sign_value(res, 64)
 
-        {ctx, gas + 5, [ans | stack]}
+        {ctx, gas + Gas.cost(:i64_div_s), [ans | stack]}
       end
     end
   end
@@ -346,7 +337,7 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_div_u) do
     rem = a - (b * trunc(a / b))
     result = Integer.floor_div((a - rem), b)
-    {ctx, gas + 5, [result | stack]}
+    {ctx, gas + Gas.cost(:i32_div_u), [result | stack]}
   end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_rem_s) do
@@ -355,7 +346,7 @@ defmodule WaspVM.Executor do
 
     rem = j1 - (j2 * trunc(j1 / j2))
 
-    {ctx, gas + 5, [rem | stack]}
+    {ctx, gas + Gas.cost(:i32_rem_s), [rem | stack]}
   end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_rem_s) do
@@ -365,13 +356,13 @@ defmodule WaspVM.Executor do
     rem = j1 - (j2 * trunc(j1 / j2))
     res = 1.8446744073709552e19 - rem
 
-    {ctx, gas + 5, [res | stack]}
+    {ctx, gas + Gas.cost(:i64_rem_s), [res | stack]}
   end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_div_u) do
     rem = a - (b * trunc(a / b))
     result = Integer.floor_div((a - rem), b)
-    {ctx, gas + 5, [result | stack]}
+    {ctx, gas + Gas.cost(:i64_div_u), [result | stack]}
   end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_rem_u) do
@@ -383,7 +374,7 @@ defmodule WaspVM.Executor do
 
     res = a - c
 
-    {ctx, gas + 5, [res | stack]}
+    {ctx, gas + Gas.cost(:i32_rem_u), [res | stack]}
   end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_rem_u) do
@@ -395,59 +386,59 @@ defmodule WaspVM.Executor do
 
     res = a - c
 
-    {ctx, gas + 5, [res | stack]}
+    {ctx, gas + Gas.cost(:i64_rem_u), [res | stack]}
   end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_le_s) do
     val = if sign_value(a, 32) <= sign_value(b, 32), do: 1, else: 0
-    {ctx, gas + 3, [val | stack]}
+    {ctx, gas + Gas.cost(:i32_le_s), [val | stack]}
   end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_ge_s) do
     val = if sign_value(a, 32) >= sign_value(b, 32), do: 1, else: 0
-    {ctx, gas + 3, [val | stack]}
+    {ctx, gas + Gas.cost(:i32_ge_s), [val | stack]}
   end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_lt_s) do
     val = if sign_value(a, 32) < sign_value(b, 32), do: 1, else: 0
-    {ctx, gas + 3, [val | stack]}
+    {ctx, gas + Gas.cost(:i32_lt_s), [val | stack]}
   end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_lt_s) do
     val = if sign_value(a, 64) < sign_value(b, 64), do: 1, else: 0
-    {ctx, gas + 3, [val | stack]}
+    {ctx, gas + Gas.cost(:i64_lt_s), [val | stack]}
   end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_gt_s) do
     val = if sign_value(a, 32) > sign_value(b, 32), do: 1, else: 0
-    {ctx, gas + 3, [val | stack]}
+    {ctx, gas + Gas.cost(:i32_gt_s), [val | stack]}
   end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_gt_s) do
     val = if sign_value(a, 64) > sign_value(b, 64), do: 1, else: 0
-    {ctx, gas + 3, [val | stack]}
+    {ctx, gas + Gas.cost(:i64_gt_s), [val | stack]}
   end
 
   defp exec_inst({frame, vm, n}, gas, [value | stack], _opts, {:set_global, idx}) do
     globals = List.replace_at(vm.globals, idx, value)
 
-    {{frame, Map.put(vm, :globals, globals), n}, gas + 3, stack}
+    {{frame, Map.put(vm, :globals, globals), n}, gas + Gas.cost(:set_global), stack}
   end
 
   defp exec_inst({frame, vm, n}, gas, [value | stack], _opts, {:set_local, idx}) do
     locals = put_elem(frame.locals, idx, value)
 
-    {{Map.put(frame, :locals, locals), vm, n}, gas + 3, stack}
+    {{Map.put(frame, :locals, locals), vm, n}, gas + Gas.cost(:set_local), stack}
   end
 
   defp exec_inst({frame, vm, n}, gas, [value | _] = stack, _opts, {:tee_local, idx}) do
     locals = put_elem(frame.locals, idx, value)
 
-    {{Map.put(frame, :locals, locals), vm, n}, gas + 3, stack}
+    {{Map.put(frame, :locals, locals), vm, n}, gas + Gas.cost(:tee_local), stack}
   end
 
   defp exec_inst({frame, vm, n}, gas, [pages | stack], _opts, :grow_memory) do
-    {{frame, Map.put(vm, :memory, Memory.grow(vm.memory, pages)), n}, gas + 3, [length(vm.memory) | stack]}
+    {{frame, Map.put(vm, :memory, Memory.grow(vm.memory, pages)), n}, gas + Gas.cost(:grow_memory), [length(vm.memory) | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load8_s, _alignment, offset}) do
@@ -458,7 +449,7 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 1)
 
-    {ctx, gas + 5, [bin_wrap_signed(:i32, :i8, i8) | stack]}
+    {ctx, gas + Gas.cost(:i32_load8_s), [bin_wrap_signed(:i32, :i8, i8) | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load16_s, _alignment, offset}) do
@@ -469,7 +460,7 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 2)
 
-    {ctx, gas + 5, [bin_wrap_signed(:i32, :i16, i16) | stack]}
+    {ctx, gas + Gas.cost(:i32_load16_s), [bin_wrap_signed(:i32, :i16, i16) | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i64_load8_s, _alignment, offset}) do
@@ -480,7 +471,7 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 1)
 
-    {ctx, gas + 5, [bin_wrap_signed(:i64, :i8, i8) | stack]}
+    {ctx, gas + Gas.cost(:i64_load8_s), [bin_wrap_signed(:i64, :i8, i8) | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i64_load16_s, _alignment, offset}) do
@@ -491,7 +482,7 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 2)
 
-    {ctx, gas + 5, [bin_wrap_signed(:i64, :i16, i16) | stack]}
+    {ctx, gas + Gas.cost(:i64_load16_s), [bin_wrap_signed(:i64, :i16, i16) | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i64_load32_s, _alignment, offset}) do
@@ -502,7 +493,7 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 4)
 
-    {ctx, gas + 5, [bin_wrap_signed(:i64, :i32, i32) | stack]}
+    {ctx, gas + Gas.cost(:i64_load32_s), [bin_wrap_signed(:i64, :i32, i32) | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load8_u, _alignment, offset}) do
@@ -513,7 +504,7 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 1)
 
-    {ctx, gas + 5, [bin_wrap_unsigned(:i32, :i8, abs(i8)) | stack]}
+    {ctx, gas + Gas.cost(:i32_load8_u), [bin_wrap_unsigned(:i32, :i8, abs(i8)) | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load16_u, _alignment, offset}) do
@@ -524,7 +515,7 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 2)
 
-    {ctx, gas + 5, [bin_wrap_unsigned(:i32, :i16, abs(i16)) | stack]}
+    {ctx, gas + Gas.cost(:i32_load16_u), [bin_wrap_unsigned(:i32, :i16, abs(i16)) | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i64_load8_u, _alignment, offset}) do
@@ -535,7 +526,7 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 1)
 
-    {ctx, gas + 5, [bin_wrap_unsigned(:i64, :i8, abs(i8)) | stack]}
+    {ctx, gas + Gas.cost(:i64_load8_u), [bin_wrap_unsigned(:i64, :i8, abs(i8)) | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i64_load16_u, _alignment, offset}) do
@@ -546,7 +537,7 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 2)
 
-    {ctx, gas + 5, [bin_wrap_unsigned(:i64, :i16, abs(i16)) | stack]}
+    {ctx, gas + Gas.cost(:i64_load16_u), [bin_wrap_unsigned(:i64, :i16, abs(i16)) | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i64_load32_u, _alignment, offset}) do
@@ -557,7 +548,7 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 4)
 
-    {ctx, gas + 5, [bin_wrap_unsigned(:i64, :i32, abs(i32)) | stack]}
+    {ctx, gas + Gas.cost(:i64_load32_u), [bin_wrap_unsigned(:i64, :i32, abs(i32)) | stack]}
   end
 
   defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i32_store, _alignment, offset}) do
@@ -571,7 +562,7 @@ defmodule WaspVM.Executor do
     store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
     store = Map.put(vm.store, :mems, store_mems)
 
-    {{frame, Map.put(vm, :store, store), n}, gas + 3, stack}
+    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:i32_store), stack}
   end
 
   defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i32_store8, _alignment, offset}) do
@@ -585,7 +576,7 @@ defmodule WaspVM.Executor do
     store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
     store = Map.put(vm.store, :mems, store_mems)
 
-    {{frame, Map.put(vm, :store, store), n}, gas + 3, stack}
+    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:i32_store8), stack}
   end
 
   defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i32_store16, _alignment, offset}) do
@@ -605,7 +596,7 @@ defmodule WaspVM.Executor do
     store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
     store = Map.put(vm.store, :mems, store_mems)
 
-    {{frame, Map.put(vm, :store, store), n}, gas + 3, stack}
+    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:i32_store16), stack}
   end
 
   defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i64_store8, _alignment, offset}) do
@@ -620,7 +611,7 @@ defmodule WaspVM.Executor do
     store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
     store = Map.put(vm.store, :mems, store_mems)
 
-    {{frame, Map.put(vm, :store, store), n}, gas + 3, stack}
+    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:i64_store8), stack}
   end
 
   defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i64_store16, _alignment, offset}) do
@@ -640,7 +631,7 @@ defmodule WaspVM.Executor do
     store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
     store = Map.put(vm.store, :mems, store_mems)
 
-    {{frame, Map.put(vm, :store, store), n}, gas + 5, stack}
+    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:i64_store16), stack}
   end
 
   defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i64_store32, _alignment, offset}) do
@@ -660,7 +651,7 @@ defmodule WaspVM.Executor do
     store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
     store = Map.put(vm.store, :mems, store_mems)
 
-    {{frame, Map.put(vm, :store, store), n}, gas + 5, stack}
+    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:i64_store32), stack}
   end
 
   defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i64_store, _alignment, offset}) do
@@ -674,7 +665,7 @@ defmodule WaspVM.Executor do
     store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
     store = Map.put(vm.store, :mems, store_mems)
 
-    {{frame, Map.put(vm, :store, store), n}, gas + 3, stack}
+    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:i64_store), stack}
   end
 
   defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:f32_store, _alignment, offset}) do
@@ -688,7 +679,7 @@ defmodule WaspVM.Executor do
     store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
     store = Map.put(vm.store, :mems, store_mems)
 
-    {{frame, Map.put(vm, :store, store), n}, gas + 3, stack}
+    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:f32_store), stack}
   end
 
   defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:f64_store, _alignment, offset}) do
@@ -702,7 +693,7 @@ defmodule WaspVM.Executor do
     store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
     store = Map.put(vm.store, :mems, store_mems)
 
-    {{frame, Map.put(vm, :store, store), n}, gas + 3, stack}
+    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:f64_store), stack}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load, _alignment, offset}) do
@@ -713,7 +704,7 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 4)
 
-    {ctx, gas + 3, [i32 | stack]}
+    {ctx, gas + Gas.cost(:i32_load), [i32 | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i64_load, _alignment, offset}) do
@@ -724,7 +715,7 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 8)
 
-    {ctx, gas + 3, [i64 | stack]}
+    {ctx, gas + Gas.cost(:i64_load), [i64 | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:f32_load, _alignment, offset}) do
@@ -735,7 +726,7 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 4)
 
-    {ctx, gas + 3, [f32 | stack]}
+    {ctx, gas + Gas.cost(:f32_load), [f32 | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:f64_load, _alignment, offset}) do
@@ -746,21 +737,21 @@ defmodule WaspVM.Executor do
       |> Enum.at(mem_addr)
       |> Memory.get_at(address + offset, 8)
 
-    {ctx, gas + 3, [f64 | stack]}
+    {ctx, gas + Gas.cost(:f64_load), [f64 | stack]}
   end
 
   defp exec_inst({frame, vm, n}, gas, stack, _opts, {:loop, _result_type}) do
     labels = [{n, n} | frame.labels]
     snapshots = [stack | frame.snapshots]
 
-    {{Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm, n}, gas + 2, stack}
+    {{Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm, n}, gas + Gas.cost(:loop), stack}
   end
 
   defp exec_inst({frame, vm, n}, gas, stack, _opts, {:block, _result_type, end_idx}) do
     labels = [{n, end_idx - 1} | frame.labels]
     snapshots = [stack | frame.snapshots]
 
-    {{Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm, n}, gas + 2, stack}
+    {{Map.merge(frame, %{labels: labels, snapshots: snapshots}), vm, n}, gas + Gas.cost(:block), stack}
   end
 
 
