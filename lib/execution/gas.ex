@@ -10,7 +10,6 @@ defmodule WaspVM.Gas do
   defp cpu_cycles(:i32_div_s), do: 20
   defp cpu_cycles(:i32_div_u), do: 20
   defp cpu_cycles(:i32_le_s), do: 1
-  defp cpu_cycles(:i32_ge_s), do: 1
   defp cpu_cycles(:i32_lt_u), do: 1
   defp cpu_cycles(:i32_gt_u), do: 1
   defp cpu_cycles(:i32_le_u), do: 1
@@ -46,8 +45,6 @@ defmodule WaspVM.Gas do
   defp cpu_cycles(:i32_store), do: not_implemented(:i32_store)
   defp cpu_cycles(:i32_store8), do: not_implemented(:i32_store8)
   defp cpu_cycles(:i32_store16), do: not_implemented(:i32_store16)
-
-
   defp cpu_cycles(:i64_add), do: 1
   defp cpu_cycles(:i64_sub), do: 1
   defp cpu_cycles(:i64_mul), do: 3
@@ -60,7 +57,6 @@ defmodule WaspVM.Gas do
   defp cpu_cycles(:i64_le_u), do: 1
   defp cpu_cycles(:i64_ge_u), do: 1
   defp cpu_cycles(:i64_lt_s), do: 1
-  defp cpu_cycles(:i64_ge_s), do: 1
   defp cpu_cycles(:i64_gt_s), do: 1
   defp cpu_cycles(:i64_eq), do: 1
   defp cpu_cycles(:i64_ne), do: 1
@@ -95,10 +91,6 @@ defmodule WaspVM.Gas do
   defp cpu_cycles(:i64_store8), do: not_implemented(:i64_store8)
   defp cpu_cycles(:i64_store16), do: not_implemented(:i64_store16)
   defp cpu_cycles(:i64_store32), do: not_implemented(:i64_store32)
-
-
-
-
   defp cpu_cycles(:f32_add), do: 4
   defp cpu_cycles(:f32_sub), do: 4
   defp cpu_cycles(:f32_mul), do: 4
@@ -120,15 +112,14 @@ defmodule WaspVM.Gas do
   defp cpu_cycles(:f32_abs), do: not_implemented(:f32_abs)
   defp cpu_cycles(:f32_sqrt), do: 13
   defp cpu_cycles(:f32_ceil), do: not_implemented(:f32_ceil)
-  defp cpu_cycles(:f32_convert_s_i32), do: not_implemented(:f32_convert_s_i32)
-  defp cpu_cycles(:f32_convert_u_i32), do: not_implemented(:f32_convert_u_i32)
-  defp cpu_cycles(:f32_convert_s_i64), do: not_implemented(:f32_convert_s_i64)
-  defp cpu_cycles(:f32_convert_u_i64), do: not_implemented(:f32_convert_u_i64)
-  defp cpu_cycles(:f32_demote_f64), do: not_implemented(:f32_demote_f64)
+  defp cpu_cycles(:f32_convert_s_i32), do: 5
+  defp cpu_cycles(:f32_convert_u_i32), do: 6
+  defp cpu_cycles(:f32_convert_s_i64), do: 5
+  defp cpu_cycles(:f32_convert_u_i64), do: 6
+  defp cpu_cycles(:f32_demote_f64), do: 10
   defp cpu_cycles(:f32_reinterpret_i32), do: not_implemented(:f32_reinterpret_i32)
   defp cpu_cycles(:f32_load), do: not_implemented(:f32_load)
   defp cpu_cycles(:f32_store), do: not_implemented(:f32_store)
-
   defp cpu_cycles(:f64_add), do: 4
   defp cpu_cycles(:f64_sub), do: 4
   defp cpu_cycles(:f64_mul), do: 3
@@ -150,14 +141,13 @@ defmodule WaspVM.Gas do
   defp cpu_cycles(:f64_abs), do: not_implemented(:f64_abs)
   defp cpu_cycles(:f64_sqrt), do: 18
   defp cpu_cycles(:f64_ceil), do: not_implemented(:f64_ceil)
-  defp cpu_cycles(:f64_convert_s_i32), do: not_implemented(:f64_convert_s_i32)
-  defp cpu_cycles(:f64_convert_u_i32), do: not_implemented(:f64_convert_u_i32)
-  defp cpu_cycles(:f64_convert_s_i64), do: not_implemented(:f64_convert_s_i64)
-  defp cpu_cycles(:f64_convert_u_i64), do: not_implemented(:f64_convert_u_i64)
-  defp cpu_cycles(:f64_promote_f32), do: not_implemented(:f64_promote_f32)
+  defp cpu_cycles(:f64_convert_s_i32), do: 4
+  defp cpu_cycles(:f64_convert_u_i32), do: 5
+  defp cpu_cycles(:f64_convert_s_i64), do: 4
+  defp cpu_cycles(:f64_convert_u_i64), do: 5
+  defp cpu_cycles(:f64_promote_f32), do: 4
   defp cpu_cycles(:f64_load), do: not_implemented(:f64_load)
   defp cpu_cycles(:f64_store), do: not_implemented(:f64_store)
-
   defp cpu_cycles(:if), do: 1
   defp cpu_cycles(:select), do: 5
   defp cpu_cycles(:br), do: 8
@@ -181,11 +171,9 @@ defmodule WaspVM.Gas do
   defp cpu_cycles(:i32_popcnt, num_ones), do: 32 + num_ones
   defp cpu_cycles(:i32_clz, num_zeros), do: num_zeros * 2
   defp cpu_cycles(:i32_ctz, num_zeros), do: num_zeros * 2
-
   defp cpu_cycles(:i64_popcnt, num_ones), do: 64 + num_ones
   defp cpu_cycles(:i64_clz, num_zeros), do: num_zeros * 2
   defp cpu_cycles(:i64_ctz, num_zeros), do: num_zeros * 2
-
   defp cpu_cycles(:end, true), do: 0
   defp cpu_cycles(:end, _), do: 8
 
