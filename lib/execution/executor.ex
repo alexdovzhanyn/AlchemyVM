@@ -84,84 +84,41 @@ defmodule WaspVM.Executor do
 
   def instruction(opcode, f, v, g, s, n, opts) when is_atom(opcode), do: exec_inst({f, v, n}, g, s, opts, opcode)
   def instruction(opcode, f, v, g, s, n, opts) when is_tuple(opcode), do: exec_inst({f, v, n}, g, s, opts, opcode)
-
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_add), do: {ctx, gas + Gas.cost(:i32_add), [a + b | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_sub), do: {ctx, gas + Gas.cost(:i32_sub), [a - b | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_mul), do: {ctx, gas + Gas.cost(:i32_mul), [a * b | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_add), do: {ctx, gas + Gas.cost(:i64_add), [a + b | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_sub), do: {ctx, gas + Gas.cost(:i64_sub), [a - b | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_mul), do: {ctx, gas + Gas.cost(:i64_mul), [a * b | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_le_s) when a <= b, do: {ctx, gas + Gas.cost(:i64_le_s), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_ge_s) when a >= b, do: {ctx, gas + Gas.cost(:i64_ge_s), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_lt_u) when a < b, do: {ctx, gas + Gas.cost(:i32_lt_u), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_lt_u) when a < b, do: {ctx, gas + Gas.cost(:i64_lt_u), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_gt_u) when a > b, do: {ctx, gas + Gas.cost(:i32_gt_u), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_gt_u) when a > b, do: {ctx, gas + Gas.cost(:i64_gt_u), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_le_u) when a <= b, do: {ctx, gas + Gas.cost(:i32_le_u), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_le_u) when a <= b, do: {ctx, gas + Gas.cost(:i64_le_u), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_ge_u) when a >= b, do: {ctx, gas + Gas.cost(:i32_ge_u), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_ge_u) when a >= b, do: {ctx, gas + Gas.cost(:i64_ge_u), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_eq) when a === b, do: {ctx, gas + Gas.cost(:i32_eq), [1 | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_eq) when a === b, do: {ctx, gas + Gas.cost(:i64_eq), [1 | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_ne) when a !== b, do: {ctx, gas + Gas.cost(:i64_ne), [1 | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_eq) when a === b, do: {ctx, gas + Gas.cost(:f32_eq), [1 | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :f64_eq) when a === b, do: {ctx, gas + Gas.cost(:f64_eq), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_ne) when a !== b, do: {ctx, gas + Gas.cost(:i32_ne), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_lt) when a < b, do: {ctx, gas + Gas.cost(:f32_lt), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f64_lt) when a < b, do: {ctx, gas + Gas.cost(:f64_lt), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_le) when a <= b, do: {ctx, gas + Gas.cost(:f32_le), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f64_le) when a <= b, do: {ctx, gas + Gas.cost(:f64_le), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_ge) when a <= b, do: {ctx, gas + Gas.cost(:f32_ge), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f64_ge) when a <= b, do: {ctx, gas + Gas.cost(:f64_ge), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_gt) when a > b, do: {ctx, gas + Gas.cost(:f32_gt), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f64_gt) when a > b, do: {ctx, gas + Gas.cost(:f64_gt), [1 | stack]}
+
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_ne) when a !== b, do: {ctx, gas + Gas.cost(:f32_ne), [1 | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :f64_ne) when a !== b, do: {ctx, gas + Gas.cost(:f64_ne), [1 | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_add), do: {ctx, gas + Gas.cost(:f32_add), [float_point_op(a + b) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_sub), do: {ctx, gas + Gas.cost(:f32_sub), [float_point_op(b - a) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_mul), do: {ctx, gas + Gas.cost(:f32_mul), [float_point_op(a * b) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f64_add), do: {ctx, gas + Gas.cost(:f64_add), [float_point_op(a + b) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f64_sub), do: {ctx, gas + Gas.cost(:f64_sub), [float_point_op(b - a) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f64_mul), do: {ctx, gas + Gas.cost(:f64_mul), [float_point_op(a * b) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_min), do: {ctx, gas + Gas.cost(:f32_min), [float_point_op(min(a, b)) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_max), do: {ctx, gas + Gas.cost(:f32_max), [float_point_op(max(a, b)) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f64_min), do: {ctx, gas + Gas.cost(:f64_min), [float_point_op(min(a, b)) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :f64_max), do: {ctx, gas + Gas.cost(:f64_max), [float_point_op(max(a, b)) | stack]}
+
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_copysign), do: {ctx, gas + Gas.cost(:f32_copysign), [float_point_op(copysign(b, a)) | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :f64_copysign), do: {ctx, gas + Gas.cost(:f64_copysign), [float_point_op(copysign(b, a)) | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :f32_div), do: {ctx, gas + Gas.cost(:f32_div), [float_point_op(a / b) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_rotl), do: {ctx, gas + Gas.cost(:i32_rotl), [rotl(b, a) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_rotr), do: {ctx, gas + Gas.cost(:i32_rotr), [rotr(b, a) | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_rotl), do: {ctx, gas + Gas.cost(:i64_rotl), [rotl(b, a) | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_rotr), do: {ctx, gas + Gas.cost(:i64_rotr), [rotr(b, a) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_and), do: {ctx, gas + Gas.cost(:i32_and), [band(a, b) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_or), do: {ctx, gas + Gas.cost(:i32_or), [bor(a, b) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_xor), do: {ctx, gas + Gas.cost(:i32_xor), [bxor(a, b) | stack]}
+
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_and), do: {ctx, gas + Gas.cost(:i64_and), [band(a, b) | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_or), do: {ctx, gas + Gas.cost(:i64_or), [bor(a, b) | stack]}
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_xor), do: {ctx, gas + Gas.cost(:i64_xor), [bxor(a, b) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_shl), do: {ctx, gas + Gas.cost(:i32_shl), [bsl(a, b) | stack]}
+
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_shl), do: {ctx, gas + Gas.cost(:i64_shl), [bsl(a, b) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_shr_u), do: {ctx, gas + Gas.cost(:i32_shr_u), [log_shr(a, b) | stack]}
+
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_shr_u), do: {ctx, gas + Gas.cost(:i64_shr_u), [bsr(a, b) | stack]}
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_shr_s), do: {ctx, gas + Gas.cost(:i32_shr_s), [bsr(a, Integer.mod(b, 32)) | stack]}
+
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_shr_s), do: {ctx, gas + Gas.cost(:i64_shr_s), [bsr(a, Integer.mod(b, 64)) | stack]}
-  defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i32_eq), do: {ctx, gas + Gas.cost(:i32_eq), [0 | stack]}
+
+
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i64_eq), do: {ctx, gas + Gas.cost(:i64_eq), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i64_ne), do: {ctx, gas + Gas.cost(:i64_ne), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i64_le_s), do: {ctx, gas + Gas.cost(:i64_le_s), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i64_ge_s), do: {ctx, gas + Gas.cost(:i64_ge_s), [0 | stack]}
-  defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i32_lt_u), do: {ctx, gas + Gas.cost(:i32_lt_u), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i64_lt_u), do: {ctx, gas + Gas.cost(:i64_lt_u), [0 | stack]}
-  defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i32_gt_u), do: {ctx, gas + Gas.cost(:i32_gt_u), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i64_gt_u), do: {ctx, gas + Gas.cost(:i64_gt_u), [0 | stack]}
-  defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i32_le_u), do: {ctx, gas + Gas.cost(:i32_le_u), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i64_le_u), do: {ctx, gas + Gas.cost(:i64_le_u), [0 | stack]}
-  defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i32_ge_u), do: {ctx, gas + Gas.cost(:i32_ge_u), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i64_ge_u), do: {ctx, gas + Gas.cost(:i64_ge_u), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :f32_eq), do: {ctx, gas + Gas.cost(:f32_eq), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :f64_eq), do: {ctx, gas + Gas.cost(:f64_eq), [0 | stack]}
-  defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i32_ne), do: {ctx, gas + Gas.cost(:i32_ne), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :f32_lt), do: {ctx, gas + Gas.cost(:f32_lt), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :f64_lt), do: {ctx, gas + Gas.cost(:f64_lt), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :f32_le) , do: {ctx, gas + Gas.cost(:f32_le), [0 | stack]}
@@ -172,8 +129,6 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :f64_gt), do: {ctx, gas + Gas.cost(:f64_gt), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :f32_ne), do: {ctx, gas + Gas.cost(:f32_ne), [0 | stack]}
   defp exec_inst(ctx, gas, [_, _ | stack], _opts, :f64_ne), do: {ctx, gas + Gas.cost(:f64_ne), [0 | stack]}
-  defp exec_inst(ctx, gas, [0 | stack], _opts, :i32_eqz), do: {ctx, gas + Gas.cost(:i32_eqz), [1 | stack]}
-  defp exec_inst(ctx, gas, [_ | stack], _opts, :i32_eqz), do: {ctx, gas + Gas.cost(:i32_eqz), [0 | stack]}
   defp exec_inst(ctx, gas, [0 | stack], _opts, :i64_eqz), do: {ctx, gas + Gas.cost(:i64_eqz), [1 | stack]}
   defp exec_inst(ctx, gas, [_ | stack], _opts, :i64_eqz), do: {ctx, gas + Gas.cost(:i64_eqz), [0 | stack]}
   defp exec_inst(ctx, gas, [a | stack], _opts, :f32_nearest), do: {ctx, gas + Gas.cost(:f32_nearest), [round(a) | stack]}
@@ -191,10 +146,7 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, gas, [a | stack], _opts, :f32_ceil), do: {ctx, gas + Gas.cost(:f32_ceil), [float_point_op(Float.ceil(a)) | stack]}
   defp exec_inst(ctx, gas, [a | stack], _opts, :f64_ceil), do: {ctx, gas + Gas.cost(:f64_ceil), [float_point_op(Float.ceil(a)) | stack]}
   defp exec_inst(ctx, gas, [a | stack], _opts, :i32_wrap_i64), do: {ctx, gas + Gas.cost(:i32_wrap_i64), [bin_wrap(:i64, :i32, a) | stack]}
-  defp exec_inst(ctx, gas, [a | stack], _opts, :i32_trunc_u_f32), do: {ctx, gas + Gas.cost(:i32_trunc_u_f32), [bin_trunc(:f32, :i32, a) | stack]}
-  defp exec_inst(ctx, gas, [a | stack], _opts, :i32_trunc_s_f32), do: {ctx, gas + Gas.cost(:i32_trunc_s_f32), [bin_trunc(:f32, :i32, a) | stack]}
-  defp exec_inst(ctx, gas, [a | stack], _opts, :i32_trunc_u_f64), do: {ctx, gas + Gas.cost(:i32_trunc_u_f32), [bin_trunc(:f32, :i32, a) | stack]}
-  defp exec_inst(ctx, gas, [a | stack], _opts, :i32_trunc_s_f64), do: {ctx, gas + Gas.cost(:i32_trunc_s_f64), [bin_trunc(:f32, :i32, a) | stack]}
+
   defp exec_inst(ctx, gas, [a | stack], _opts, :i64_trunc_u_f32), do: {ctx, gas + Gas.cost(:i64_trunc_u_f32), [bin_trunc(:f32, :i64, a) | stack]}
   defp exec_inst(ctx, gas, [a | stack], _opts, :i64_trunc_s_f32), do: {ctx, gas + Gas.cost(:i64_trunc_s_f32), [bin_trunc(:f32, :i64, a) | stack]}
   defp exec_inst(ctx, gas, [a | stack], _opts, :i64_trunc_u_f64), do: {ctx, gas + Gas.cost(:i64_trunc_u_f64), [bin_trunc(:f64, :i64, a) | stack]}
@@ -211,7 +163,7 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, gas, [a | stack], _opts, :i64_extend_s_i32), do: {ctx, gas + Gas.cost(:i64_extend_s_i32), [band(a, 0xFFFFFFFFFFFFFFFF) | stack]}
   defp exec_inst(ctx, gas, [a | stack], _opts, :f32_demote_f64), do: {ctx, gas + Gas.cost(:f32_demote_f64), [float_demote(a * 1.0000000) | stack]}
   defp exec_inst(ctx, gas, [a | stack], _opts, :f64_promote_f32), do: {ctx, gas + Gas.cost(:f64_promote_f32), [float_promote(a * 1.0000000) | stack]}
-  defp exec_inst(ctx, gas, [a | stack], _opts, :i32_reinterpret_f32), do: {ctx, gas + Gas.cost(:i32_reinterpret_f32), [reint(:f32, :i32, a) | stack]}
+
   defp exec_inst(ctx, gas, [a | stack], _opts, :i64_reinterpret_f32), do: {ctx, gas + Gas.cost(:i64_reinterpret_f32), [reint(:f32, :i64, a) | stack]}
   defp exec_inst(ctx, gas, [a | stack], _opts, :f64_reinterpret_i64), do: {ctx, gas + Gas.cost(:f64_reinterpret_i64), [reint(:f64, :i64, a) | stack]}
   defp exec_inst(ctx, gas, [a | stack], _opts, :f32_reinterpret_i32), do: {ctx, gas + Gas.cost(:f32_reinterpret_i32), [reint(:f32, :i32, a) | stack]}
@@ -219,10 +171,6 @@ defmodule WaspVM.Executor do
   defp exec_inst(ctx, gas, [1, _ | stack], _opts, :select), do: {ctx, gas + Gas.cost(:select), stack}
   defp exec_inst(ctx, gas, [1 | stack], _opts, {:br_if, label_idx}), do: break_to(ctx, gas + Gas.cost(:br_if), stack, label_idx)
   defp exec_inst(ctx, gas, [_ | stack], _opts, {:br_if, _label_idx}), do: {ctx, gas + Gas.cost(:br_if), stack}
-  defp exec_inst(ctx, gas, stack, _opts, {:i32_const, i32}), do: {ctx, gas + Gas.cost(:i32_const), [i32 | stack]}
-  defp exec_inst(ctx, gas, stack, _opts, {:i64_const, i64}), do: {ctx, gas + Gas.cost(:i64_const), [i64 | stack]}
-  defp exec_inst(ctx, gas, stack, _opts, {:f32_const, f32}), do: {ctx, gas + Gas.cost(:f32_const), [f32 | stack]}
-  defp exec_inst(ctx, gas, stack, _opts, {:f64_const, f64}), do: {ctx, gas + Gas.cost(:f64_const), [f64 | stack]}
   defp exec_inst({_frame, vm, _n} = ctx, gas, stack, _opts, :current_memory),  do: {ctx, gas + Gas.cost(:current_memory), [length(vm.memory.pages) | stack]}
   defp exec_inst({frame, _vm, _n} = ctx, gas, stack, _opts, {:get_local, idx}), do: {ctx, gas + Gas.cost(:get_local), [elem(frame.locals, idx) | stack]}
   defp exec_inst({_frame, vm, _n} = ctx, gas, stack, _opts, {:get_global, idx}), do: {ctx, gas + Gas.cost(:get_global), [Enum.at(vm.globals, idx) | stack]}
@@ -233,21 +181,260 @@ defmodule WaspVM.Executor do
   defp exec_inst({frame, vm, _n}, gas, stack, _opts, :return), do: {{frame, vm, -10}, gas + Gas.cost(:return), stack}
   defp exec_inst(ctx, gas, stack, _opts, :unreachable), do: {ctx, gas + Gas.cost(:unreachable), stack}
   defp exec_inst(ctx, gas, stack, _opts, :nop), do: {ctx, gas + Gas.cost(:nop), stack}
-  defp exec_inst(_ctx, _gas, [0 | _], _opts, :i32_div_u), do: trap("Divide by zero in i32.div_u")
-  defp exec_inst(_ctx, _gas, [0 | _], _opts, :i32_rem_s), do: trap("Divide by zero in i32.rem_s")
+
   defp exec_inst(_ctx, _gas, [0 | _], _opts, :i64_rem_s), do: trap("Divide by zero in i64.rem_s")
   defp exec_inst(_ctx, _gas, [0 | _], _opts, :i64_div_u), do: trap("Divide by zero in i64.div_u")
-  defp exec_inst(_ctx, _gas, [0 | _], _opts, :i32_rem_u), do: trap("Divide by zero in i32.rem_u")
+
   defp exec_inst(_ctx, _gas, [0 | _], _opts, :i64_rem_u), do: trap("Divide by zero in i64.rem_u")
 
-  defp exec_inst(ctx, gas, [a | stack], _opts, :i32_popcnt) do
-    num_ones = popcnt(a, 32)
-    {ctx, gas + Gas.cost(:i32_popcnt, num_ones), [num_ones | stack]}
+  # Begin i32 Instructions =====================================================
+
+  defp exec_inst(ctx, gas, stack, _opts, {:i32_const, i32}) do
+    {ctx, gas + Gas.cost(:i32_const), [<<i32::integer-32-little>> | stack]}
   end
 
-  defp exec_inst(ctx, gas, [a | stack], _opts, :i64_popcnt) do
-    num_ones = popcnt(a, 64)
-    {ctx, gas + Gas.cost(:i64_popcnt, num_ones), [num_ones | stack]}
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_add) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    {ctx, gas + Gas.cost(:i32_add), [<<(a + b)::integer-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_sub) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    {ctx, gas + Gas.cost(:i32_sub), [<<(a - b)::integer-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_mul) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    {ctx, gas + Gas.cost(:i32_mul), [<<(a * b)::integer-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_div_s) do
+    <<a::integer-32-little-signed>> = i32a
+    <<b::integer-32-little-signed>> = i32b
+
+    if b == 0 do
+      trap("Divide by zero in i32.div_s")
+    else
+      if a / b >= 2147483648 do
+        trap("Out of bounds in i32.div_s")
+      else
+        res = trunc(a / b)
+
+        {ctx, gas + Gas.cost(:i32_div_s), [<<res::integer-32-little-signed>> | stack]}
+      end
+    end
+  end
+
+  defp exec_inst(_ctx, _gas, [<<0, 0, 0, 0>> | _], _opts, :i32_div_u) do
+    trap("Divide by zero in i32.div_u")
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_div_u) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    res = trunc(a / b)
+
+    {ctx, gas + Gas.cost(:i32_div_u), [<<res::integer-32-little>> | stack]}
+  end
+
+  defp exec_inst(_ctx, _gas, [<<0, 0, 0, 0>> | _], _opts, :i32_rem_s) do
+    trap("Divide by zero in i32.rem_s")
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_rem_s) do
+    <<a::integer-32-little-signed>> = i32a
+    <<b::integer-32-little-signed>> = i32b
+
+    {ctx, gas + Gas.cost(:i32_rem_s), [<<rem(a, b)::integer-32-little-signed>> | stack]}
+  end
+
+  defp exec_inst(_ctx, _gas, [<<0, 0, 0, 0>> | _], _opts, :i32_rem_u) do
+    trap("Divide by zero in i32.rem_u")
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_rem_u) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    {ctx, gas + Gas.cost(:i32_rem_u), [<<rem(a, b)::integer-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_rotl) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    result = rotl(b, a)
+
+    {ctx, gas + Gas.cost(:i32_rotl), [<<result::integer-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_rotr) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    result = rotr(b, a)
+
+    {ctx, gas + Gas.cost(:i32_rotr), [<<result::integer-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_and) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    {ctx, gas + Gas.cost(:i32_and), [<<(a &&& b)::integer-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_or) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    {ctx, gas + Gas.cost(:i32_or), [<<(a ||| b)::integer-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_xor) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    {ctx, gas + Gas.cost(:i32_xor), [<<bxor(a, b)::integer-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_shl) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    {ctx, gas + Gas.cost(:i32_shl), [<<(a <<< b)::integer-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_shr_u) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    {ctx, gas + Gas.cost(:i32_shr_u), [<<(a >>> b)::integer-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_shr_s) do
+    <<a::integer-32-little-signed>> = i32a
+    <<b::integer-32-little-signed>> = i32b
+
+    {ctx, gas + Gas.cost(:i32_shr_s), [<<(a >>> b)::integer-32-little-signed>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_eq) when a === b do
+    {ctx, gas + Gas.cost(:i32_eq), [<<1, 0, 0, 0>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [_, _ | stack], _opts, :i32_eq) do
+    {ctx, gas + Gas.cost(:i32_eq), [<<0, 0, 0, 0>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_ne) when a !== b do
+    {ctx, gas + Gas.cost(:i32_ne), [<<1, 0, 0, 0>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_ne) do
+    {ctx, gas + Gas.cost(:i32_ne), [<<0, 0, 0, 0>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [<<0, 0, 0, 0>> | stack], _opts, :i32_eqz) do
+    {ctx, gas + Gas.cost(:i32_eqz), [<<1, 0, 0, 0>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [_ | stack], _opts, :i32_eqz) do
+    {ctx, gas + Gas.cost(:i32_eqz), [<<0, 0, 0, 0>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_lt_u) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    result = if a < b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i32_lt_u), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_gt_u) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    result = if a > b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i32_gt_u), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_le_u) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    result = if a <= b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i32_le_u), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_ge_u) do
+    <<a::integer-32-little>> = i32a
+    <<b::integer-32-little>> = i32b
+
+    result = if a >= b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i32_ge_u), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_le_s) do
+    <<a::integer-32-little-signed>> = i32a
+    <<b::integer-32-little-signed>> = i32b
+
+    result = if a <= b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i32_le_s), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_ge_s) do
+    <<a::integer-32-little-signed>> = i32a
+    <<b::integer-32-little-signed>> = i32b
+
+    result = if a >= b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i32_ge_s), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_lt_s) do
+    <<a::integer-32-little-signed>> = i32a
+    <<b::integer-32-little-signed>> = i32b
+
+    result = if a < b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i32_lt_s), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32b, i32a | stack], _opts, :i32_gt_s) do
+    <<a::integer-32-little-signed>> = i32a
+    <<b::integer-32-little-signed>> = i32b
+
+    result = if a > b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i32_gt_s), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i32 | stack], _opts, :i32_popcnt) do
+    count =
+      for <<bit::1 <- i32 >>, do: bit
+      |> Enum.reject(& &1 !== 1)
+      |> length()
+
+    {ctx, gas + Gas.cost(:i32_popcnt, count), [<<count::integer-32-little>> | stack]}
+  end
+
+  # TODO: Revisit
+  defp exec_inst(ctx, gas, [a | stack], _opts, :i32_ctz) do
+    num_zeros = count_bits(:t, a)
+    {ctx, gas + Gas.cost(:i32_ctz, num_zeros), [num_zeros | stack]}
   end
 
   defp exec_inst(ctx, gas, [a | stack], _opts, :i32_clz) do
@@ -255,15 +442,434 @@ defmodule WaspVM.Executor do
     {ctx, gas + Gas.cost(:i32_clz, num_zeros), [num_zeros | stack]}
   end
 
+  defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load, _alignment, offset}) do
+    # TODO: Should this be the first memory in the module? Can this reference an imported memory?
+    mem_addr = hd(frame.module.memaddrs)
+
+    # Address can only be an i32 in the MVP
+    <<i32addr::integer-32-little>> = address
+    <<i32off::integer-32-little>> = offset
+
+    i32 =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(i32addr + i32off, 4)
+
+    {ctx, gas + Gas.cost(:i32_load), [i32 | stack]}
+  end
+
+  defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load8_s, _alignment, offset}) do
+    mem_addr = hd(frame.module.memaddrs)
+
+    # Address can only be an i32 in the MVP
+    <<i32addr::integer-32-little>> = address
+    <<i32off::integer-32-little>> = offset
+
+    i8bin =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(i32addr + i32off, 1)
+
+    <<i8::integer-8-little-signed>> = i8bin
+
+    sign = if i8 > 0, do: <<0>>, else: <<255>>
+
+    {ctx, gas + Gas.cost(:i32_load8_s), [i8bin <> <<sign, sign, sign>> | stack]}
+  end
+
+  defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load16_s, _alignment, offset}) do
+    mem_addr = hd(frame.module.memaddrs)
+
+    # Address can only be an i32 in the MVP
+    <<i32addr::integer-32-little>> = address
+    <<i32off::integer-32-little>> = offset
+
+    i16bin =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(i32addr + i32off, 2)
+
+    <<i16::integer-16-little-signed>> = i16bin
+
+    sign = if i16 > 0, do: <<0>>, else: <<255>>
+
+    {ctx, gas + Gas.cost(:i32_load16_s), [i16bin <> <<sign, sign>> | stack]}
+  end
+
+  defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load8_u, _alignment, offset}) do
+    mem_addr = hd(frame.module.memaddrs)
+
+    # Address can only be an i32 in the MVP
+    <<i32addr::integer-32-little>> = address
+    <<i32off::integer-32-little>> = offset
+
+    i8 =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(i32addr + i32off, 1)
+
+    {ctx, gas + Gas.cost(:i32_load8_u), [i8 <> <<0, 0, 0>> | stack]}
+  end
+
+  defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load16_u, _alignment, offset}) do
+    mem_addr = hd(frame.module.memaddrs)
+
+    # Address can only be an i32 in the MVP
+    <<i32addr::integer-32-little>> = address
+    <<i32off::integer-32-little>> = offset
+
+    i16 =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.get_at(i32addr + i32off, 2)
+
+    {ctx, gas + Gas.cost(:i32_load16_u), [i16 <> <<0, 0>> | stack]}
+  end
+
+  defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i32_store, _alignment, offset}) do
+    mem_addr = hd(frame.module.memaddrs)
+
+    # Address can only be an i32 in the MVP
+    <<i32addr::integer-32-little>> = address
+    <<i32off::integer-32-little>> = offset
+
+    mem =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(i32addr + i32off, value)
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:i32_store), stack}
+  end
+
+  defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i32_store8, _alignment, offset}) do
+    mem_addr = hd(frame.module.memaddrs)
+
+    # Address can only be an i32 in the MVP
+    <<i32addr::integer-32-little>> = address
+    <<i32off::integer-32-little>> = offset
+
+    # Value is little endian, so grabbing the first byte is effectively wrapping
+    <<i8::bytes-size(1), _rest::binary>> = value
+
+    mem =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(i32addr + i32off, i8)
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:i32_store8), stack}
+  end
+
+  defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i32_store16, _alignment, offset}) do
+    mem_addr = hd(frame.module.memaddrs)
+
+    # Address can only be an i32 in the MVP
+    <<i32addr::integer-32-little>> = address
+    <<i32off::integer-32-little>> = offset
+
+    # Value is little endian, so grabbing the first 2 bytes is effectively wrapping
+    <<i16::bytes-size(2), _rest::binary>> = value
+
+    mem =
+      vm.store.mems
+      |> Enum.at(mem_addr)
+      |> Memory.put_at(i32addr + i32off, i16)
+
+    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
+    store = Map.put(vm.store, :mems, store_mems)
+
+    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:i32_store16), stack}
+  end
+
+  # TODO: Continue this
+  defp exec_inst(ctx, gas, [a | stack], _opts, :i32_trunc_u_f32) do
+    {ctx, gas + Gas.cost(:i32_trunc_u_f32), [bin_trunc(:f32, :i32, a) | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [a | stack], _opts, :i32_trunc_s_f32) do
+    {ctx, gas + Gas.cost(:i32_trunc_s_f32), [bin_trunc(:f32, :i32, a) | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [a | stack], _opts, :i32_trunc_u_f64) do
+    {ctx, gas + Gas.cost(:i32_trunc_u_f32), [bin_trunc(:f32, :i32, a) | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [a | stack], _opts, :i32_trunc_s_f64) do
+    {ctx, gas + Gas.cost(:i32_trunc_s_f64), [bin_trunc(:f32, :i32, a) | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [a | stack], _opts, :i32_reinterpret_f32) do
+    {ctx, gas + Gas.cost(:i32_reinterpret_f32), [reint(:f32, :i32, a) | stack]}
+  end
+
+  # End i32 Instructions =======================================================
+  # Begin i64 Instructions =====================================================
+
+  defp exec_inst(ctx, gas, stack, _opts, {:i64_const, i64}) do
+    {ctx, gas + Gas.cost(:i64_const), [<<i64::integer-64-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i64b, i64a | stack], _opts, :i64_add) do
+    <<a::integer-64-little>> = i64a
+    <<b::integer-64-little>> = i64b
+
+    {ctx, gas + Gas.cost(:i64_add), [<<(a + b)::integer-64-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i64b, i64a | stack], _opts, :i64_sub) do
+    <<a::integer-64-little>> = i64a
+    <<b::integer-64-little>> = i64b
+
+    {ctx, gas + Gas.cost(:i64_sub), [<<(a - b)::integer-64-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i64b, i64a | stack], _opts, :i64_mul) do
+    <<a::integer-64-little>> = i64a
+    <<b::integer-64-little>> = i64b
+
+    {ctx, gas + Gas.cost(:i64_mul), [<<(a * b)::integer-64-little>> | stack]}
+  end
+
+  # End i64 Instructions =======================================================
+  # Begin f32 Instructions =====================================================
+
+  defp exec_inst(ctx, gas, stack, _opts, {:f32_const, f32}) do
+    {ctx, gas + Gas.cost(:f32_const), [<<f32::float-32-little>> | stack]}
+  end
+
+  # End f32 Instructions =======================================================
+  # Begin f64 Instructions =====================================================
+
+  defp exec_inst(ctx, gas, stack, _opts, {:f64_const, f64}) do
+    {ctx, gas + Gas.cost(:f64_const), [<<f64::float-64-little>> | stack]}
+  end
+
+  # End f64 Instructions =======================================================
+
+  defp exec_inst(ctx, gas, [i64b, i64a | stack], _opts, :i64_le_s) do
+    <<a::integer-64-little>> = i64a
+    <<b::integer-64-little>> = i64b
+
+    result = if a <= b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i64_le_s), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [i64b, i64a | stack], _opts, :i64_ge_s) do
+    <<a::integer-64-little>> = i64a
+    <<b::integer-64-little>> = i64b
+
+    result = if a >= b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i64_ge_s), [result | stack]}
+  end
+
+
+
+  defp exec_inst(ctx, gas, [i64b, i64a | stack], _opts, :i64_lt_u) do
+    <<a::integer-64-little>> = i64a
+    <<b::integer-64-little>> = i64b
+
+    result = if a < b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i64_lt_u), [result | stack]}
+  end
+
+
+
+  defp exec_inst(ctx, gas, [i64b, i64a | stack], _opts, :i64_gt_u) do
+    <<a::integer-64-little>> = i64a
+    <<b::integer-64-little>> = i64b
+
+    result = if a > b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i64_gt_u), [result | stack]}
+  end
+
+
+
+  defp exec_inst(ctx, gas, [i64b, i64a | stack], _opts, :i64_le_u) do
+    <<a::integer-64-little>> = i64a
+    <<b::integer-64-little>> = i64b
+
+    result = if a <= b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i64_le_u), [result | stack]}
+  end
+
+
+
+  defp exec_inst(ctx, gas, [i64b, i64a | stack], _opts, :i64_ge_u) do
+    <<a::integer-64-little>> = i64a
+    <<b::integer-64-little>> = i64b
+
+    result = if a >= b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:i64_ge_u), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f32b, f32a | stack], _opts, :f32_lt) do
+    <<a::float-32-little>> = f32a
+    <<b::float-32-little>> = f32b
+
+    result = if a < b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:f32_lt), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f64b, f64a | stack], _opts, :f64_lt) do
+    <<a::float-64-little>> = f64a
+    <<b::float-64-little>> = f64b
+
+    result = if a < b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:f64_lt), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f32b, f32a | stack], _opts, :f32_le) do
+    <<a::float-32-little>> = f32a
+    <<b::float-32-little>> = f32b
+
+    result = if a <= b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:f32_le), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f64b, f64a | stack], _opts, :f64_le) do
+    <<a::float-64-little>> = f64a
+    <<b::float-64-little>> = f64b
+
+    result = if a <= b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:f64_le), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f32b, f32a | stack], _opts, :f32_ge) do
+    <<a::float-32-little>> = f32a
+    <<b::float-32-little>> = f32b
+
+    result = if a <= b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:f32_ge), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f64b, f64a | stack], _opts, :f64_ge) do
+    <<a::float-64-little>> = f64a
+    <<b::float-64-little>> = f64b
+
+    result = if a >= b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:f64_ge), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f32b, f32a | stack], _opts, :f32_gt) do
+    <<a::float-32-little>> = f32a
+    <<b::float-32-little>> = f32b
+
+    result = if a > b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:f32_gt), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f64b, f64a | stack], _opts, :f64_gt) do
+    <<a::float-64-little>> = f64a
+    <<b::float-64-little>> = f64b
+
+    result = if a > b, do: <<1, 0, 0, 0>>, else: <<0, 0, 0, 0>>
+
+    {ctx, gas + Gas.cost(:f64_gt), [result | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f32b, f32a | stack], _opts, :f32_add) do
+    <<a::float-32-little>> = f32a
+    <<b::float-32-little>> = f32b
+
+    {ctx, gas + Gas.cost(:f32_add), [<<(a + b)::float-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f32b, f32a | stack], _opts, :f32_sub) do
+    <<a::float-32-little>> = f32a
+    <<b::float-32-little>> = f32b
+
+    {ctx, gas + Gas.cost(:f32_sub), [<<(a - b)::float-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f32b, f32a | stack], _opts, :f32_mul) do
+    <<a::float-32-little>> = f32a
+    <<b::float-32-little>> = f32b
+
+    {ctx, gas + Gas.cost(:f32_mul), [<<(a * b)::float-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f64b, f64a | stack], _opts, :f64_add) do
+    <<a::float-64-little>> = f64a
+    <<b::float-64-little>> = f64b
+
+    {ctx, gas + Gas.cost(:f64_add), [<<(a + b)::float-64-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f64b, f64a | stack], _opts, :f64_sub) do
+    <<a::float-64-little>> = f64a
+    <<b::float-64-little>> = f64b
+
+    {ctx, gas + Gas.cost(:f64_sub), [<<(a - b)::float-64-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f64b, f64a | stack], _opts, :f64_mul) do
+    <<a::float-64-little>> = f64a
+    <<b::float-64-little>> = f64b
+
+    {ctx, gas + Gas.cost(:f64_mul), [<<(a * b)::float-64-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f32b, f32a | stack], _opts, :f32_min) do
+    <<a::float-32-little>> = f32a
+    <<b::float-32-little>> = f32b
+
+    {ctx, gas + Gas.cost(:f32_min), [<<min(a, b)::float-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f32b, f32a | stack], _opts, :f32_max) do
+    <<a::float-32-little>> = f32a
+    <<b::float-32-little>> = f32b
+
+    {ctx, gas + Gas.cost(:f32_max), [<<max(a, b)::float-32-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f64b, f64a | stack], _opts, :f64_min) do
+    <<a::float-64-little>> = f64a
+    <<b::float-64-little>> = f64b
+
+    {ctx, gas + Gas.cost(:f64_min), [<<min(a, b)::float-64-little>> | stack]}
+  end
+
+  defp exec_inst(ctx, gas, [f64b, f64a | stack], _opts, :f64_max) do
+    <<a::float-64-little>> = f64a
+    <<b::float-64-little>> = f64b
+
+    {ctx, gas + Gas.cost(:f64_max), [<<max(a, b)::float-64-little>> | stack]}
+  end
+
+
+
+  defp exec_inst(ctx, gas, [a | stack], _opts, :i64_popcnt) do
+    num_ones = popcnt(a, 64)
+    {ctx, gas + Gas.cost(:i64_popcnt, num_ones), [num_ones | stack]}
+  end
+
+
+
   defp exec_inst(ctx, gas, [a | stack], _opts, :i64_clz) do
     num_zeros = count_bits(:l, a)
     {ctx, gas + Gas.cost(:i64_clz, num_zeros), [num_zeros | stack]}
   end
 
-  defp exec_inst(ctx, gas, [a | stack], _opts, :i32_ctz) do
-    num_zeros = count_bits(:t, a)
-    {ctx, gas + Gas.cost(:i32_ctz, num_zeros), [num_zeros | stack]}
-  end
+
 
   defp exec_inst(ctx, gas, [a | stack], _opts, :i64_ctz) do
     num_zeros = count_bits(:t, a)
@@ -298,23 +904,7 @@ defmodule WaspVM.Executor do
     {{frame, vm, n}, gas + Gas.cost(:call), stack}
   end
 
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_div_s) do
-    j1 = sign_value(a, 32)
-    j2 = sign_value(b, 32)
 
-    if j2 == 0 do
-      trap("Divide by zero in i32.div_s")
-    else
-      if j1 / j2 == 2147483648 do
-        trap("Out of bounds in i32.div_s")
-      else
-        res = trunc(j1 / j2)
-        ans = sign_value(res, 32)
-
-        {ctx, gas + Gas.cost(:i32_div_s), [ans | stack]}
-      end
-    end
-  end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_div_s) do
     j1 = sign_value(a, 64)
@@ -334,20 +924,7 @@ defmodule WaspVM.Executor do
     end
   end
 
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_div_u) do
-    rem = a - (b * trunc(a / b))
-    result = Integer.floor_div((a - rem), b)
-    {ctx, gas + Gas.cost(:i32_div_u), [result | stack]}
-  end
 
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_rem_s) do
-    j1 = sign_value(a, 32)
-    j2 = sign_value(b, 32)
-
-    rem = j1 - (j2 * trunc(j1 / j2))
-
-    {ctx, gas + Gas.cost(:i32_rem_s), [rem | stack]}
-  end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_rem_s) do
     j1 = sign_value(a, 64)
@@ -365,17 +942,7 @@ defmodule WaspVM.Executor do
     {ctx, gas + Gas.cost(:i64_div_u), [result | stack]}
   end
 
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_rem_u) do
-    c =
-      a
-      |> Kernel./(b)
-      |> trunc()
-      |> Kernel.*(b)
 
-    res = a - c
-
-    {ctx, gas + Gas.cost(:i32_rem_u), [res | stack]}
-  end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_rem_u) do
     c =
@@ -389,30 +956,14 @@ defmodule WaspVM.Executor do
     {ctx, gas + Gas.cost(:i64_rem_u), [res | stack]}
   end
 
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_le_s) do
-    val = if sign_value(a, 32) <= sign_value(b, 32), do: 1, else: 0
-    {ctx, gas + Gas.cost(:i32_le_s), [val | stack]}
-  end
 
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_ge_s) do
-    val = if sign_value(a, 32) >= sign_value(b, 32), do: 1, else: 0
-    {ctx, gas + Gas.cost(:i32_ge_s), [val | stack]}
-  end
-
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_lt_s) do
-    val = if sign_value(a, 32) < sign_value(b, 32), do: 1, else: 0
-    {ctx, gas + Gas.cost(:i32_lt_s), [val | stack]}
-  end
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_lt_s) do
     val = if sign_value(a, 64) < sign_value(b, 64), do: 1, else: 0
     {ctx, gas + Gas.cost(:i64_lt_s), [val | stack]}
   end
 
-  defp exec_inst(ctx, gas, [b, a | stack], _opts, :i32_gt_s) do
-    val = if sign_value(a, 32) > sign_value(b, 32), do: 1, else: 0
-    {ctx, gas + Gas.cost(:i32_gt_s), [val | stack]}
-  end
+
 
   defp exec_inst(ctx, gas, [b, a | stack], _opts, :i64_gt_s) do
     val = if sign_value(a, 64) > sign_value(b, 64), do: 1, else: 0
@@ -439,28 +990,6 @@ defmodule WaspVM.Executor do
 
   defp exec_inst({frame, vm, n}, gas, [pages | stack], _opts, :grow_memory) do
     {{frame, Map.put(vm, :memory, Memory.grow(vm.memory, pages)), n}, gas + Gas.cost(:grow_memory), [length(vm.memory) | stack]}
-  end
-
-  defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load8_s, _alignment, offset}) do
-    mem_addr = hd(frame.module.memaddrs)
-
-    <<i8::8>> =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.get_at(address + offset, 1)
-
-    {ctx, gas + Gas.cost(:i32_load8_s), [bin_wrap_signed(:i32, :i8, i8) | stack]}
-  end
-
-  defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load16_s, _alignment, offset}) do
-    mem_addr = hd(frame.module.memaddrs)
-
-    <<i16::16>> =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.get_at(address + offset, 2)
-
-    {ctx, gas + Gas.cost(:i32_load16_s), [bin_wrap_signed(:i32, :i16, i16) | stack]}
   end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i64_load8_s, _alignment, offset}) do
@@ -496,27 +1025,7 @@ defmodule WaspVM.Executor do
     {ctx, gas + Gas.cost(:i64_load32_s), [bin_wrap_signed(:i64, :i32, i32) | stack]}
   end
 
-  defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load8_u, _alignment, offset}) do
-    mem_addr = hd(frame.module.memaddrs)
 
-    <<i8::8>> =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.get_at(address + offset, 1)
-
-    {ctx, gas + Gas.cost(:i32_load8_u), [bin_wrap_unsigned(:i32, :i8, abs(i8)) | stack]}
-  end
-
-  defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load16_u, _alignment, offset}) do
-    mem_addr = hd(frame.module.memaddrs)
-
-    <<i16::16>> =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.get_at(address + offset, 2)
-
-    {ctx, gas + Gas.cost(:i32_load16_u), [bin_wrap_unsigned(:i32, :i16, abs(i16)) | stack]}
-  end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i64_load8_u, _alignment, offset}) do
     mem_addr = hd(frame.module.memaddrs)
@@ -551,53 +1060,7 @@ defmodule WaspVM.Executor do
     {ctx, gas + Gas.cost(:i64_load32_u), [bin_wrap_unsigned(:i64, :i32, abs(i32)) | stack]}
   end
 
-  defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i32_store, _alignment, offset}) do
-    mem_addr = hd(frame.module.memaddrs)
 
-    mem =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.put_at(address + offset, <<value::32>>)
-
-    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
-    store = Map.put(vm.store, :mems, store_mems)
-
-    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:i32_store), stack}
-  end
-
-  defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i32_store8, _alignment, offset}) do
-    mem_addr = hd(frame.module.memaddrs)
-
-    mem =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.put_at(address + offset, <<wrap_to_value(:i8, value)::8>>)
-
-    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
-    store = Map.put(vm.store, :mems, store_mems)
-
-    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:i32_store8), stack}
-  end
-
-  defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i32_store16, _alignment, offset}) do
-    mem_addr = hd(frame.module.memaddrs)
-
-    value =
-      <<wrap_to_value(:i16, value)::16>>
-      |> Binary.to_list
-      |> Enum.reverse()
-      |> Binary.from_list
-
-    mem =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.put_at(address + offset, value)
-
-    store_mems = List.replace_at(vm.store.mems, mem_addr, mem)
-    store = Map.put(vm.store, :mems, store_mems)
-
-    {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:i32_store16), stack}
-  end
 
   defp exec_inst({frame, vm, n}, gas, [value, address | stack], _opts, {:i64_store8, _alignment, offset}) do
     mem_addr = hd(frame.module.memaddrs)
@@ -696,16 +1159,7 @@ defmodule WaspVM.Executor do
     {{frame, Map.put(vm, :store, store), n}, gas + Gas.cost(:f64_store), stack}
   end
 
-  defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i32_load, _alignment, offset}) do
-    mem_addr = hd(frame.module.memaddrs)
 
-    <<i32::32>> =
-      vm.store.mems
-      |> Enum.at(mem_addr)
-      |> Memory.get_at(address + offset, 4)
-
-    {ctx, gas + Gas.cost(:i32_load), [i32 | stack]}
-  end
 
   defp exec_inst({frame, vm, _n} = ctx, gas, [address | stack], _opts, {:i64_load, _alignment, offset}) do
     mem_addr = hd(frame.module.memaddrs)
