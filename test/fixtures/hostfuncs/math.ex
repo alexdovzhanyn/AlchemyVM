@@ -1,19 +1,19 @@
 defmodule Math do
   use WaspVM.HostFunction
 
-  defhost add(a, b) do
-    a + b
+  defhost add(<<a::integer-32-little>>, <<b::integer-32-little>>) do
+    <<(a + b)::integer-32-little>>
   end
 
-  defhost subtract(b, a) do
-    a - b
+  defhost subtract(<<b::integer-32-little>>, <<a::integer-32-little>>) do
+    <<(a - b)::integer-32-little>>
   end
 
-  defhost multiply(a, b) do
-    a * b
+  defhost multiply(<<a::integer-32-little>>, <<b::integer-32-little>>) do
+    <<(a * b)::integer-32-little>>
   end
 
-  defhost divide(b, a) do
-    a / b
+  defhost divide(<<b::integer-32-little>>, <<a::integer-32-little>>) do
+    <<div(a, b)::integer-32-little>>
   end
 end

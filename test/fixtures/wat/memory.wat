@@ -34,7 +34,7 @@
       i32.const 0
       i32.load)
 
-  (func (export "i64_store8") (result i32)
+  (func (export "i64_store8") (result i64)
       i32.const 0
       i64.const 0xeeeeeeeeeeeeeefb
       i64.store8
@@ -48,9 +48,9 @@
       i64.const 0xeeeeeeeeeeeeeefe
       i64.store8
       i32.const 0
-      i32.load)
+      i64.load)
 
-  (func (export "i64_store16") (result i32)
+  (func (export "i64_store16") (result i64)
       i32.const 0
       i64.const 0xeeeeeeeeeeeecac9
       i64.store16
@@ -58,14 +58,14 @@
       i64.const 0xeeeeeeeeeeeecccb
       i64.store16
       i32.const 0
-      i32.load)
+      i64.load)
 
-  (func (export "i64_store32") (result i32)
+  (func (export "i64_store32") (result i64)
       i32.const 0
       i64.const -123456
       i64.store32
       i32.const 0
-      i32.load)
+      i64.load)
 
   (func (export "i64_store") (result i64)
       i32.const 0

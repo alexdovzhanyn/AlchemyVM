@@ -14,6 +14,14 @@ defmodule WaspVM do
     Execute WebAssembly code
   """
 
+  def i64(num), do: <<num::integer-64-little-signed>>
+  
+  def i32(num), do: <<num::integer-32-little-signed>>
+
+  def f64(num), do: <<num::float-64-little>>
+
+  def f32(num), do: <<num::float-32-little>>
+
   @doc """
     Starts the Virtual Machine and returns the PID which is used to
     interface with the VM.
