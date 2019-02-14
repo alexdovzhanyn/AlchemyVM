@@ -951,9 +951,10 @@ defmodule WaspVM.Executor do
     {ctx, gas + Gas.cost(:f32_convert_u_i64), [<<(a * 1.0)::float-32-little>> | stack]}
   end
 
-  # TODO: Revisit this -- it's likely incorrect
-  defop f32_demote_f64(f64) do
-    {ctx, gas + Gas.cost(:f32_demote_f64), [float_demote(f64 * 1.0000000) | stack]}
+  # TODO: Revisit this -- it's a naive solution that has a few issues (can
+  # break with very large numbers)
+  defop f32_demote_f64(<<f64::float-64-little>>) do
+    {ctx, gas + Gas.cost(:f32_demote_f64), [<<f64::float-32-little>> | stack]}
   end
 
   defop f32_reinterpret_i32(a) do

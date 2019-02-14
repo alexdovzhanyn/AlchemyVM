@@ -754,7 +754,7 @@ defmodule WaspVM.ExecutorTest do
     {:ok, pid} = WaspVM.start()
     WaspVM.load_file(pid, "test/fixtures/wasm/wrap_fixed.wasm")
 
-    assert {:ok, _gas, 123456789.0} = WaspVM.execute(pid, "f32_demote_f64", [])
+    assert {:ok, _gas, 12345679.0} = WaspVM.execute(pid, "f32_demote_f64", [])
   end
 
   test "f64 promote f32 works" do
