@@ -23,22 +23,14 @@ defmodule WaspVM.HostFunctionTest do
 
     WaspVM.load_file(pid, "test/fixtures/wasm/host_func_math.wasm", imports)
 
-    assert WaspVM.i32(55) == Math.hostfunc("add", [WaspVM.i32(5), WaspVM.i32(50)], nil)
-    assert WaspVM.i32(45) == Math.hostfunc("subtract", [WaspVM.i32(5), WaspVM.i32(50)], nil)
-    assert WaspVM.i32(250) == Math.hostfunc("multiply", [WaspVM.i32(5), WaspVM.i32(50)], nil)
-    assert WaspVM.i32(10) == Math.hostfunc("divide", [WaspVM.i32(5), WaspVM.i32(50)], nil)
-
-    expected = WaspVM.i32(55)
-    assert {:ok, _gas, ^expected} = WaspVM.execute(pid, "add", [WaspVM.i32(5), WaspVM.i32(50)])
-
-    expected = WaspVM.i32(45)
-    assert {:ok, _gas, ^expected} = WaspVM.execute(pid, "subtract", [WaspVM.i32(5), WaspVM.i32(50)])
-
-    expected = WaspVM.i32(250)
-    assert {:ok, _gas, ^expected} = WaspVM.execute(pid, "multiply", [WaspVM.i32(5), WaspVM.i32(50)])
-
-    expected = WaspVM.i32(10)
-    assert {:ok, _gas, ^expected} = WaspVM.execute(pid, "divide", [WaspVM.i32(5), WaspVM.i32(50)])
+    assert <<55::integer-32-little>> == Math.hostfunc("add", [<<5::integer-32-little>>, <<50::integer-32-little>>], nil)
+    assert <<45::integer-32-little>> == Math.hostfunc("subtract", [<<5::integer-32-little>>, <<50::integer-32-little>>], nil)
+    assert <<250::integer-32-little>> == Math.hostfunc("multiply", [<<5::integer-32-little>>, <<50::integer-32-little>>], nil)
+    assert <<10::integer-32-little>> == Math.hostfunc("divide", [<<5::integer-32-little>>, <<50::integer-32-little>>], nil)
+    assert {:ok, _gas, 55} = WaspVM.execute(pid, "add", [5, 50])
+    assert {:ok, _gas, 45} = WaspVM.execute(pid, "subtract", [5, 50])
+    assert {:ok, _gas, 250} = WaspVM.execute(pid, "multiply", [5, 50])
+    assert {:ok, _gas, 10} = WaspVM.execute(pid, "divide", [5, 50])
   end
 
   test "Host funcs with numerical return values add to the stack automatically" do
@@ -50,8 +42,7 @@ defmodule WaspVM.HostFunctionTest do
 
     WaspVM.load_file(pid, "test/fixtures/wasm/host_func_math.wasm", imports)
 
-    expected = WaspVM.i32(1055)
-    assert {:ok, _gas, ^expected} = WaspVM.execute(pid, "add_using_return", [WaspVM.i32(5), WaspVM.i32(50)])
+    assert {:ok, _gas, 1055} = WaspVM.execute(pid, "add_using_return", [5, 50])
   end
 
   test "Host funcs can interface with Memory API properly" do
@@ -71,8 +62,7 @@ defmodule WaspVM.HostFunctionTest do
 
     WaspVM.load_file(pid, "test/fixtures/wasm/host_func.wasm", imports)
 
-    expected = WaspVM.i32(10_000_000)
-    assert {:ok, _gas, ^expected} = WaspVM.execute(pid, "f0", [])
+    assert {:ok, _gas, 10_000_000} = WaspVM.execute(pid, "f0", [])
   end
 
   test "Imports can be generated using more than one module" do
@@ -85,11 +75,8 @@ defmodule WaspVM.HostFunctionTest do
 
     WaspVM.load_file(pid, "test/fixtures/wasm/host_func_multimodule_imports.wasm", imports)
 
-    expected = WaspVM.i32(55)
-    assert {:ok, _gas, ^expected} = WaspVM.execute(pid, "add", [WaspVM.i32(5), WaspVM.i32(50)])
-
-    expected = WaspVM.i32(10_000_000)
-    assert {:ok, _gas, ^expected} = WaspVM.execute(pid, "f0", [WaspVM.i32(64), WaspVM.i32(96)])
+    assert {:ok, _gas, 55} = WaspVM.execute(pid, "add", [5, 50])
+    assert {:ok, _gas, 10_000_000} = WaspVM.execute(pid, "f0", [64, 96])
   end
 
 end
