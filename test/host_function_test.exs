@@ -23,15 +23,14 @@ defmodule WaspVM.HostFunctionTest do
 
     WaspVM.load_file(pid, "test/fixtures/wasm/host_func_math.wasm", imports)
 
-    assert 55 == Math.hostfunc("add", [5, 50], nil)
-    assert 45 == Math.hostfunc("subtract", [5, 50], nil)
-    assert 250 == Math.hostfunc("multiply", [5, 50], nil)
-    assert 10.0 == Math.hostfunc("divide", [5, 50], nil)
-
+    assert <<55::integer-32-little>> == Math.hostfunc("add", [<<5::integer-32-little>>, <<50::integer-32-little>>], nil)
+    assert <<45::integer-32-little>> == Math.hostfunc("subtract", [<<5::integer-32-little>>, <<50::integer-32-little>>], nil)
+    assert <<250::integer-32-little>> == Math.hostfunc("multiply", [<<5::integer-32-little>>, <<50::integer-32-little>>], nil)
+    assert <<10::integer-32-little>> == Math.hostfunc("divide", [<<5::integer-32-little>>, <<50::integer-32-little>>], nil)
     assert {:ok, _gas, 55} = WaspVM.execute(pid, "add", [5, 50])
     assert {:ok, _gas, 45} = WaspVM.execute(pid, "subtract", [5, 50])
     assert {:ok, _gas, 250} = WaspVM.execute(pid, "multiply", [5, 50])
-    assert {:ok, _gas, 10.0} = WaspVM.execute(pid, "divide", [5, 50])
+    assert {:ok, _gas, 10} = WaspVM.execute(pid, "divide", [5, 50])
   end
 
   test "Host funcs with numerical return values add to the stack automatically" do

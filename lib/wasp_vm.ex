@@ -216,16 +216,35 @@ defmodule WaspVM do
 
   @spec execute_func(WaspVM, integer, list, :infinity | integer, String.t(), list) :: tuple
   defp execute_func(vm, addr, args, gas_limit, fname, opts) do
-    stack = Enum.reduce(args, [], & [&1 | &2])
+    args = Enum.reverse(args)
 
     # Conditional for Trace
     if opts[:trace], do: create_log_timestamp(fname)
 
-    {vm, gas, stack} = Executor.create_frame_and_execute(vm, addr, gas_limit, opts, 0, stack)
+    # We'll have to update this when we allow multiple return values post-MVP
+    {return_type, {vm, gas, stack}} = Executor.create_frame_and_execute(vm, addr, gas_limit, opts, 0, [], args)
 
     case vm do
       tuple when is_tuple(tuple) -> tuple
-      _ -> {{:ok, gas, List.first(stack)}, vm}
+      _ ->
+        return_val =
+          case return_type do
+            {:i32} ->
+              [<<value::integer-32-little-signed>> | _] = stack
+              value
+            {:i64} ->
+              [<<value::integer-64-little-signed>> | _] = stack
+              value
+            {:f32} ->
+              [<<value::float-32-little>> | _] = stack
+              value
+            {:f64} ->
+              [<<value::float-64-little>> | _] = stack
+              value
+            {} -> nil
+          end
+
+        {{:ok, gas, return_val}, vm}
     end
   end
 
