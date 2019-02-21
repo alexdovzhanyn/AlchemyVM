@@ -31,12 +31,12 @@ defmodule WaspVM.Gas do
   defp cpu_cycles(:i32_rem_s), do: 20
   defp cpu_cycles(:i32_rem_u), do: 20
   defp cpu_cycles(:i32_const), do: 4
-  defp cpu_cycles(:i32_wrap_i64), do: not_implemented(:i32_wrap_i64)
-  defp cpu_cycles(:i32_trunc_u_f32), do: not_implemented(:i32_trunc_u_f32)
-  defp cpu_cycles(:i32_trunc_s_f32), do: not_implemented(:i32_trunc_s_f32)
-  defp cpu_cycles(:i32_trunc_u_f64), do: not_implemented(:i32_trunc_u_f64)
-  defp cpu_cycles(:i32_trunc_s_f64), do: not_implemented(:i32_trunc_s_f64)
-  defp cpu_cycles(:i32_reinterpret_f32), do: not_implemented(:i32_reinterpret_f32)
+  defp cpu_cycles(:i32_wrap_i64), do: 0
+  defp cpu_cycles(:i32_trunc_u_f32), do: 6
+  defp cpu_cycles(:i32_trunc_s_f32), do: 6
+  defp cpu_cycles(:i32_trunc_u_f64), do: 6
+  defp cpu_cycles(:i32_trunc_s_f64), do: 6
+  defp cpu_cycles(:i32_reinterpret_f32), do: 0
   defp cpu_cycles(:i32_load), do: not_implemented(:i32_load)
   defp cpu_cycles(:i32_load8_s), do: not_implemented(:i32_load8_s)
   defp cpu_cycles(:i32_load8_u), do: not_implemented(:i32_load8_u)
@@ -72,14 +72,14 @@ defmodule WaspVM.Gas do
   defp cpu_cycles(:i64_rem_s), do: 85
   defp cpu_cycles(:i64_rem_u), do: 80
   defp cpu_cycles(:i64_const), do: 4
-  defp cpu_cycles(:i64_trunc_u_f32), do: not_implemented(:i64_trunc_u_f32)
-  defp cpu_cycles(:i64_trunc_s_f32), do: not_implemented(:i64_trunc_s_f32)
-  defp cpu_cycles(:i64_trunc_u_f64), do: not_implemented(:i64_trunc_u_f64)
-  defp cpu_cycles(:i64_trunc_s_f64), do: not_implemented(:i64_trunc_s_f64)
-  defp cpu_cycles(:i64_extend_u_i32), do: not_implemented(:i64_extend_u_i32)
-  defp cpu_cycles(:i64_extend_s_i32), do: not_implemented(:i64_extend_s_i32)
-  defp cpu_cycles(:i64_reinterpret_f32), do: not_implemented(:i64_reinterpret_f32)
-  defp cpu_cycles(:i64_reinterpret_f64), do: not_implemented(:i64_reinterpret_f64)
+  defp cpu_cycles(:i64_trunc_u_f32), do: 6
+  defp cpu_cycles(:i64_trunc_s_f32), do: 6
+  defp cpu_cycles(:i64_trunc_u_f64), do: 6
+  defp cpu_cycles(:i64_trunc_s_f64), do: 6
+  defp cpu_cycles(:i64_extend_u_i32), do: 8
+  defp cpu_cycles(:i64_extend_s_i32), do: 8
+  defp cpu_cycles(:i64_reinterpret_f32), do: 0
+  defp cpu_cycles(:i64_reinterpret_f64), do: 0
   defp cpu_cycles(:i64_load), do: not_implemented(:i64_load)
   defp cpu_cycles(:i64_load8_s), do: not_implemented(:i64_load8_s)
   defp cpu_cycles(:i64_load8_u), do: not_implemented(:i64_load8_u)
@@ -177,8 +177,8 @@ defmodule WaspVM.Gas do
   defp cpu_cycles(:end, true), do: 0
   defp cpu_cycles(:end, _), do: 8
 
-  defp not_implemented(opcode) do
-    IO.warn("Gas cost not implemented for #{opcode}. Defaulting to cost of 1 cycle.")
+  defp not_implemented(_opcode) do
+    # IO.warn("Gas cost not implemented for #{opcode}. Defaulting to cost of 1 cycle.")
     1
   end
 end
