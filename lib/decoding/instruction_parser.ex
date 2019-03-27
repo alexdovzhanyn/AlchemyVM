@@ -1,6 +1,6 @@
-defmodule WaspVM.Decoder.InstructionParser do
-  alias WaspVM.LEB128
-  alias WaspVM.OpCodes
+defmodule AlchemyVM.Decoder.InstructionParser do
+  alias AlchemyVM.LEB128
+  alias AlchemyVM.OpCodes
   require IEx
 
   @moduledoc false

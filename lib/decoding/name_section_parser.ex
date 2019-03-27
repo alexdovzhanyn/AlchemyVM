@@ -1,5 +1,5 @@
-defmodule WaspVM.Decoder.NameSectionParser do
-  alias WaspVM.LEB128
+defmodule AlchemyVM.Decoder.NameSectionParser do
+  alias AlchemyVM.LEB128
 
   @moduledoc false
 

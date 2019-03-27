@@ -1,7 +1,7 @@
-defmodule WaspVM.Store do
+defmodule AlchemyVM.Store do
   require IEx
-  alias WaspVM.Memory
-  alias WaspVM.Store
+  alias AlchemyVM.Memory
+  alias AlchemyVM.Store
 
   defstruct funcs: {},
             mems: [],

@@ -1,4 +1,4 @@
-defmodule WaspVM.Gas do
+defmodule AlchemyVM.Gas do
   @cycle_cost 0.3125
 
   def cost(opcode), do: cpu_cycles(opcode) * @cycle_cost

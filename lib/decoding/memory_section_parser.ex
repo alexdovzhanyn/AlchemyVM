@@ -1,5 +1,5 @@
-defmodule WaspVM.Decoder.MemorySectionParser do
-  alias WaspVM.LEB128
+defmodule AlchemyVM.Decoder.MemorySectionParser do
+  alias AlchemyVM.LEB128
 
   @moduledoc false
 

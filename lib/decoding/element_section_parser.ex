@@ -1,6 +1,6 @@
-defmodule WaspVM.Decoder.ElementSectionParser do
-  alias WaspVM.LEB128
-  alias WaspVM.Decoder.Util
+defmodule AlchemyVM.Decoder.ElementSectionParser do
+  alias AlchemyVM.LEB128
+  alias AlchemyVM.Decoder.Util
   require IEx
 
   @moduledoc false

@@ -1,10 +1,10 @@
-defmodule WaspVM do
+defmodule AlchemyVM do
   use GenServer
-  alias WaspVM.Decoder
-  alias WaspVM.ModuleInstance
-  alias WaspVM.Store
-  alias WaspVM.Executor
-  alias WaspVM.Helpers
+  alias AlchemyVM.Decoder
+  alias AlchemyVM.ModuleInstance
+  alias AlchemyVM.Store
+  alias AlchemyVM.Executor
+  alias AlchemyVM.Helpers
   require IEx
 
   @enforce_keys [:modules, :store]
@@ -22,12 +22,12 @@ defmodule WaspVM do
   def start, do: GenServer.start_link(__MODULE__, [])
 
   @doc false
-  def init(_args), do: {:ok, %WaspVM{modules: %{}, store: %Store{}}}
+  def init(_args), do: {:ok, %AlchemyVM{modules: %{}, store: %Store{}}}
 
   @doc """
     Load a binary WebAssembly file (.wasm) as a module into the VM
   """
-  @spec load_file(pid, String.t(), map) :: {:ok, WaspVM.Module}
+  @spec load_file(pid, String.t(), map) :: {:ok, AlchemyVM.Module}
   def load_file(ref, filename, imports \\ %{}) do
     GenServer.call(ref, {:load_module, Decoder.decode_file(filename), imports}, :infinity)
   end
@@ -35,7 +35,7 @@ defmodule WaspVM do
   @doc """
     Load a WebAssembly module directly from a binary into the VM
   """
-  @spec load(pid, binary, map) :: {:ok, WaspVM.Module}
+  @spec load(pid, binary, map) :: {:ok, AlchemyVM.Module}
   def load(ref, binary, imports \\ %{}) when is_binary(binary) do
     GenServer.call(ref, {:load_module, Decoder.decode(binary), imports}, :infinity)
   end
@@ -44,7 +44,7 @@ defmodule WaspVM do
     Load a module that was already decoded by load/3 or load_file/3. This is useful
     for caching modules, as it skips the entire decoding step.
   """
-  @spec load_module(pid, WaspVM.Module, map) :: {:ok, WaspVM.Module}
+  @spec load_module(pid, AlchemyVM.Module, map) :: {:ok, AlchemyVM.Module}
   def load_module(ref, module, imports \\ %{}) do
     GenServer.call(ref, {:load_module, module, imports}, :infinity)
   end
@@ -69,11 +69,11 @@ defmodule WaspVM do
   Use an external tool to compile add.wat to add.wasm (compile from text
   representation to binary representation)
 
-      {:ok, pid} = WaspVM.start() # Start the VM
-      WaspVM.load_file(pid, "path/to/add.wasm") # Load the module that contains our add function
+      {:ok, pid} = AlchemyVM.start() # Start the VM
+      AlchemyVM.load_file(pid, "path/to/add.wasm") # Load the module that contains our add function
 
       # Call the add function, passing in 3 and 10 as args
-      {:ok, gas, result} = WaspVM.execute(pid, "basic_add", [3, 10])
+      {:ok, gas, result} = AlchemyVM.execute(pid, "basic_add", [3, 10])
 
   ### Executing modules with host functions:
 
@@ -95,7 +95,7 @@ defmodule WaspVM do
   Use an external tool to compile log.wat to log.wasm (compile from text
   representation to binary representation)
 
-      {:ok, pid} = WaspVM.start() # Start the VM
+      {:ok, pid} = AlchemyVM.start() # Start the VM
 
       # Define the imports used in this module. Keys in the import map
       # must be strings
@@ -106,20 +106,20 @@ defmodule WaspVM do
       }
 
       # Load the file, passing in the imports
-      WaspVM.load_file(pid, "path/to/log.wasm", imports)
+      AlchemyVM.load_file(pid, "path/to/log.wasm", imports)
 
       # Call getSqrt with an argument of 25
-      WaspVM.execute(pid, "getSqrt", [25])
+      AlchemyVM.execute(pid, "getSqrt", [25])
 
   Program execution can also be limited by specifying a `:gas_limit` option:
 
-      WaspVM.execute(pid, "some_func", [], gas_limit: 100)
+      AlchemyVM.execute(pid, "some_func", [], gas_limit: 100)
 
       This will stop execution of the program if the accumulated gas exceeds 100
 
   Program execution can also output to a log file by specifying a `:trace` option:
 
-      WaspVM.execute(pid, "some_func", [], trace: true)
+      AlchemyVM.execute(pid, "some_func", [], trace: true)
 
       This will trace all instructions passed, as well as the gas cost accumulated to a log file
 
@@ -136,7 +136,7 @@ defmodule WaspVM do
     Retrieve a Virtual Memory set from the VM. Memory must have been exported
     from the WebAssembly module in order to be accessible here.
   """
-  @spec get_memory(pid, String.t()) :: WaspVM.Memory
+  @spec get_memory(pid, String.t()) :: AlchemyVM.Memory
   def get_memory(ref, mem_name) do
     GenServer.call(ref, {:get_mem, mem_name}, :infinity)
   end
@@ -145,7 +145,7 @@ defmodule WaspVM do
     Write to a module's exported memory directly. Memory must have been exported
     from the WebAssembly module in order to be accessible here.
   """
-  @spec update_memory(pid, String.t(), WaspVM.Memory) :: WaspVM
+  @spec update_memory(pid, String.t(), AlchemyVM.Memory) :: AlchemyVM
   def update_memory(ref, mem_name, mem) do
     GenServer.call(ref, {:update_mem, mem_name, mem}, :infinity)
   end
@@ -153,7 +153,7 @@ defmodule WaspVM do
   @doc """
     Returns the state for a given VM instance
   """
-  @spec vm_state(pid) :: WaspVM
+  @spec vm_state(pid) :: AlchemyVM
   def vm_state(ref), do: GenServer.call(ref, :vm_state, :infinity)
 
   def handle_call({:load_module, module, imports}, _from, vm) do
@@ -214,7 +214,7 @@ defmodule WaspVM do
     {:noreply, vm}
   end
 
-  @spec execute_func(WaspVM, integer, list, :infinity | integer, String.t(), list) :: tuple
+  @spec execute_func(AlchemyVM, integer, list, :infinity | integer, String.t(), list) :: tuple
   defp execute_func(vm, addr, args, gas_limit, fname, opts) do
     args = Enum.reverse(args)
 

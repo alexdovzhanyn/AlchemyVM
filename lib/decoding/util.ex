@@ -1,5 +1,5 @@
-defmodule WaspVM.Decoder.Util do
-  alias WaspVM.LEB128
+defmodule AlchemyVM.Decoder.Util do
+  alias AlchemyVM.LEB128
 
   @moduledoc false
 
@@ -26,8 +26,8 @@ defmodule WaspVM.Decoder.Util do
 
     {instruction, bytecode} =
       opcode
-      |> WaspVM.OpCodes.encode_instr()
-      |> WaspVM.Decoder.InstructionParser.parse_instruction(bytecode)
+      |> AlchemyVM.OpCodes.encode_instr()
+      |> AlchemyVM.Decoder.InstructionParser.parse_instruction(bytecode)
 
     if instruction == :end do
       # Should only be one instruction in the MVP, no other combination is valid

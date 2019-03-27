@@ -1,4 +1,4 @@
-defmodule WaspVM.OpCodes do
+defmodule AlchemyVM.OpCodes do
   require IEx
 
   @moduledoc false

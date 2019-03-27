@@ -2,7 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{caption}
 
-\title{WaspVM Gas Calculation}
+\title{AlchemyVM Gas Calculation}
 
 \begin{document}
 
@@ -18,7 +18,7 @@ Assuming that we're forward-thinking developers who want our products to be rele
 We can say that we want 1 second of execution time to cost 1 billion gas. If we use 3.2GHz as our baseline CPU clock speed, we can find the gas cost per cycle by dividing the gas cost per second by the clock speed (\texttt{1,000,000,000 / 3,200,000,000}), which gives a cost per cycle of 0.3125. From here, the gas cost for any given operation can be calculated as \texttt{instruction\_cpu\_cycles\ *\ 0.3125}; an operation that takes 20 CPU cycles to complete would cost 6.25 gas.
 \\\\
 
-Due to the fact that CPU architectures vary, counting clock cycles on the CPU that is running the program is unreliable; gas needs to be deterministic (the same program executed on different CPUs will cost the same amount of gas). It is instead necessary to choose a specific architecture from which these cycle counts can be based; WaspVM makes use of the instruction set latency (clock cycles) defined in Appendix C of Intel's Architecture Optimization Manual \cite{Intel Manual}. Each VM instruction is decomposed to the approximate necessary CPU instructions that are necessary to execute the operation defined by the VM instruction, the latencies of the CPU instructions are then summed -- this becomes the clock count for the specified VM instruction. This clock count is then plugged into the above equation to determine the gas cost for the given operation.
+Due to the fact that CPU architectures vary, counting clock cycles on the CPU that is running the program is unreliable; gas needs to be deterministic (the same program executed on different CPUs will cost the same amount of gas). It is instead necessary to choose a specific architecture from which these cycle counts can be based; AlchemyVM makes use of the instruction set latency (clock cycles) defined in Appendix C of Intel's Architecture Optimization Manual \cite{Intel Manual}. Each VM instruction is decomposed to the approximate necessary CPU instructions that are necessary to execute the operation defined by the VM instruction, the latencies of the CPU instructions are then summed -- this becomes the clock count for the specified VM instruction. This clock count is then plugged into the above equation to determine the gas cost for the given operation.
 
 \begin{table}
 \centering

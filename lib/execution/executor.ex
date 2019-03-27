@@ -1,10 +1,10 @@
-defmodule WaspVM.Executor do
-  alias WaspVM.Frame
-  alias WaspVM.Memory
-  alias WaspVM.Gas
-  alias WaspVM.HostFunction.API
+defmodule AlchemyVM.Executor do
+  alias AlchemyVM.Frame
+  alias AlchemyVM.Memory
+  alias AlchemyVM.Gas
+  alias AlchemyVM.HostFunction.API
   use Bitwise
-  use WaspVM.DSL
+  use AlchemyVM.DSL
   require IEx
   alias Decimal, as: D
 

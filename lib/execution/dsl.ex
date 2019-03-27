@@ -1,9 +1,9 @@
-defmodule WaspVM.DSL do
+defmodule AlchemyVM.DSL do
   @moduledoc false
 
   defmacro __using__(_opts) do
     quote do
-      import WaspVM.DSL
+      import AlchemyVM.DSL
     end
   end
 

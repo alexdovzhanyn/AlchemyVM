@@ -1,5 +1,5 @@
 defmodule Math do
-  use WaspVM.HostFunction
+  use AlchemyVM.HostFunction
 
   defhost add(<<a::integer-32-little>>, <<b::integer-32-little>>) do
     <<(a + b)::integer-32-little>>

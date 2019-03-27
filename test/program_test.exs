@@ -1,25 +1,25 @@
-defmodule WaspVM.ProgramTest do
+defmodule AlchemyVM.ProgramTest do
   use ExUnit.Case
   require Bitwise
-  doctest WaspVM
+  doctest AlchemyVM
 
 
   test "32 bit div program works properly" do
-    {:ok, pid} = WaspVM.start()
-    WaspVM.load_file(pid, "test/fixtures/wasm/int_div.wasm")
-    {_status, _gas, result_1} = WaspVM.execute(pid, "main", [-4])
-    {_status, _gas, result_2} = WaspVM.execute(pid, "main", [4])
+    {:ok, pid} = AlchemyVM.start()
+    AlchemyVM.load_file(pid, "test/fixtures/wasm/int_div.wasm")
+    {_status, _gas, result_1} = AlchemyVM.execute(pid, "main", [-4])
+    {_status, _gas, result_2} = AlchemyVM.execute(pid, "main", [4])
 
     assert result_1 == -2
     assert result_2 == 2
   end
 
   test "Trace Works" do
-    {:ok, pid} = WaspVM.start()
-    WaspVM.load_file(pid, "test/fixtures/wasm/int_div.wasm")
+    {:ok, pid} = AlchemyVM.start()
+    AlchemyVM.load_file(pid, "test/fixtures/wasm/int_div.wasm")
 
     expected = -2
-    assert {:ok, _gas, ^expected} = WaspVM.execute(pid, "main", [-4], [trace: true])
+    assert {:ok, _gas, ^expected} = AlchemyVM.execute(pid, "main", [-4], [trace: true])
 
     {_status, text} =
       './trace.log'
@@ -39,13 +39,13 @@ defmodule WaspVM.ProgramTest do
   test "Modules with start functions execute immediately after initialization" do
     Code.load_file("test/fixtures/hostfuncs/host.ex")
 
-    {:ok, pid} = WaspVM.start()
+    {:ok, pid} = AlchemyVM.start()
 
-    imports = WaspVM.HostFunction.create_imports(Host)
+    imports = AlchemyVM.HostFunction.create_imports(Host)
 
-    WaspVM.load_file(pid, "test/fixtures/wasm/start.wasm", imports)
+    AlchemyVM.load_file(pid, "test/fixtures/wasm/start.wasm", imports)
 
-    %{store: %{mems: mems}} = WaspVM.vm_state(pid)
+    %{store: %{mems: mems}} = AlchemyVM.vm_state(pid)
 
     assert <<15>> =
       mems
