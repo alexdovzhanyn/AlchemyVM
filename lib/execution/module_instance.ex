@@ -108,8 +108,7 @@ defmodule AlchemyVM.ModuleInstance do
         typeidx = Enum.at(module.function_types, idx)
         type = Enum.at(module.types, typeidx)
 
-        locals = Enum.flat_map(func.locals, & List.duplicate(0, &1.count))
-
+        locals = Enum.flat_map(func.locals, & List.duplicate(<<0::integer-32-little>>, &1.count))
 
         {type, ref, func.body, locals}
       end)

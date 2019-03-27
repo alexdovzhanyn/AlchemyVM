@@ -1,0 +1,272 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{caption}
+
+\title{AlchemyVM Gas Calculation}
+
+\begin{document}
+
+\maketitle
+
+\section{Gas Cost Calculation
+Logic}
+
+According to CPU World \cite{CPU World} there were 55 CPU models released by AMD and Intel in 2018, with varying clock speeds. Clock speeds across all 55 models average about 3.3 GHz, with a mode of 3.2 GHz.
+
+Assuming that we're forward-thinking developers who want our products to be relevant and accurate for as long as possible, it makes sense to use 2018 as the benchmark year for clock speeds (as it's the most recent complete dataset); although the majority of computers in existence aren't built in 2018, the majority will shift over time (assuming an average computer life expectancy of 2-3 years), this means each year, on average, roughly 33\% of computers will get upgraded, which leads to the assumption that roughly 33\% of computers in use as of 2018 we're obtained in 2018 -- likely featuring a CPU released some time in 2018. These numbers are likely much more skewed but we can assume a roll over to keep things from getting too complicated.
+
+We can say that we want 1 second of execution time to cost 1 billion gas. If we use 3.2GHz as our baseline CPU clock speed, we can find the gas cost per cycle by dividing the gas cost per second by the clock speed (\texttt{1,000,000,000 / 3,200,000,000}), which gives a cost per cycle of 0.3125. From here, the gas cost for any given operation can be calculated as \texttt{instruction\_cpu\_cycles\ *\ 0.3125}; an operation that takes 20 CPU cycles to complete would cost 6.25 gas.
+\\\\
+
+Due to the fact that CPU architectures vary, counting clock cycles on the CPU that is running the program is unreliable; gas needs to be deterministic (the same program executed on different CPUs will cost the same amount of gas). It is instead necessary to choose a specific architecture from which these cycle counts can be based; AlchemyVM makes use of the instruction set latency (clock cycles) defined in Appendix C of Intel's Architecture Optimization Manual \cite{Intel Manual}. Each VM instruction is decomposed to the approximate necessary CPU instructions that are necessary to execute the operation defined by the VM instruction, the latencies of the CPU instructions are then summed -- this becomes the clock count for the specified VM instruction. This clock count is then plugged into the above equation to determine the gas cost for the given operation.
+
+\begin{table}
+\centering
+\captionsetup{labelformat=empty}
+\caption{Gas Price per OpCode}
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{~ OpCode~~}                         & \textbf{~ Gas Price~~}       & \textbf{~ Corresponding CPU Instructions~ ~}         & ~ \textbf{Notes~~}    \\
+\hline
+~ i32.add                                   & ~ 0.3125                     & ~ ADD                                                &                       \\
+\hline
+~ i32.sub                                   & ~ 0.3125                     & ~ SUB                                                &                       \\
+\hline
+~ i32.mul                                   & ~ 1.5625                     & ~ IMUL r32                                           &                       \\
+\hline
+~ i32.div\_s                                & ~ 6.25                       & ~ IDIV r32                                           & ~ [1]~~               \\
+\hline
+~ i32.div\_u                                & ~ 6.25                       & ~ DIV r32                                            & ~ [1]~~               \\
+\hline
+~ i32.le\_s                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i32.ge\_s                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i32.lt\_u                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i32.gt\_u                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i32.le\_u                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i32.ge\_u                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i32.lt\_s                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i32.ge\_s                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i32.gt\_s                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i32.eq                                    & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i32.ne                                    & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i32.eqz                                   & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i32.rotl                                  & ~ 0.3125                     & ~ ROL reg imm                                        &                       \\
+\hline
+~ i32.rotr                                  & ~ 0.3125                     & ~ ROR reg imm                                        &                       \\
+\hline
+~ i32.and                                   & ~ 0.3125                     & ~ AND                                                &                       \\
+\hline
+~ i32.or                                    & ~ 0.3125                     & ~ OR                                                 &                       \\
+\hline
+~ i32.xor                                   & ~ 0.3125                     & ~ XOR                                                &                       \\
+\hline
+~ i32.shl                                   & ~ 0.3125                     & ~ SHL reg imm                                        &                       \\
+\hline
+~ i32.shr\_u                                & ~ 0.3125                     & ~ SHR reg imm                                        &                       \\
+\hline
+~ i32.shr\_s                                & ~ 0.3125                     & ~ SHR reg imm                                        &                       \\
+\hline
+~ i32.popcnt~~                              & ~ Varies                     & ~ CMP, INC                                           & ~ [4]                 \\
+\hline
+~ i32.clz                                   & ~ Varies                     & ~ CMP, INC                                           & ~ [5]                 \\
+\hline
+~ i32.ctz                                   & ~ Varies                     & ~ CMP, INC                                           & ~ [5]                 \\
+\hline
+~ i32.rem\_s                                & ~ 6.25                       & ~ IDIV r32                                           & ~ [1]                 \\
+\hline
+~ i32.rem\_u                                & ~ 6.25                       & ~ DIV r32                                            & ~ [1]                 \\
+\hline
+~ i32.const                                 & ~ 1.25                       & ~ MOV                                                &                       \\
+\hline
+                                            &                              &                                                      &                       \\
+\hline
+                                            &                              &                                                      &                       \\
+\hline
+~ i64.add                                   & ~ 0.3125                     & ~ ADD                                                &                       \\
+\hline
+~ i64.sub                                   & ~ 0.3125                     & ~ SUB                                                &                       \\
+\hline
+~ i64.mul                                   & ~ 0.9375                     & ~ IMUL r64, r64                                      &                       \\
+\hline
+~ i64.div\_s                                & ~ 26.5625                    & ~ IDIV r64                                           & ~ [2]~~               \\
+\hline
+~ i64.div\_u                                & ~ 25.0                       & ~ DIV r64                                            & ~ [3]~~               \\
+\hline
+~ i64.le\_s                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i64.ge\_s                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i64.lt\_u                                 & ~ 0.3215                     & ~ CMP                                                &                       \\
+\hline
+~ i64.gt\_u                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i64.le\_u                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i64.ge\_u                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i64.lt\_s                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i64.ge\_s                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i64.gt\_s                                 & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i64.eq                                    & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i64.ne                                    & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i64.eqz                                   & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ i64.rotl                                  & ~ 0.3125                     & ~ ROL reg imm                                        &                       \\
+\hline
+~ i64.rotr                                  & ~ 0.3125                     & ~ ROR reg imm                                        &                       \\
+\hline
+~ i64.and                                   & ~ 0.3125                     & ~ AND                                                &                       \\
+\hline
+~ i64.or                                    & ~ 0.3125                     & ~ OR                                                 &                       \\
+\hline
+~ i64.xor                                   & ~ 0.3125                     & ~ XOR                                                &                       \\
+\hline
+~ i64.shl                                   & ~ 0.3125                     & ~ SHL reg imm                                        &                       \\
+\hline
+~ i64.shr\_u                                & ~ 0.3125                     & ~ SHR reg imm                                        &                       \\
+\hline
+~ i64.shr\_s                                & ~ 0.3125                     & ~ SHR reg imm                                        &                       \\
+\hline
+~ i64.popcnt                                & ~ Varies                     & ~ CMP, INC                                           & ~ [4]                 \\
+\hline
+~ i64.clz                                   & ~ Varies                     & ~ CMP, INC                                           & ~ [5]                 \\
+\hline
+~ i64.ctz                                   & ~ Varies                     & ~ CMP, INC                                           & ~ [5]                 \\
+\hline
+~ i64.rem\_s                                & ~ 26.5625                    & ~ IDIV r64                                           & ~ [2]                 \\
+\hline
+~ i64.rem\_u                                & ~ 25.0                       & ~ DIV r64                                            & ~ [3]                 \\
+\hline
+~ i64.const                                 & ~ 1.25                       & ~ MOV                                                &                       \\
+\hline
+                                            &                              &                                                      &                       \\
+\hline
+                                            &                              &                                                      &                       \\
+\hline
+\multicolumn{1}{l}{}                        & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.add}               & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ ADDPS}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.sub}               & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ SUBPS}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.mul}               & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ MULPS}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.div}               & \multicolumn{1}{l}{~ 3.4375} & \multicolumn{1}{l}{~ DIVPS}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.le}                & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ CMPPS}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.ge}                & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ CMPPS}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.lt}                & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ CMPPS}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.gt}                & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ CMPPS}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.eq}                & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ CMPPS}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.ne}                & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ CMPPS}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.const}             & \multicolumn{1}{l}{~ 0.3125} & \multicolumn{1}{l}{~ MOVAPS}                         & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.min}               & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ MINPS}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.max}               & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ MAXPS}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.copysign}          & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.nearest}           & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.trunc}             & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.floor}             & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.neg}               & \multicolumn{1}{l}{~ 1.5625} & \multicolumn{1}{l}{~ MOVAPS, MULPS}                  & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.abs}               & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.sqrt}              & \multicolumn{1}{l}{~ 4.0625} & \multicolumn{1}{l}{~ SQRTPS}                         & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.convert\_u\_i32~~} & \multicolumn{1}{l}{~ 1.875}  & \multicolumn{1}{l}{~ MOVAPS, ANDPS, MULPS}           & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.convert\_s\_i32}   & \multicolumn{1}{l}{~ 1.5625} & \multicolumn{1}{l}{~ MOVAPS, MULPS}                  & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.convert\_u\_i64}   & \multicolumn{1}{l}{~ 1.875}  & \multicolumn{1}{l}{~ MOVAPS, ANDPS, MULPS}           & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.convert\_s\_i64}   & \multicolumn{1}{l}{~ 1.5625} & \multicolumn{1}{l}{~ MOVAPS, MULPS}                  & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f32.demote\_f64}       & \multicolumn{1}{l}{~ 3.125}  & \multicolumn{1}{l}{~ MOVAPS, MULPS, MOVAPS, MULPS~~} & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{}                        & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.add}               & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ ADDPD}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.sub}               & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ SUBPD}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.mul}               & \multicolumn{1}{l}{~ 0.9375} & \multicolumn{1}{l}{~ MULPD}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.div}               & \multicolumn{1}{l}{~ 4.375}  & \multicolumn{1}{l}{~ DIVPD}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.le}                & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ CMPPD}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.ge}                & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ CMPPD}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.lt}                & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ CMPPD}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.gt}                & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ CMPPD}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.eq}                & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ CMPPD}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.ne}                & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ CMPPD}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.const}             & \multicolumn{1}{l}{~ 0.3125} & \multicolumn{1}{l}{~ MOVAPD}                         & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.min}               & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ MINPD}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.max}               & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ MAXPD}                          & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.copysign}          & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.nearest}           & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.trunc}             & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.floor}             & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.neg}               & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ MOVAPD, MULPD}                  & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.abs}               & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.sqrt}              & \multicolumn{1}{l}{~ 5.625}  & \multicolumn{1}{l}{~ SQRTPD}                         & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.convert\_u\_i32}   & \multicolumn{1}{l}{~ 1.5625} & \multicolumn{1}{l}{~ MOVAPD, ANDPD, MULPD}           & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.convert\_s\_i32}   & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ MOVAPD, MULPD}                  & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.convert\_u\_i64}   & \multicolumn{1}{l}{~ 1.5625} & \multicolumn{1}{l}{~ MOVAPD, ANDPD, MULPD}           & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.convert\_s\_i64}   & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ MOVAPD, MULPD}                  & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{~ f64.promote\_f32}      & \multicolumn{1}{l}{~ 1.25}   & \multicolumn{1}{l}{~ MOVAPD, MULPD}                  & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{}                        & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{}                        & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\multicolumn{1}{l}{}                        & \multicolumn{1}{l}{}         & \multicolumn{1}{l}{}                                 & \multicolumn{1}{l}{}  \\
+\hline
+~ select                                    & ~ 1.5625                     & ~ CMP, MOV                                           &                       \\
+\hline
+~ br\_if                                    & ~ 2.8125                     & ~ CMP, MOV, MOV                                      &                       \\
+\hline
+~ br                                        & ~ 2.5                        & ~ MOV, MOV                                           &                       \\
+\hline
+~ nop                                       & ~ 0.0                        &                                                      &                       \\
+\hline
+~ unreachable~~                             & ~ 0.0                        &                                                      &                       \\
+\hline
+~ return                                    & ~ 0.0                        &                                                      &                       \\
+\hline
+~ if                                        & ~ 0.3125                     & ~ CMP                                                &                       \\
+\hline
+~ else                                      & ~ 0.0                        &                                                      &                       \\
+\hline
+~ end (block/loop)~~                        & ~ 2.5                        & ~ MOV, MOV                                           &                       \\
+\hline
+~ end (function)                            & ~ 0.0                        &                                                      &                       \\
+\hline
+~ drop                                      & ~ 1.25                       & ~ MOV                                                &                       \\
+\hline
+~ loop                                      & ~ 2.5                        & ~ MOV, MOV                                           &                       \\
+\hline
+~ block                                     & ~ 2.5                        & ~ MOV, MOV                                           &                       \\
+\hline
+                                            &                              &                                                      &                       \\
+\hline
+                                            &                              &                                                      &                       \\
+\hline
+                                            &                              &                                                      &                       \\
+\hline
+\end{tabular}
+\end{table}
+
+Footnotes
+\\\\
+1. The latency of “DIV/IDIV r32 varies with the significant bits of input values. Lower bound of 20 cycles is used.
+\\\\
+2. The latency of “DIV/IDIV r64 varies with the significant bits of input values. Lower bound of 85 cycles is used.
+\\\\
+3. The latency of “DIV/IDIV r64 varies with the significant bits of input values. Lower bound of 80 cycles is used.
+\\\\
+4. Popcnt opcode varies in gas cost based on the size of the number and the number of bits that are set to 1. The formula for calculating gas for Popcnt is (total\_bits\_in\_number + total\_1\_bits) * 0.3125.
+\\\\
+5. Clz and Ctz opcodes vary in gas cost based on the number that they return. The formula for calculating gas for these opcodes is total\_number\_of\_zeros * 0.625.
+
+\begin{thebibliography}{}
+    \bibitem{CPU World}Release dates of desktop microprocessors (2018). Retrieved January 25, 2019, from http://www.cpu-world.com/Releases/Desktop\_CPU\_releases\_%282018%29.html
+    \bibitem{Intel Manual}Intel® 64 and IA-32 Architectures Optimization Reference Manual. Retrieved January 25, 2019, from https://software.intel.com/sites/default/files/managed/9e/bc/64-ia-32-architectures-optimization-manual.pdf
+
+\end{thebibliography}
+
+\end{document}

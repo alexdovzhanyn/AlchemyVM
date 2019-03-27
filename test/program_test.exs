@@ -18,7 +18,8 @@ defmodule AlchemyVM.ProgramTest do
     {:ok, pid} = AlchemyVM.start()
     AlchemyVM.load_file(pid, "test/fixtures/wasm/int_div.wasm")
 
-    assert {:ok, _gas, -2} = AlchemyVM.execute(pid, "main", [-4], [trace: true])
+    expected = -2
+    assert {:ok, _gas, ^expected} = AlchemyVM.execute(pid, "main", [-4], [trace: true])
 
     {_status, text} =
       './trace.log'
