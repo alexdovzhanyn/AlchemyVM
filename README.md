@@ -2,7 +2,7 @@
 
 [![Packagist](https://img.shields.io/badge/license-MIT-blue.svg)]()
 [![](https://img.shields.io/hexpm/v/wasp_vm.svg)](https://hex.pm/packages/alchemy_vm)
-[![Build Status](https://travis-ci.org/ElixiumNetwork/AlchemyVM.svg?branch=master)](https://travis-ci.org/ElixiumNetwork/AlchemyVM)
+[![Build Status](https://travis-ci.org/ElixiumNetwork/WaspVM.svg?branch=master)](https://travis-ci.org/ElixiumNetwork/AlchemyVM)
 
 WebAssembly Virtual Machine written in Elixir. Currently used as the Wasm VM in
 the [Elixium Network](https://www.elixiumnetwork.org)
