@@ -1,4 +1,4 @@
-defmodule WaspVM.LEB128 do
+defmodule AlchemyVM.LEB128 do
   @moduledoc false
 
   @doc """

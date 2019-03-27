@@ -1,16 +1,16 @@
-defmodule WaspVM.MixProject do
+defmodule AlchemyVM.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :wasp_vm,
+      app: :alchemy_vm,
       version: "0.8.1",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: description(),
       package: package(),
-      source_url: "https://github.com/ElixiumNetwork/WaspVM",
+      source_url: "https://github.com/ElixiumNetwork/AlchemyVM",
       docs: docs()
     ]
   end
@@ -38,7 +38,7 @@ defmodule WaspVM.MixProject do
       maintainers: ["Alex Dovzhanyn", "Matthew Eaton"],
       licenses: ["MIT"],
       links: %{
-        "GitHub" => "https://github.com/ElixiumNetwork/WaspVM",
+        "GitHub" => "https://github.com/ElixiumNetwork/AlchemyVM",
         "Elixium Network Website" => "https://www.elixiumnetwork.org"
       }
     ]
@@ -46,7 +46,7 @@ defmodule WaspVM.MixProject do
 
   defp docs do
     [
-      source_url: "https://github.com/ElixiumNetwork/WaspVM",
+      source_url: "https://github.com/ElixiumNetwork/AlchemyVM",
       extras: ["README.md"]
     ]
   end

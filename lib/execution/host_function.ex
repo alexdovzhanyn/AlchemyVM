@@ -1,4 +1,4 @@
-defmodule WaspVM.HostFunction do
+defmodule AlchemyVM.HostFunction do
 
   @moduledoc """
     Exposes a DSL for defining and importing host functions
@@ -7,9 +7,9 @@ defmodule WaspVM.HostFunction do
   @doc false
   defmacro __using__(_opts) do
     quote do
-      import WaspVM.HostFunction
+      import AlchemyVM.HostFunction
 
-      @before_compile WaspVM.HostFunction
+      @before_compile AlchemyVM.HostFunction
 
       Module.register_attribute(__MODULE__, :host_funcs, accumulate: true)
     end
@@ -22,7 +22,7 @@ defmodule WaspVM.HostFunction do
     corresponding WebAssembly module that this host function can be imported from.
     `fname` can be a string or an atom. A variable called `ctx` is available
     within the context of the macro body as a pointer to VM state, to be used
-    with functions defined in `WaspVM.HostFunction.API`.
+    with functions defined in `AlchemyVM.HostFunction.API`.
 
   ## Usage
 
@@ -30,7 +30,7 @@ defmodule WaspVM.HostFunction do
   WebAssembly:
 
       defmodule Math do
-        use WaspVM.HostFunction
+        use AlchemyVM.HostFunction
 
         defhost add(a, b) do
           a + b
@@ -41,11 +41,11 @@ defmodule WaspVM.HostFunction do
 
       defmodule MyWaspApp do
         def start do
-          {:ok, pid} = WaspVM.start()
+          {:ok, pid} = AlchemyVM.start()
 
-          imports = WaspVM.HostFunction.create_imports(Math)
+          imports = AlchemyVM.HostFunction.create_imports(Math)
 
-          WaspVM.load_file(pid, "path/to/wasm/file.wasm", imports)
+          AlchemyVM.load_file(pid, "path/to/wasm/file.wasm", imports)
         end
       end
 
@@ -76,7 +76,7 @@ defmodule WaspVM.HostFunction do
 
   When using a single module to define imports:
 
-      WaspVM.HostFunction.create_imports(Module1)
+      AlchemyVM.HostFunction.create_imports(Module1)
 
   Functions will be accessible in the WebAssembly module as:
 
@@ -84,7 +84,7 @@ defmodule WaspVM.HostFunction do
 
   When using multiple modules to define imports:
 
-      WaspVM.HostFunction.create_imports([Module1, Module2, Module3])
+      AlchemyVM.HostFunction.create_imports([Module1, Module2, Module3])
 
   Functions will be accessible in the WebAssembly module as:
 

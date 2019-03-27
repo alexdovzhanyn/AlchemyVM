@@ -1,4 +1,4 @@
-defmodule WaspVM.Module do
+defmodule AlchemyVM.Module do
 
   defstruct sections: %{},
             magic: nil,

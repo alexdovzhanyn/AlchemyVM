@@ -1,5 +1,5 @@
 defmodule Math do
-  use WaspVM.HostFunction
+  use AlchemyVM.HostFunction
 
   defhost add(a, b) do
     a + b

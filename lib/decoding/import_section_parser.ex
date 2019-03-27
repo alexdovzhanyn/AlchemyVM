@@ -1,7 +1,7 @@
-defmodule WaspVM.Decoder.ImportSectionParser do
-  alias WaspVM.LEB128
-  alias WaspVM.OpCodes
-  alias WaspVM.Decoder.Util
+defmodule AlchemyVM.Decoder.ImportSectionParser do
+  alias AlchemyVM.LEB128
+  alias AlchemyVM.OpCodes
+  alias AlchemyVM.Decoder.Util
 
   @moduledoc false
 
