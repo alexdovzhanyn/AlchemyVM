@@ -1,8 +1,8 @@
-defmodule WaspVM.Helpers do
+defmodule AlchemyVM.Helpers do
 
   @moduledoc false
 
-  @spec get_export_by_name(WaspVM, String.t(), atom) :: integer | :not_found
+  @spec get_export_by_name(AlchemyVM, String.t(), atom) :: integer | :not_found
   def get_export_by_name(vm, mname, type) do
     vm.modules
     |> Map.values()

@@ -1,8 +1,8 @@
-defmodule WaspVM.ModuleInstance do
-  alias WaspVM.ModuleInstance
-  alias WaspVM.Module
-  alias WaspVM.Memory
-  alias WaspVM.Store
+defmodule AlchemyVM.ModuleInstance do
+  alias AlchemyVM.ModuleInstance
+  alias AlchemyVM.Module
+  alias AlchemyVM.Memory
+  alias AlchemyVM.Store
   require IEx
 
   defstruct ref: nil,

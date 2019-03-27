@@ -1,5 +1,5 @@
 defmodule OtherHost do
-  use WaspVM.HostFunction
+  use AlchemyVM.HostFunction
 
   defhost function0 do
     IO.puts "Hey there"

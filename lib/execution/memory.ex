@@ -1,5 +1,5 @@
-defmodule WaspVM.Memory do
-  alias WaspVM.Memory
+defmodule AlchemyVM.Memory do
+  alias AlchemyVM.Memory
   require IEx
 
   defstruct data: {},

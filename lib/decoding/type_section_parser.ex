@@ -1,6 +1,6 @@
-defmodule WaspVM.Decoder.TypeSectionParser do
-  alias WaspVM.LEB128
-  alias WaspVM.OpCodes
+defmodule AlchemyVM.Decoder.TypeSectionParser do
+  alias AlchemyVM.LEB128
+  alias AlchemyVM.OpCodes
 
   @moduledoc false
 

@@ -1,7 +1,7 @@
-defmodule WaspVM.Executor do
-  alias WaspVM.Frame
-  alias WaspVM.Memory
-  alias WaspVM.HostFunction.API
+defmodule AlchemyVM.Executor do
+  alias AlchemyVM.Frame
+  alias AlchemyVM.Memory
+  alias AlchemyVM.HostFunction.API
   use Bitwise
   require Logger
   require IEx

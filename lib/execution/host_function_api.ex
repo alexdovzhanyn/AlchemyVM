@@ -1,5 +1,5 @@
-defmodule WaspVM.HostFunction.API do
-  alias WaspVM.Helpers
+defmodule AlchemyVM.HostFunction.API do
+  alias AlchemyVM.Helpers
   use Agent
 
   @moduledoc """
@@ -16,7 +16,7 @@ defmodule WaspVM.HostFunction.API do
   def stop(pid), do: Agent.stop(pid)
 
   @doc false
-  @spec state(pid) :: WaspVM
+  @spec state(pid) :: AlchemyVM
   def state(pid), do: Agent.get(pid, & &1)
 
   @doc """
@@ -31,7 +31,7 @@ defmodule WaspVM.HostFunction.API do
   by doing:
 
       defhost get_from_memory do
-        <<243, 80, 45, 92>> = WaspVM.HostFunction.API.get_memory(ctx, "memory1", 8, 4)
+        <<243, 80, 45, 92>> = AlchemyVM.HostFunction.API.get_memory(ctx, "memory1", 8, 4)
       end
 
   Note that `ctx` here is a variable defined by the `defhost` macro in order
@@ -46,7 +46,7 @@ defmodule WaspVM.HostFunction.API do
       addr ->
         vm.store.mems
         |> Enum.at(addr)
-        |> WaspVM.Memory.get_at(address, bytes)
+        |> AlchemyVM.Memory.get_at(address, bytes)
     end
   end
 
@@ -60,7 +60,7 @@ defmodule WaspVM.HostFunction.API do
   by doing:
 
       defhost update_memory do
-        WaspVM.HostFunction.API.update_memory(ctx, "memory1", 0, <<"hello world">>)
+        AlchemyVM.HostFunction.API.update_memory(ctx, "memory1", 0, <<"hello world">>)
       end
 
   This will set the value of "memory1" to `{"h", "e", "l", "l", "o", " ", "w",
@@ -80,7 +80,7 @@ defmodule WaspVM.HostFunction.API do
           mem =
             vm.store.mems
             |> Enum.at(addr)
-            |> WaspVM.Memory.put_at(address, bytes)
+            |> AlchemyVM.Memory.put_at(address, bytes)
 
           mems = List.replace_at(vm.store.mems, addr, mem)
           store = Map.put(vm.store, :mems, mems)

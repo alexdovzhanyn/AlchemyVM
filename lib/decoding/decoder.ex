@@ -1,18 +1,18 @@
-defmodule WaspVM.Decoder do
-  alias WaspVM.LEB128
-  alias WaspVM.Module
-  alias WaspVM.Decoder.TypeSectionParser
-  alias WaspVM.Decoder.FunctionSectionParser
-  alias WaspVM.Decoder.GlobalSectionParser
-  alias WaspVM.Decoder.TableSectionParser
-  alias WaspVM.Decoder.MemorySectionParser
-  alias WaspVM.Decoder.ExportSectionParser
-  alias WaspVM.Decoder.ImportSectionParser
-  alias WaspVM.Decoder.StartSectionParser
-  alias WaspVM.Decoder.ElementSectionParser
-  alias WaspVM.Decoder.CodeSectionParser
-  alias WaspVM.Decoder.CustomSectionParser
-  alias WaspVM.Decoder.DataSectionParser
+defmodule AlchemyVM.Decoder do
+  alias AlchemyVM.LEB128
+  alias AlchemyVM.Module
+  alias AlchemyVM.Decoder.TypeSectionParser
+  alias AlchemyVM.Decoder.FunctionSectionParser
+  alias AlchemyVM.Decoder.GlobalSectionParser
+  alias AlchemyVM.Decoder.TableSectionParser
+  alias AlchemyVM.Decoder.MemorySectionParser
+  alias AlchemyVM.Decoder.ExportSectionParser
+  alias AlchemyVM.Decoder.ImportSectionParser
+  alias AlchemyVM.Decoder.StartSectionParser
+  alias AlchemyVM.Decoder.ElementSectionParser
+  alias AlchemyVM.Decoder.CodeSectionParser
+  alias AlchemyVM.Decoder.CustomSectionParser
+  alias AlchemyVM.Decoder.DataSectionParser
   require IEx
 
   @moduledoc false
