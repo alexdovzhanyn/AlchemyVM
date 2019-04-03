@@ -1,4 +1,4 @@
-![AlchemyVM Banner](https://s3-us-west-2.amazonaws.com/elixium-assets/alchemyvm.png)
+![AlchemyVM Banner](https://s3-us-west-2.amazonaws.com/elixium-assets/alchemylogo.jpg)
 
 [![Packagist](https://img.shields.io/badge/license-MIT-blue.svg)]()
 [![](https://img.shields.io/hexpm/v/wasp_vm.svg)](https://hex.pm/packages/alchemy_vm)
