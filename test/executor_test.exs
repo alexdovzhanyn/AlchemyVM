@@ -498,9 +498,9 @@ defmodule AlchemyVM.ExecutorTest do
       answer =
         answer
         |> :binary.encode_unsigned()
-        |> Binary.to_list()
+        |> :binary.bin_to_list()
         |> Enum.reverse
-        |> Binary.from_list
+        |> :binary.list_to_bin
         |> :binary.decode_unsigned()
 
       assert answer == 4278058235
@@ -514,9 +514,9 @@ defmodule AlchemyVM.ExecutorTest do
       answer =
         answer
         |> :binary.encode_unsigned()
-        |> Binary.to_list()
+        |> :binary.bin_to_list()
         |> Enum.reverse
-        |> Binary.from_list
+        |> :binary.list_to_bin
         |> :binary.decode_unsigned()
 
       assert answer == 4278058235
@@ -530,9 +530,9 @@ defmodule AlchemyVM.ExecutorTest do
       answer =
         answer
         |> :binary.encode_unsigned()
-        |> Binary.to_list()
+        |> :binary.bin_to_list()
         |> Enum.reverse
-        |> Binary.from_list
+        |> :binary.list_to_bin
         |> :binary.decode_unsigned()
 
       assert answer == 3435907785
@@ -546,9 +546,9 @@ defmodule AlchemyVM.ExecutorTest do
       answer =
         answer
         |> :binary.encode_unsigned()
-        |> Binary.to_list()
+        |> :binary.bin_to_list()
         |> Enum.reverse
-        |> Binary.from_list
+        |> :binary.list_to_bin
         |> :binary.decode_unsigned()
 
       assert answer == 3435907785
@@ -562,9 +562,9 @@ defmodule AlchemyVM.ExecutorTest do
       answer =
         answer
         |> :binary.encode_unsigned()
-        |> Binary.to_list()
+        |> :binary.bin_to_list()
         |> Enum.reverse
-        |> Binary.from_list
+        |> :binary.list_to_bin
         |> :binary.decode_unsigned()
 
       assert answer == 4294843840

@@ -560,9 +560,9 @@ defmodule AlchemyVM.Executor do
 
     value =
       <<wrap_to_value(:i16, value)::16>>
-      |> Binary.to_list
+      |> :binary.bin_to_list
       |> Enum.reverse()
-      |> Binary.from_list
+      |> :binary.list_to_bin
 
     mem =
       vm.store.mems
@@ -595,9 +595,9 @@ defmodule AlchemyVM.Executor do
 
     value =
       <<wrap_to_value(:i16, value)::16>>
-      |> Binary.to_list
+      |> :binary.bin_to_list
       |> Enum.reverse()
-      |> Binary.from_list
+      |> :binary.list_to_bin
 
     mem =
       vm.store.mems
@@ -615,9 +615,9 @@ defmodule AlchemyVM.Executor do
 
     value =
       <<wrap_to_value(:i32, value)::32>>
-      |> Binary.to_list
+      |> :binary.bin_to_list
       |> Enum.reverse()
-      |> Binary.from_list
+      |> :binary.list_to_bin
 
     mem =
       vm.store.mems
@@ -788,7 +788,7 @@ defmodule AlchemyVM.Executor do
   defp popcnt(integer, 64), do: popcnt(<<integer::64>>)
   defp popcnt(binary) do
     binary
-    |> Binary.to_list()
+    |> :binary.bin_to_list()
     |> Enum.reject(& &1 == 0)
     |> Enum.count()
   end
@@ -850,13 +850,13 @@ defmodule AlchemyVM.Executor do
 
   defp count_bits(:l, number) do
     <<number::32>>
-    |> Binary.to_list
+    |> :binary.bin_to_list
     |> check_value
   end
 
   defp count_bits(:t, number) do
     <<number::32>>
-    |> Binary.to_list
+    |> :binary.bin_to_list
     |> Enum.reverse
     |> check_value
   end
@@ -867,9 +867,9 @@ defmodule AlchemyVM.Executor do
 
   defp bin_wrap(:i64, :i32, integer) do
     <<integer::64>>
-    |> Binary.to_list()
+    |> :binary.bin_to_list()
     |> Enum.reverse
-    |> Binary.from_list
+    |> :binary.list_to_bin
     |> :binary.decode_unsigned()
     |> Bitwise.band(0xFFFFFFFF)
   end
